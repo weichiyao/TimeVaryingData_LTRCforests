@@ -1,6 +1,6 @@
 Package: LTRCforests
 Version: 0.5.0
-Date: 2020-05-17
+Date: 2020-05-20
 Title: Ensemble Methods for Survival Data with Time-Varying Covariates
 Authors@R: c(person(given = "Weichi", family = "Yao", role = c("aut", "cre"), 
                     email = "wy635@stern.nyu.edu"),
@@ -17,7 +17,7 @@ Imports: stats, utils, survival, ipred, parallel
 Suggests: LTRCtrees, inum, KMSurv
 Description: Implements the conditional inference forest and random survival
   forest with Poisson splitting rule algorithm to modeling left-truncated right-censored
-  data with time-invariant covariates, and right-censored survival data
+  data with time-invariant covariates, and (left-truncated) right-censored survival data
   with time-varying covariates. It also provides functions to tune the parameters and
   evaluate the model fit are provided. See Yao et al. (2020) <arXiv:1901.04599>.
 License: GPL (>= 2)

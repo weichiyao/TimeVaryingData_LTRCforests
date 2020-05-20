@@ -35,10 +35,7 @@ object, with form
 \code{Surv(tleft, tright, event)}.}
 
 \item{data}{a data frame containing \code{n} rows of
-left-truncated right-censored observations.
-For right-censored survival data with time-varying covariates, this should be
-a data frame containing pseudo-subject observations based on the Andersen-Gill
-reformulation.}
+left-truncated right-censored observations.}
 
 \item{id}{variable name of subject identifiers. If this is present, it will be
 searched for in the \code{data} data frame. Each group of rows in \code{data}
@@ -50,7 +47,7 @@ covariates.}
 \item{mtryStart}{starting value of \code{mtry}; default is \code{sqrt(nvar)}.}
 
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
-by this value.}
+by this value. The default value is \code{2}.}
 
 \item{ntreeTry}{number of trees used at the tuning step.}
 
@@ -59,14 +56,14 @@ by this value.}
 the choices are: \code{"by.sub"} (by default) which bootstraps subjects,
 \code{"by.root"} which bootstraps pseudo-subjects.
 Both can be with or without replacement (by default sampling is without
-replacement; see the option \code{perturb} below).
+replacement; see the option \code{perturb} below);
 (2) If \code{id} is not specified, it bootstraps the \code{data} by
-sampling with or without replacement;
+sampling with or without replacement.
 Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
 
-\item{samp}{Bootstrap specification when \code{bootstype="by.user"}.
+\item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
 inbag in the bootstrap for each tree.}
 
@@ -106,9 +103,9 @@ See \code{\link[partykit]{ctree_control}}.}
 The default values correspond to those of the default values used by \code{\link{ltrccf}}.}
 }
 \value{
-If \code{doBest=FALSE} (default), this returns the optimal mtry value of those searched.
+If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 
-If \code{doBest=TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
+If \code{doBest = TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
 }
 \description{
 Starting with the default value of \code{mtry}, search for the optimal value
@@ -118,7 +115,8 @@ Starting with the default value of \code{mtry}, search for the optimal value
 ### Example with data pbcsample
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
-mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3, ntreeTry = 50L, trace = FALSE)
+mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+                    ntreeTry = 50L, plot = TRUE)
 
 
 }

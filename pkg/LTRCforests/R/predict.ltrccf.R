@@ -1,8 +1,8 @@
 #' Compute a Survival Curve from a LTRCCF model
 #'
 #' Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model
-#' for any given right-censored survival data with time-varying covariates. It can
-#' also conputes survival function estimates for left-truncated right-censored data
+#' for any given (left-truncated) right-censored survival data with time-varying covariates.
+#' It can also conputes survival function estimates for left-truncated right-censored data
 #' with time-invariant covariate.
 #'
 #' @param object an object as returned by \code{\link{ltrccf}}.
@@ -13,7 +13,7 @@
 #' contain one curve per subject. If it is not specified, then predictions are
 #' returned for each row of \code{newdata}.
 #' @param newdata an optional data frame containing the test data
-#' (with the names of the variables the same as those in \code{traindata}).
+#' (with the names of the variables the same as those in \code{data} from \code{object}).
 #' @param OOB a logical specifying whether out-of-bag predictions are desired
 #'
 #'
@@ -22,7 +22,7 @@
 #' will be computed.
 #' @param time.tau an optional vector, with the \emph{i}-th entry giving the upper time limit for the
 #' computed survival probabilities for the \emph{i}-th data of interest (i.e., only compute
-#' survival probabilies at \code{time.eval[time.eval<=time.tau[i]]} for the \emph{i}-th
+#' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 #' data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the length of
 #' \code{data} used to train the \code{object};
 #' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
@@ -53,7 +53,8 @@
 #' ## Construct an estimated survival estimate for the second subject
 #' tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
 #' newData <- pbcsample[pbcsample$ID == 2,]
-#' Pred <- predict.ltrccf(object = LTRCCFobj, newdata = newData, time.eval = tpnt)
+#' Pred <- predict.ltrccf(object = LTRCCFobj, newdata = newData, newdata.id = ID,
+#'                        time.eval = tpnt)
 #' ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
 #' dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)
 #' ## Plot the estimated survival curve
@@ -62,8 +63,9 @@
 #'
 #'
 #' ## When time.tau is specified and some entries are different from the others
-#' Pred2 = predict.ltrccf(object = LTRCCFobj, newdata = pbcsample, time.eval = tpnt,
-#'         time.tau = seq(100, 400, length.out = length(unique(pbcsample$ID))))
+#' Pred2 = predict.ltrccf(object = LTRCCFobj, newdata = pbcsample, newdata.id = ID,
+#'         time.eval = tpnt, time.tau = seq(100, 400,
+#'                                          length.out = length(unique(pbcsample$ID))))
 #' ## Then Pred2$survival.probs is a list:
 #' class(Pred2$survival.probs)
 #' ## Plot the estimated survival curve for the subject with id = 20
@@ -77,8 +79,12 @@
 #' @export
 predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                           time.eval, time.tau = NULL){
+  # package version dependency
+  if (packageVersion("partykit") < "1.2.7") {
+    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  }
 
-  pred <- predict(object = object, newdata = newdata, OOB = OOB, type = "prob")
+  pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob")
 
   yvar.names <- as.character(object$formulaLTRC[[2]])[2:4]
   Rname <- yvar.names[2]
@@ -96,10 +102,14 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     }
     newdata <- as.data.frame(newdata[, c(yvar.names, idname)])
   }
+
   rm(object)
   N <- length(unique(newdata[, 'id'])) # number of subjects
   if (is.null(time.tau)){
     time.tau <- rep(max(time.eval), N)
+  } else {
+    if (N != length(time.tau)) stop("time.tau should be a vector of length equaling to number of SUBJECT observation! \n
+                                     In the time-varying case, check whether newdata.id has been correctly specified!")
   }
 
   Shat <- sapply(1:N, function(Ni) shatfunc(Ni, data = newdata, pred = pred, tpnt = time.eval, tau = time.tau))
@@ -153,8 +163,8 @@ shatfunc <- function(Ni, data, pred, tpnt, tau){
       ## Get the index of the Pred to compute Shat
       II <- which(id.seu == id.sub[Ni])[1] + jall[j] - 1
       KM <- pred[[II]]
-      Shat_temp[1,r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
-      # j-th S_{j-1}(R_{j-1})=S_{j-1}(L_{j})
+      Shat_temp[1, r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
+      # j-th S_{j-1}(R_{j-1}) = S_{j-1}(L_{j})
       ShatR_temp[1, j + 1] <- ipred::getsurv(KM, TestT[j + 1])
     }
     # c(1, S_{1}(R_{1}), ..., S_{nj-1}(R_{nj-1}))
@@ -178,9 +188,15 @@ shatfunc <- function(Ni, data, pred, tpnt, tau){
     # S_1(L_1), S_1(R_1), S_2(R_2), ..., S_{nj-1}(R_{nj-1})
     qR <- ShatR_temp
 
-    m <- cumprod(qR / qL)
+    # If S_1(L_1) = 1, then the following two are equivalent
+    # m <- cumprod(qR / qL)
+    # for (j in 1:nj){
+    #   Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] * m[j]
+    # }
+    # This is the more general version, can be applied to left-truncated right-censored data
+    m <- c(1, cumprod(qR[2:nj] / qL[1:(nj - 1)]))
     for (j in 1:nj){
-      Shat_temp[1,r.ID == jall[j]] <- Shat_temp[1,r.ID == jall[j]] * m[j]
+      Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] / qL[j] * m[j]
     }
   }
 

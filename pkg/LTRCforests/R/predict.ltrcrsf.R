@@ -1,8 +1,8 @@
 #' Compute a Survival Curve from a LTRCRSF model
 #'
 #' Constructs a monotone nonincreasing estimated survival curve from a LTRCRSF model
-#' for any given right-censored survival data with time-varying covariates. It can
-#' also conputes survival function estimates for left-truncated right-censored data
+#' for any given (left-truncated) right-censored survival data with time-varying covariates.
+#' It can also conputes survival function estimates for left-truncated right-censored data
 #' with time-invariant covariate.
 #'
 #' @param object an object as returned by \code{\link{ltrcrsf}}.
@@ -13,7 +13,7 @@
 #' contain one curve per subject. If it is not specified, then predictions are
 #' returned for each row of \code{newdata}.
 #' @param newdata an optional data frame containing the test data
-#' (with the names of the variables the same as those in \code{traindata}).
+#' (with the names of the variables the same as those in \code{data} from \code{object}).
 #' @param OOB a logical specifying whether out-of-bag predictions are desired
 #'
 #'
@@ -22,7 +22,7 @@
 #' are computed.
 #' @param time.tau an optional vector, with the \emph{i}-th entry giving the upper time limit for the
 #' computed survival probabilities for the \emph{i}-th data of interest (i.e., only compute
-#' survival probabilies at \code{time.eval[time.eval<=time.tau[i]]} for the \emph{i}-th
+#' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 #' data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the length of
 #' \code{data} used to train the \code{object};
 #' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
@@ -42,6 +42,33 @@
 #' @import ipred
 #' @import survival
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit
+#' @examples
+#' #### Example with time-varying data pbcsample
+#' ## View the prebuilt object
+#' LTRCRSFobj
+#'
+#' ## Construct an estimated survival estimate for the second subject
+#' tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
+#' newData <- pbcsample[pbcsample$ID == 2,]
+#' Pred <- predict(object = LTRCRSFobj, newdata = newData, newdata.id = ID, time.eval = tpnt)
+#'
+#' ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
+#' dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)
+#' ## Plot the estimated survival curve
+#' plot(Pred$survival.times, Pred$survival.probs, type = "l", col = "red",
+#'      xlab = "Time", ylab = "Survival probabilities")
+#'
+#' ## When time.tau is specified and some entries are different from the others
+#' Pred2 = predict.ltrcrsf(object = LTRCRSFobj, newdata = pbcsample, newdata.id = ID,
+#'                         time.eval = tpnt, time.tau = seq(100, 400, length.out =
+#'                                                            length(unique(pbcsample$ID))))
+#'
+#' ## Then Pred2$survival.probs is a list:
+#' class(Pred2$survival.probs)
+#' ## Plot the estimated survival curve for the subject with id = 20
+#' plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[20]],
+#'      Pred2$survival.probs[[20]], type = "l", col = "red",
+#'      xlab = "Time", ylab = "Survival probabilities")
 #' @export
 
 predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
@@ -52,7 +79,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
   wt <- object$inbag # of size Ndata x ntree
 
-  yvar.names <- as.character(formula[[2]])[2:4]
+  yvar.names <- object$yvarLTRC.names
   Rname <- yvar.names[2]
   traindata <- object$yvarLTRC
   traindata$id <- object$id
@@ -76,8 +103,8 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       tlen <- length(tpnt)
 
       r.ID <- findInterval(tpnt, c(0, newi[, Rname]))
-      r.ID[tpnt == newi[, Rname][n_newi]] = n_newi
-      jall <- unique(r.ID[r.ID <= n_newi])
+      r.ID[tpnt >= newi[, Rname][n_newi]] = n_newi
+      jall <- unique(r.ID)
       nj <- length(jall)
       if (nj == 1){
         survival <- rep(0, tlen)
@@ -98,7 +125,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## Build the survival tree
           KM <- survival::survfit(formula = formula, data = traindata[id_buildtree_j, ])
           ## Get survival probabilities
-          Shat_ti[r.ID == jall[j]] <- ipred::getsurv(KM, time.eval[r.ID == jall[j]])
+          Shat_ti[r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
           survival <- survival + Shat_ti
         }
@@ -166,20 +193,19 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     } else {
       if (!is.data.frame(newdata)) stop("newdata must be a dataframe")
       x.IDs <- match(object$xvar.names, names(newdata))
-      nIDxnewdata <- predict(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
+      class(object) = class(object)[2:4] # for the prediction function in rfsrc to work
+      nIDxnewdata <- randomForestSRC::predict.rfsrc(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
 
       if (missing(newdata.id)){
         newdata$id <- 1:nrow(newdata)
       } else {
         names(newdata)[names(newdata) == deparse(substitute(newdata.id))] <- "id"
       }
-      id_uniq <- unique(newdata$id) # id of subjects
-      n_uniq <- length(id_uniq) # number of subjects
 
     }
-    obj.IDs <- match(c("id", object$yvarLTRC.names), names(newdata))
-    newdata = newdata[, obj.IDs]
     rm(object)
+    obj.IDs <- match(c("id", yvar.names), names(newdata))
+    newdata = newdata[, obj.IDs]
 
     # label the newdata
     newdata$I <- 1:nrow(newdata)
@@ -190,6 +216,8 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
     if (is.null(time.tau)){
       time.tau <- rep(max(time.eval), n_uniq)
+    } else {
+      if (n_uniq != length(time.tau)) stop("time.tau should be a vector of length equaling to number of SUBJECT observation! In the time-varying case, check whether newdata.id has been correctly specified!")
     }
     pred <- sapply(1:n_uniq, function(i){
       newi <- newdata[newdata$id == id_uniq[i], , drop = FALSE]
@@ -213,12 +241,12 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           # ID of observations in the b-th bootstrap samples
           rw <- which(wt[,b] == 1)
           IDnew <- IDnew[IDnew %in% rw]
-          KM <- survival::survfit(formula = formula, data = data[IDnew, ])
+          KM <- survival::survfit(formula = formula, data = traindata[IDnew, ])
           Shat_b[r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
           survival <- survival + Shat_b
         }
 
-        RES=survival/ntree
+        RES = survival/ntree
       } else {
         ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
         r.IDmax <- c(1,sapply(jall[-nj], function(j){
@@ -269,7 +297,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           }
 
           survival <- survival + Shat_b
-          survivalR <- survivalR + ShatR_b[, 1:nj]
+          survivalR <- survivalR + ShatR_b[1, 1:nj]
         }
 
         survival <- survival / ntree

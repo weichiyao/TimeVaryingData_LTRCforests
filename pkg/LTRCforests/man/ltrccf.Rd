@@ -32,7 +32,7 @@ object, with form
 
 \item{data}{a data frame containing \code{n} rows of
 left-truncated right-censored observations.
-For right-censored survival data with time-varying covariates, this should be
+For time-varying data, this should be
 a data frame containing pseudo-subject observations based on the Andersen-Gill
 reformulation.}
 
@@ -47,16 +47,16 @@ covariates.}
 random forest like algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.}
 
 \item{ntree}{an integer, the number of the trees to grow for the forest.
-\code{ntree=100L} is set by default.}
+\code{ntree = 100L} is set by default.}
 
 \item{bootstrap}{bootstrap protocol.
 (1) If \code{id} is present,
 the choices are: \code{"by.sub"} (by default) which bootstraps subjects,
 \code{"by.root"} which bootstraps pseudo-subjects.
 Both can be with or without replacement (by default sampling is without
-replacement; see the option \code{perturb} below).
+replacement; see the option \code{perturb} below);
 (2) If \code{id} is not specified, it
-bootstraps the \code{data} by sampling with or without replacement;
+bootstraps the \code{data} by sampling with or without replacement.
 Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
@@ -66,7 +66,7 @@ type of resampling, with \code{replace = TRUE} referring to the \emph{n}-out-of-
 bootstrap and \code{replace = FALSE} referring to sample splitting. \code{fraction} is
 the proportion of observations to draw without replacement.}
 
-\item{samp}{Bootstrap specification when \code{bootstype="by.user"}.
+\item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
 inbag in the bootstrap for each tree.}
 
@@ -76,7 +76,7 @@ inbag in the bootstrap for each tree.}
 
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
 by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
-The default value is 2.}
+The default value is \code{2}.}
 
 \item{na.action}{a function which indicates what should happen when the data contain
 missing values.}
@@ -97,17 +97,17 @@ See \code{\link[partykit]{ctree_control}}.}
 default values used by \code{\link[partykit]{ctree_control}}.}
 }
 \value{
-An object of class of \code{\link[partykit]{cforest}}.
+An object belongs to the class \code{ltrccf}, as a subclass of
+\code{\link[partykit]{cforest}}.
 }
 \description{
 An implementation of the random forest and bagging ensemble algorithms utilizing
 LTRC conditional inference trees \code{\link{LTRCIT}} as base learners for
 left-truncated right-censored survival data with time-invariant covariates.
-It also allows for right-censored survival data with time-varying covariates.
+It also allows for (left-truncated) right-censored survival data with
+time-varying covariates.
 }
 \details{
-\code{ltrc} returns an \code{cforest} object.
-The object belongs to the class of \code{\link[partykit]{cforest}}.
 This function extends the conditional inference survival forest algorithm in
 \code{\link[partykit]{cforest}} to fit left-truncated and right-censored data,
 which allow for time-varying covariates. The traditional survival forests in

@@ -33,10 +33,10 @@
 #' An implementation of the random forest and bagging ensemble algorithms utilizing
 #' LTRC conditional inference trees \code{\link{LTRCIT}} as base learners for
 #' left-truncated right-censored survival data with time-invariant covariates.
-#' It also allows for right-censored survival data with time-varying covariates.
+#' It also allows for (left-truncated) right-censored survival data with
+#' time-varying covariates.
 #'
-#' \code{ltrc} returns an \code{cforest} object.
-#' The object belongs to the class of \code{\link[partykit]{cforest}}.
+#'
 #' This function extends the conditional inference survival forest algorithm in
 #' \code{\link[partykit]{cforest}} to fit left-truncated and right-censored data,
 #' which allow for time-varying covariates. The traditional survival forests in
@@ -50,7 +50,7 @@
 #' \code{Surv(tleft, tright, event)}.
 #' @param data a data frame containing \code{n} rows of
 #' left-truncated right-censored observations.
-#' For right-censored survival data with time-varying covariates, this should be
+#' For time-varying data, this should be
 #' a data frame containing pseudo-subject observations based on the Andersen-Gill
 #' reformulation.
 #' @param id variable name of subject identifiers. If this is present, it will be
@@ -64,13 +64,13 @@
 #' the choices are: \code{"by.sub"} (by default) which bootstraps subjects,
 #' \code{"by.root"} which bootstraps pseudo-subjects.
 #' Both can be with or without replacement (by default sampling is without
-#' replacement; see the option \code{perturb} below).
+#' replacement; see the option \code{perturb} below);
 #' (2) If \code{id} is not specified, it
-#' bootstraps the \code{data} by sampling with or without replacement;
+#' bootstraps the \code{data} by sampling with or without replacement.
 #' Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 #' \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
 #' the bootstrap specified by \code{samp} is used.
-#' @param samp Bootstrap specification when \code{bootstype="by.user"}.
+#' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' inbag in the bootstrap for each tree.
 #' @param na.action a function which indicates what should happen when the data contain
@@ -78,7 +78,7 @@
 #' @param mtry number of input variables randomly sampled as candidates at each node for
 #' random forest like algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.
 #' @param ntree an integer, the number of the trees to grow for the forest.
-#' \code{ntree=100L} is set by default.
+#' \code{ntree = 100L} is set by default.
 #' @param perturb a list with arguments \code{replace} and \code{fraction} determining which
 #' type of resampling, with \code{replace = TRUE} referring to the \emph{n}-out-of-\emph{n}
 #' bootstrap and \code{replace = FALSE} referring to sample splitting. \code{fraction} is
@@ -96,14 +96,15 @@
 #' \code{trace = TRUE} is set by default.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
 #' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
-#' The default value is 2.
+#' The default value is \code{2}.
 #' @param control a list of control parameters, see \code{\link[partykit]{ctree_control}}.
 #' \code{control} parameters \code{minsplit}, \code{minbucket} have been adjusted from the
 #' \code{\link[partykit]{cforest}} defaults. Other default values correspond to those of the
 #' default values used by \code{\link[partykit]{ctree_control}}.
 #' @keywords Ensemble method, conditional inference forest, left-truncated right-censored data,
 #' time-varying covariate data
-#' @return An object of class of \code{\link[partykit]{cforest}}.
+#' @return An object belongs to the class \code{ltrccf}, as a subclass of
+#' \code{\link[partykit]{cforest}}.
 #' @import partykit
 #' @import survival
 #' @import stats
@@ -136,6 +137,10 @@ ltrccf <- function(formula, data, id,
                                                      minbucket = max(ceiling(sqrt(nrow(data))), 7),
                                                      minprob = 0.01,
                                                      mincriterion = 0, saveinfo = FALSE)){
+  # package version dependency
+  if (packageVersion("partykit") < "1.2.7") {
+    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  }
 
   requireNamespace("inum")
   Call <- match.call()
@@ -196,11 +201,13 @@ ltrccf <- function(formula, data, id,
     if (is.null(samp)) {
       stop("samp must not be NULL when bootstrapping by user")
     }
-    if (!is.matrix(samp)) stop("samp must be a matrx")
-    if (any(!is.finite(samp))) stop("samp must be finite")
-    if (any(samp < 0)) stop("samp must be non-negative")
-    if (all(dim(samp) != c(n, ntree))) stop("dimension of samp must be n x ntree")
-    samp <- as.matrix(samp)  # transform into matrix
+    if (is.matrix(samp)){
+      if (!is.matrix(samp)) stop("samp must be a matrx")
+      if (any(!is.finite(samp))) stop("samp must be finite")
+      if (any(samp < 0)) stop("samp must be non-negative")
+      if (all(dim(samp) != c(n, ntree))) stop("dimension of samp must be n x ntree")
+      samp <- as.matrix(samp)  # transform into matrix
+    }
   } else if (bootstrap == "by.root"){
     samp <- rep(1, n)
   } else {
@@ -210,7 +217,7 @@ ltrccf <- function(formula, data, id,
   if (is.null(mtry)){
     data$id = id # this is a must, otherwise id cannot be passed to the next level
     mtry <- tune.ltrccf(formula = formula, data = data, id = id,
-                        control = control,
+                        control = control, ntreeTry = ntree,
                         bootstrap = "by.user",
                         perturb = perturb,
                         samp = samp,

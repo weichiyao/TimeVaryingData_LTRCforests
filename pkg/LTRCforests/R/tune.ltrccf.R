@@ -10,9 +10,6 @@
 #' \code{Surv(tleft, tright, event)}.
 #' @param data a data frame containing \code{n} rows of
 #' left-truncated right-censored observations.
-#' For right-censored survival data with time-varying covariates, this should be
-#' a data frame containing pseudo-subject observations based on the Andersen-Gill
-#' reformulation.
 #' @param id variable name of subject identifiers. If this is present, it will be
 #' searched for in the \code{data} data frame. Each group of rows in \code{data}
 #' with the same subject \code{id} represents the covariate path through time of
@@ -24,18 +21,18 @@
 #' the choices are: \code{"by.sub"} (by default) which bootstraps subjects,
 #' \code{"by.root"} which bootstraps pseudo-subjects.
 #' Both can be with or without replacement (by default sampling is without
-#' replacement; see the option \code{perturb} below).
+#' replacement; see the option \code{perturb} below);
 #' (2) If \code{id} is not specified, it bootstraps the \code{data} by
-#' sampling with or without replacement;
+#' sampling with or without replacement.
 #' Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 #' \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
 #' the bootstrap specified by \code{samp} is used.
-#' @param samp Bootstrap specification when \code{bootstype="by.user"}.
+#' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' inbag in the bootstrap for each tree.
 #' @param mtryStart starting value of \code{mtry}; default is \code{sqrt(nvar)}.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
-#' by this value.
+#' by this value. The default value is \code{2}.
 #' @param na.action a function which indicates what should happen when the data contain
 #' missing values.
 #' @param perturb a list with arguments \code{replace} and \code{fraction} determining which
@@ -67,9 +64,9 @@
 #' data of interest).
 #' @keywords mtry, out-of-bag errors, brier score
 #' @return
-#' If \code{doBest=FALSE} (default), this returns the optimal mtry value of those searched.
+#' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
-#' If \code{doBest=TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
+#' If \code{doBest = TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
 #' @import partykit
 #' @import prodlim
 #' @importFrom survival Surv
@@ -82,7 +79,8 @@
 #' ### Example with data pbcsample
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
-#' mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3, ntreeTry = 50L, trace = FALSE)
+#' mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+#'                     ntreeTry = 50L, plot = TRUE)
 #'
 #'
 #' @export
@@ -101,6 +99,11 @@ tune.ltrccf <- function(formula, data, id,
                                                           minsplit = max(ceiling(sqrt(nrow(data))), 20),
                                                           minbucket = max(ceiling(sqrt(nrow(data))), 7),
                                                           minprob = 0.01)) {
+
+  # package version dependency
+  if (packageVersion("partykit") < "1.2.7") {
+    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  }
 
   Call <- match.call()
   Call[[1]] <- as.name('tuneLTRCCF')  #make nicer printout for the user
@@ -149,7 +152,7 @@ tune.ltrccf <- function(formula, data, id,
 
     if (is.null(time.eval)){
       # estimated survival probabilities will be calculated at (a subset of) time.eval
-      time.eval <- c(0, sort(unique(Rtimes)), seq(max(Rtimes), 1.5 * max(Rtimes), length = 50)[-1])
+      time.eval <- c(0, sort(unique(Rtimes)), seq(max(Rtimes), 1.5 * max(Rtimes), length.out = 50)[-1])
     }
     if (is.null(time.tau)){
       # For i-th data, estimated survival probabilities only calculated up time.tau[i]
@@ -161,7 +164,8 @@ tune.ltrccf <- function(formula, data, id,
   # id is a vector, as requred by sbrier_ltrc function
   data$id <- id # this is a must, otherwise id cannot be passed to the next level
   # integrated Brier score of out-of-bag samples for a mtry value at test
-  errorOOB_mtry <- function(eformula, edata, id, emtryTest,
+  errorOOB_mtry <- function(eformula, edata, id,
+                            emtryTest,
                             etpnt, etau,
                             entreeTry, econtrol,
                             ebootstrap,
@@ -221,7 +225,7 @@ tune.ltrccf <- function(formula, data, id,
       }
       if (mtryCur == mtryOld) break
 
-      errorCur <- errorOOB_mtry(eformula = formula, edata = data, eid = id,
+      errorCur <- errorOOB_mtry(eformula = formula, edata = data, id = id,
                                 emtryTest = mtryCur,
                                 etpnt = time.eval,
                                 etau = time.tau,

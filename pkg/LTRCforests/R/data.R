@@ -13,14 +13,14 @@
 #'   pseudo-subject observation}
 #'   \item{Stop}{the right censoring time point for the corresponding
 #'   pseudo-subject observation}
-#'   \item{Event}{a binary value, with 1 indicating the event occurring at
-#'   the corresponding \code{tright}, 0 indicating right-censored}
+#'   \item{Event}{a binary value, with \code{1} indicating the event occurring at
+#'   the corresponding \code{Stop}, \code{0} indicating right-censored}
 #'   \item{age}{patient's age at entry, in years}
 #'   \item{alk.phos}{alkaline phosphotase (U/liter)}
 #'   \item{ast}{aspartate aminotransferase (U/ml)}
 #'   \item{chol}{serum cholesterol (mg/dl)}
-#'   \item{edema}{0--no edema, 0.5--untreated or successfully treated,
-#'   1--edema despite diuretic therapy}
+#'   \item{edema}{\code{0}--no edema, \code{0.5}--untreated or successfully treated,
+#'   \code{1}--edema despite diuretic therapy}
 #' @usage data("pbcsample")
 #' @source P. A. Murtaugh, E. R. Dickson, G. M. V. Dam,
 #' M. Malinchoc, P. M. Grambsch, A. L. Langworthy, and C. H. Gips. (1989).

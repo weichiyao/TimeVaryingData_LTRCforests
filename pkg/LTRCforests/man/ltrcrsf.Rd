@@ -9,7 +9,7 @@ ltrcrsf(
   data,
   id,
   ntree = 100L,
-  mtry,
+  mtry = NULL,
   nodesize = max(ceiling(sqrt(nrow(data))), 15),
   nodedepth = NULL,
   nsplit = 10,
@@ -32,7 +32,7 @@ object, with form
 
 \item{data}{a data frame containing \code{n} rows of
 left-truncated right-censored observations.
-For right-censored survival data with time-varying covariates, this should be
+For time-varying data, this should be
 a data frame containing pseudo-subject observations based on the Andersen-Gill
 reformulation.}
 
@@ -59,7 +59,7 @@ is that this parameter is ignored.}
 \item{nsplit}{an non-negative integer value for number of random splits to consider
 for each candidate splitting variable. This significantly increases speed.
 When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-splits considered. \code{nsplit=10} by default.}
+splits considered. \code{nsplit = 10} by default.}
 
 \item{bootstrap}{bootstrap protocol.
 (1) If \code{id} is present,
@@ -80,13 +80,13 @@ the bootstrap specified by \code{samp} is used.}
 without replacement.}
 
 \item{sampfrac}{a fraction, determining the proportion of subjects to draw
-without replacement when \code{samptype="swor"}. The default value is \code{0.632}.
+without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
 To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
 pseudo-subject observations are drawn without replacement (\code{N} denotes the
 number of subjects); otherwise, \code{0.632 * n} is the requested size
 of the sample.}
 
-\item{samp}{Bootstrap specification when \code{bootstype="by.user"}.
+\item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
 inbag in the bootstrap for each tree.}
 
@@ -113,13 +113,14 @@ of \code{mtry} if \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
 \code{trace = TRUE} is set by default.}
 }
 \value{
-An object of class of \code{\link[randomForestSRC]{rfsrc}}.
+An object belongs to the class \code{ltrcrsf},
+as a subclass of \code{\link[randomForestSRC]{rfsrc}}.
 }
 \description{
 An implementation of the random forest algorithms utilizing LTRC \code{rpart}
 trees \code{\link{LTRCART}} as base learners for left-truncated right-censored
-survival data with time-invariant covariates. It also allows for right-censored
-survival data with time-varying covariates.
+survival data with time-invariant covariates. It also allows for (left-truncated)
+right-censored survival data with time-varying covariates.
 }
 \details{
 This function extends the random survival forest algorithm in
@@ -140,8 +141,9 @@ with \cr
 # Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 # by specifying id:
-# LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L, mtry = 3)
-
+# LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 100L)
+# A prebuilt object has been saved in the directory ./data/
+print(LTRCRSFobj)
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox’s regression model for counting

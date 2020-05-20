@@ -17,7 +17,7 @@
 \item{object}{an object as returned by \code{\link{ltrccf}}.}
 
 \item{newdata}{an optional data frame containing the test data
-(with the names of the variables the same as those in \code{traindata}).}
+(with the names of the variables the same as those in \code{data} from \code{object}).}
 
 \item{newdata.id}{optional variable name of subject identifiers for \code{newdata}.
 If this is present, it will be search for in the \code{newdata} data frame.
@@ -36,7 +36,7 @@ will be computed.}
 
 \item{time.tau}{an optional vector, with the \emph{i}-th entry giving the upper time limit for the
 computed survival probabilities for the \emph{i}-th data of interest (i.e., only compute
-survival probabilies at \code{time.eval[time.eval<=time.tau[i]]} for the \emph{i}-th
+survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the length of
 \code{data} used to train the \code{object};
 If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
@@ -58,8 +58,8 @@ A list containing:
 }
 \description{
 Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model
-for any given right-censored survival data with time-varying covariates. It can
-also conputes survival function estimates for left-truncated right-censored data
+for any given (left-truncated) right-censored survival data with time-varying covariates.
+It can also conputes survival function estimates for left-truncated right-censored data
 with time-invariant covariate.
 }
 \examples{
@@ -73,7 +73,8 @@ LTRCCFobj <- ltrccf(formula = Formula, data = pbcsample, id = ID,
 ## Construct an estimated survival estimate for the second subject
 tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
 newData <- pbcsample[pbcsample$ID == 2,]
-Pred <- predict.ltrccf(object = LTRCCFobj, newdata = newData, time.eval = tpnt)
+Pred <- predict.ltrccf(object = LTRCCFobj, newdata = newData, newdata.id = ID,
+                       time.eval = tpnt)
 ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
 dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)
 ## Plot the estimated survival curve
@@ -82,8 +83,9 @@ plot(Pred$survival.times, Pred$survival.probs, type = "l", col = "red",
 
 
 ## When time.tau is specified and some entries are different from the others
-Pred2 = predict.ltrccf(object = LTRCCFobj, newdata = pbcsample, time.eval = tpnt,
-        time.tau = seq(100, 400, length.out = length(unique(pbcsample$ID))))
+Pred2 = predict.ltrccf(object = LTRCCFobj, newdata = pbcsample, newdata.id = ID,
+        time.eval = tpnt, time.tau = seq(100, 400,
+                                         length.out = length(unique(pbcsample$ID))))
 ## Then Pred2$survival.probs is a list:
 class(Pred2$survival.probs)
 ## Plot the estimated survival curve for the subject with id = 20

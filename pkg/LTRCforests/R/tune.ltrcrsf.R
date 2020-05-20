@@ -8,12 +8,8 @@
 #'
 #'
 #' \code{Surv(tleft, tright, event)}.
-#' @param data a data frame containing left-truncated right-censored pseudo-subject
-#' observations based on the Andersen-Gill reformulation method. The data frame is
-#' required to contain a variable named \code{id}, indicating the subject id for each
-#' pseudo-subject observation; a variable named \code{tleft} and a variable named
-#' \code{tright}, indicating the left truncation and the right censoring time point
-#' for each pseudo-subject observation.
+#' @param data a a data frame containing \code{n} rows of
+#' left-truncated right-censored observations.
 #' @param mtryStart starting value of \code{mtry}; default is \code{sqrt(nvar)}.
 #' @param id variable name of subject identifiers. If this is present, it will be
 #' searched for in the \code{data} data frame. Each group of rows in \code{data}
@@ -37,7 +33,7 @@
 #' @param samptype choices are \code{swor} (sampling without replacement) and
 #' \code{swr} (sampling with replacement). The default action here is sampling
 #' without replacement.
-#' @param samp Bootstrap specification when \code{bootstype="by.user"}.
+#' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' inbag in the bootstrap for each tree.
 #' @param trace whether to print the progress of the search of the optimal value
@@ -51,9 +47,9 @@
 #' @param nsplit an non-negative integer value for number of random splits to consider
 #' for each candidate splitting variable. This significantly increases speed.
 #' When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-#' splits considered. \code{nsplit=10} by default.
+#' splits considered. \code{nsplit = 10} by default.
 #' @param sampfrac a fraction, determining the proportion of subjects to draw
-#' without replacement when \code{samptype="swor"}. The default value is \code{0.632}.
+#' without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
 #' To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
 #' pseudo-subject observations are drawn without replacement (\code{N} denotes the
 #' number of subjects); otherwise, \code{0.632 * n} is the requested size
@@ -88,10 +84,9 @@
 #' data of interest).
 #' @keywords mtry, out-of-bag errors, brier score
 #' @return
-#' If \code{doBest=FALSE} (default), this returns the optimal mtry value of those searched.
+#' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
-#' If \code{doBest=TRUE}, this returns the \code{\link{ltrcrsf}} object produced with the optimal \code{mtry}.
-#' @import partykit
+#' If \code{doBest = TRUE}, this returns the \code{\link{ltrcrsf}} object produced with the optimal \code{mtry}.
 #' @importFrom survival Surv
 #' @importFrom graphics axis
 #' @import stats
@@ -100,7 +95,10 @@
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit for the optimal value of \code{mtry}.
 #' @examples
 #' ### Example with data pbcsample
-#'
+#' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+#' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
+#' mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+#'                      ntreeTry = 50L, plot = TRUE)
 #' @export
 
 tune.ltrcrsf <- function(formula, data, id,
@@ -118,7 +116,8 @@ tune.ltrcrsf <- function(formula, data, id,
                          stepFactor = 2,
                          ntime,
                          trace = TRUE,
-                         doBest = FALSE) {
+                         doBest = FALSE,
+                         plot = FALSE) {
   Call <- match.call()
   Call[[1]] <- as.name('tuneLTRCRSF')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
@@ -174,7 +173,7 @@ tune.ltrcrsf <- function(formula, data, id,
 
     if (is.null(time.eval)){
       # estimated survival probabilities will be calculated at (a subset of) time.eval
-      time.eval <- c(0, sort(unique(Rtimes)), seq(max(Rtimes), 1.5 * max(Rtimes), length = 50)[-1])
+      time.eval <- c(0, sort(unique(Rtimes)), seq(max(Rtimes), 1.5 * max(Rtimes), length.out = 50)[-1])
     }
     if (is.null(time.tau)){
       # For i-th data, estimated survival probabilities only calculated up time.tau[i]
@@ -203,7 +202,7 @@ tune.ltrcrsf <- function(formula, data, id,
                       nodesize = enodesizeTry,
                       nodedepth = enodedepth,
                       nsplit = ensplit,
-                      bootstrap = ebootstraptype,
+                      bootstrap = ebootstrap,
                       samptype = esamptype,
                       sampfrac = esampfrac,
                       samp = esamp,

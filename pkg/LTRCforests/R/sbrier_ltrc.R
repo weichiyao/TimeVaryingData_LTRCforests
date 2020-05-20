@@ -1,22 +1,23 @@
 #' Model fit evaluation for LTRC forests.
 #'
 #' Compute the (integrated) Brier score to evaluate the model fit for
-#' right-censored survival data with time-varying covariates, as well as
-#' left-truncated right-censored data with time-invariant covariates.
+#' (left-truncated) right-censored survival data with time-varying covariates,
+#' as well as left-truncated right-censored data with time-invariant covariates.
 #'
 #' @param obj an object of class \code{\link[survival]{Surv}}, formed on
 #' left-truncated right-censored observations (which are pseudo-subject
 #' observations in the time-varying case).
 #' @param id an optional vector as subject identifiers for \code{obj}.
-#' @param pred predicted values. This should be a list containint either a matrix
-#' or a list of vectors of survival probabilies named \code{surv.probs}, a sequence
-#' of time points \code{surv.times}, a vector of upper time limits \code{surv.tau}.
-#' Please see the values returned by \code{\link{predLTRCCF}} and
-#' \code{\link{predLTRCRSF}}.
-#' @param type a character string denoting the type of scores returned. If \code{type="IBS"},
+#' @param pred a list. This should contain 1) either a matrix
+#' or a list of survival probabilies named \code{survival.probs}; 2) a sequence
+#' of time points \code{survival.times}; 3) a vector of upper time limits
+#' \code{survival.tau}.
+#' Please see the values returned by \code{\link{pred.ltrccf}} and
+#' \code{\link{pred.ltrcrsf}}.
+#' @param type a character string denoting the type of scores returned. If \code{type = "IBS"},
 #' the integrated Brier score up to the last time point in \code{pred$surv.times} that is
 #' not larger than the minimmum value of \code{pred$surv.tau} is returned.
-#' If \code{type="BS"}, the Brier score at every time point in \code{pred$surv.times} up to
+#' If \code{type = "BS"}, the Brier score at every time point in \code{pred$surv.times} up to
 #' the minimum value of \code{pred$surv.tau} is returned.
 #' @keywords Brier score, integrated Brier score
 #' @return
@@ -34,7 +35,7 @@
 #' ### Example with dataset pbcsample
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## Fit an LTRC conditional inference forest on time-varying data
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry=3, ntree = 50L)
+#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 #'
 #' # Time points
 #' tpnt = seq(0, 6000, by = 200)
@@ -57,7 +58,7 @@
 #' ## (max(tpnt[tpnt <= min(tau)]) == 4000).
 #' @export
 
-sbrier_ltrc <- function(obj, id=NULL, pred, type = c("IBS","BS")){
+sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
   if(!inherits(obj, "Surv"))
     stop("obj is not of class Surv")
 
@@ -69,140 +70,55 @@ sbrier_ltrc <- function(obj, id=NULL, pred, type = c("IBS","BS")){
 
   if (!is.null(id)){
     if (n != length(id)) stop("The length of id is different from the Surv object!")
-  } else {
-    id <- 1:length(obj) # label
+  } else { # id is NULL => LTRC observations with time-invariant covariates
+    id <- 1:n # label
   }
 
   id.sub = unique(id)
   n.sub = length(id.sub)
 
   obj <- as.data.frame(as.matrix(obj))
-  if (n == n.sub){ # ltrc data with time-invariant covariates
-    if (type[1] == "IBS"){
-      ret <- sapply(1:n, function(Ni) ibsfunc_ti(Ni = Ni, data_sbrier = obj, pred = pred))
-      ret <- mean(ret)
-      names(ret) <- "Integrated Brier score"
-    } else if (type[1] == "BS"){
-      # Brier score will be evaluated up to the last time point where survival probabilities of all data are computed.
-      tpnt <- pred$survival.times[pred$survival.times <= min(pred$survival.tau)]
-      bsres <- sapply(1:n, function(Ni) bsfunc_ti(Ni = Ni, data_sbrier = obj, pred = pred, tpnt = tpnt))
-      bsres <- rowMeans(bsres)
-      ret <- data.frame(matrix(0, ncol = 2, nrow = length(tpnt)))
-      colnames(ret) <- c("Time", "BScore")
-      ret$Time <- tpnt
-      ret$BScore <- bsres
-    } else {
-      stop("type can only be 'IBS' or 'BS'")
-    }
-  } else { # rc data with time-varing covariates
+
+  if (n == n.sub){# ltrc data with time-invariant covariates
+    data_sbrier = obj
+    data_sbrier$id = 1:n
+  } else {# ltrc data with time-varying covariates
     data_sbrier <- data.frame(matrix(0, nrow = n.sub, ncol = 3))
-    names(data_sbrier) <- c("id", "times", "cens")
+    names(data_sbrier) <- c("start", "stop", "status")
     data_sbrier$id <- id.sub
     for (ii in 1:n.sub){
-      data_sbrier[ii, ]$times = max(obj[id == id.sub[ii], ]$stop)
-      data_sbrier[ii, ]$cens = sum(obj[id == id.sub[ii], ]$status)
+      data_sbrier[ii, ]$start = min(obj[id == id.sub[ii], ]$start)
+      data_sbrier[ii, ]$stop = max(obj[id == id.sub[ii], ]$stop)
+      data_sbrier[ii, ]$status = sum(obj[id == id.sub[ii], ]$status)
     }
+  }
 
-    if (type[1] == "IBS"){
-      ret <- sapply(1:n.sub, function(Ni) ibsfunc_tv(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred))
-      ret <- mean(ret)
-      names(ret) = "Integrated Brier score"
-    } else if (type[1] == "BS"){
-      # Brier score will be evaluated up to the last time point where survival probabilities of all data are computed.
-      tpnt <- pred$survival.times[pred$survival.times <= min(pred$survival.tau)]
-      bsres <- sapply(1:n.sub, function(Ni) bsfunc_tv(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
-      bsres <- rowMeans(bsres)
-      ret <- data.frame(matrix(0, ncol = 2, nrow = length(tpnt)))
-      colnames(ret) = c("Time","BScore")
-      ret$Time <- tpnt
-      ret$BScore <- bsres
-    } else {
-      stop("type can only be 'IBS' or 'BS'")
-    }
+  if (type[1] == "IBS"){
+    ret <- sapply(1:n.sub, function(Ni) ibsfunc(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred))
+    ret <- mean(ret)
+    names(ret) = "Integrated Brier score"
+  } else if (type[1] == "BS"){
+    # Brier score will be evaluated up to the last time point where survival probabilities of all data are computed.
+    tpnt <- pred$survival.times[pred$survival.times <= min(pred$survival.tau)]
+    bsres <- sapply(1:n.sub, function(Ni) bsfunc(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
+    bsres <- rowMeans(bsres)
+    ret <- data.frame(matrix(0, ncol = 2, nrow = length(tpnt)))
+    colnames(ret) <- c("Time", "BScore")
+    ret$Time <- tpnt
+    ret$BScore <- bsres
+  } else {
+    stop("type can only be 'IBS' or 'BS'")
   }
   return(ret)
 }
 
-ibsfunc_tv <- function(Ni, id, data_sbrier, pred){
+ibsfunc <- function(Ni, id, data_sbrier, pred){
   id_uniq <- unique(id)
 
-  ## Get the estimated survival probabilities
-  if (class(pred$survival.probs)[1] == "matrix"){
-    Shat = pred$survival.probs[,Ni]
-  } else if(class(pred$survival.probs)[1] == "list"){
-    Shat = pred$survival.probs[[Ni]]
-  }
-  tpnt = pred$survival.times[pred$survival.times<=pred$survival.tau[Ni]]
-  ######================ reverse Kaplan-Meier: estimate censoring distribution ====== ########
-  # deal with ties
-  hatcdist <- prodlim(Surv(times, cens) ~ 1, data = data_sbrier, reverse = TRUE)
-
-  Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni],]$times
-  ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv")
-  csurv_obs[csurv_obs == 0] <- Inf
-
-  # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv")
-  csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
-  csurv_t[csurv_t == 0] <- Inf
-
-  ## c(G^{-1}(t), G^{-1}(Obs))
-  csurv <- c(1/csurv_t, rep(1/csurv_obs,sum(tpnt >= Ttildei)))
-
-  ######================ indicator ================#################
-  Indicator_t <- as.integer(tpnt<Ttildei)
-  Indicator_t[Indicator_t==0] = as.integer(data_sbrier[data_sbrier$id == id_uniq[Ni],]$cens == 1)
-
-  ######================ Brier score =================#################
-  fibs_itg = (as.integer(tpnt<Ttildei)-Shat)^2*csurv*Indicator_t
-  ibs = diff(tpnt) %*% (fibs_itg[-length(fibs_itg)] + fibs_itg[-1]) / 2
-  ibs = ibs/diff(range(tpnt))
-  ibs
-}
-
-bsfunc_tv <- function(Ni, id, data_sbrier, pred, tpnt){
-  id_uniq <- unique(id)
-  tlen = length(tpnt)
-  ## Get the estimated survival probabilities
-  if (class(pred$survival.probs)[1] == "matrix"){
-    Shat = pred$survival.probs[1:tlen,Ni]
-  } else if(class(pred$survival.probs)[1] == "list"){
-    Shat = pred$survival.probs[[Ni]][1:tlen]
-  }
-
-  ######================ reverse Kaplan-Meier: estimate censoring distribution ================###########
-  # deal with ties
-  hatcdist <- prodlim(Surv(times, cens) ~ 1, data = data_sbrier, reverse = TRUE)
-
-  Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni],]$times
-  ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv")
-  csurv_obs[csurv_obs == 0] <- Inf
-
-  # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv")
-  csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
-  csurv_t[csurv_t == 0] <- Inf
-
-  ## c(G^{-1}(t), G^{-1}(Obs))
-  csurv <- c(1/csurv_t, rep(1/csurv_obs,sum(tpnt >= Ttildei)))
-
-  ######================ indicator ================#################
-  Indicator_t <- as.integer(tpnt<Ttildei)
-  Indicator_t[Indicator_t==0] = as.integer(data_sbrier[data_sbrier$id == id_uniq[Ni],]$cens == 1)
-
-  ######================ Brier score =================#################
-  fibs_itg = (as.integer(tpnt<Ttildei)-Shat)^2*csurv*Indicator_t
-  fibs_itg
-}
-
-
-ibsfunc_ti <- function(Ni, data_sbrier, pred){
   ## Get the estimated survival probabilities
   if (class(pred$survival.probs)[1] == "matrix"){
     Shat = pred$survival.probs[, Ni]
-  } else if (class(pred$survival.probs)[1] == "list"){
+  } else if(class(pred$survival.probs)[1] == "list"){
     Shat = pred$survival.probs[[Ni]]
   }
   tpnt = pred$survival.times[pred$survival.times <= pred$survival.tau[Ni]]
@@ -210,7 +126,7 @@ ibsfunc_ti <- function(Ni, data_sbrier, pred){
   # deal with ties
   hatcdist <- prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
 
-  Ttildei <- data_sbrier[Ni, ]$stop
+  Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni], ]$stop
   ### conditional survival for Observed value < t, G(Obs)
   csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv")
   csurv_obs[csurv_obs == 0] <- Inf
@@ -221,11 +137,11 @@ ibsfunc_ti <- function(Ni, data_sbrier, pred){
   csurv_t[csurv_t == 0] <- Inf
 
   ## c(G^{-1}(t), G^{-1}(Obs))
-  csurv <- c(1 / csurv_t, rep(1 / csurv_obs, sum(tpnt >= Ttildei)))
+  csurv <- c(1/csurv_t, rep(1 / csurv_obs, sum(tpnt >= Ttildei)))
 
   ######================ indicator ================#################
   Indicator_t <- as.integer(tpnt < Ttildei)
-  Indicator_t[Indicator_t == 0] = as.integer(data_sbrier[Ni, ]$status == 1)
+  Indicator_t[Indicator_t == 0] = as.integer(data_sbrier[data_sbrier$id == id_uniq[Ni],]$status == 1)
 
   ######================ Brier score =================#################
   fibs_itg = (as.integer(tpnt < Ttildei) - Shat) ^ 2 * csurv * Indicator_t
@@ -234,7 +150,8 @@ ibsfunc_ti <- function(Ni, data_sbrier, pred){
   ibs
 }
 
-bsfunc_ti <- function(Ni, data_sbrier, pred, tpnt){
+bsfunc <- function(Ni, id, data_sbrier, pred, tpnt){
+  id_uniq <- unique(id)
   tlen = length(tpnt)
   ## Get the estimated survival probabilities
   if (class(pred$survival.probs)[1] == "matrix"){
@@ -247,7 +164,7 @@ bsfunc_ti <- function(Ni, data_sbrier, pred, tpnt){
   # deal with ties
   hatcdist <- prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
 
-  Ttildei <- data_sbrier[Ni, ]$stop
+  Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni], ]$stop
   ### conditional survival for Observed value < t, G(Obs)
   csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv")
   csurv_obs[csurv_obs == 0] <- Inf
@@ -262,9 +179,11 @@ bsfunc_ti <- function(Ni, data_sbrier, pred, tpnt){
 
   ######================ indicator ================#################
   Indicator_t <- as.integer(tpnt < Ttildei)
-  Indicator_t[Indicator_t == 0] = as.integer(data_sbrier[Ni, ]$status == 1)
+  Indicator_t[Indicator_t == 0] = as.integer(data_sbrier[data_sbrier$id == id_uniq[Ni], ]$status == 1)
 
   ######================ Brier score =================#################
-  fibs_itg <- (as.integer(tpnt < Ttildei) - Shat) ^ 2 * csurv * Indicator_t
+  fibs_itg = (as.integer(tpnt < Ttildei) - Shat) ^ 2 * csurv * Indicator_t
   fibs_itg
 }
+
+

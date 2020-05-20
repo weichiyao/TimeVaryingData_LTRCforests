@@ -2,8 +2,8 @@
 #'
 #' An implementation of the random forest algorithms utilizing LTRC \code{rpart}
 #' trees \code{\link{LTRCART}} as base learners for left-truncated right-censored
-#' survival data with time-invariant covariates. It also allows for right-censored
-#' survival data with time-varying covariates.
+#' survival data with time-invariant covariates. It also allows for (left-truncated)
+#' right-censored survival data with time-varying covariates.
 #'
 #' This function extends the random survival forest algorithm in
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
@@ -25,7 +25,7 @@
 #' \code{Surv(tleft, tright, event)}.
 #' @param data a data frame containing \code{n} rows of
 #' left-truncated right-censored observations.
-#' For right-censored survival data with time-varying covariates, this should be
+#' For time-varying data, this should be
 #' a data frame containing pseudo-subject observations based on the Andersen-Gill
 #' reformulation.
 #' @param id variable name of subject identifiers. If this is present, it will be
@@ -57,7 +57,7 @@
 #' @param samptype choices are \code{swor} (sampling without replacement) and
 #' \code{swr} (sampling with replacement). The default action here is sampling
 #' without replacement.
-#' @param samp Bootstrap specification when \code{bootstype="by.user"}.
+#' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' inbag in the bootstrap for each tree.
 #' @param trace whether to print the progress of the search of the optimal value
@@ -73,9 +73,9 @@
 #' @param nsplit an non-negative integer value for number of random splits to consider
 #' for each candidate splitting variable. This significantly increases speed.
 #' When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-#' splits considered. \code{nsplit=10} by default.
+#' splits considered. \code{nsplit = 10} by default.
 #' @param sampfrac a fraction, determining the proportion of subjects to draw
-#' without replacement when \code{samptype="swor"}. The default value is \code{0.632}.
+#' without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
 #' To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
 #' pseudo-subject observations are drawn without replacement (\code{N} denotes the
 #' number of subjects); otherwise, \code{0.632 * n} is the requested size
@@ -94,7 +94,8 @@
 #' If no value is specified, the default action is to use all observed event times.
 #' @keywords Ensemble method, random survival forest, Poisson splitting rule,
 #' left-truncated right-censored data, time-varying covariate data
-#' @return An object of class of \code{\link[randomForestSRC]{rfsrc}}.
+#' @return An object belongs to the class \code{ltrcrsf},
+#' as a subclass of \code{\link[randomForestSRC]{rfsrc}}.
 #' @import survival
 #' @import stats
 #' @import utils
@@ -109,10 +110,11 @@
 #' # Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 #' # by specifying id:
-#' # LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L, mtry = 3)
-#'
+#' # LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 100L)
+#' # A prebuilt object has been saved in the directory ./data/
+#' print(LTRCRSFobj)
 #' @export
-ltrcrsf <- function(formula, data, id, ntree = 100L, mtry,
+ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     nodesize = max(ceiling(sqrt(nrow(data))),15), nodedepth = NULL,
                     nsplit = 10,
                     bootstrap = c("by.sub","by.root","by.node","by.user","none"),
@@ -124,14 +126,19 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry,
                     stepFactor = 2,
                     trace=TRUE){
 
+  # package version dependency
+  if (packageVersion("randomForestSRC") < "2.9.3") {
+    stop("randomForestSRC >= 2.9.3 needed for this function.", call. = FALSE)
+  }
+
   Call <- match.call()
   Call[[1]] <- as.name('LTRCRSF')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'data', 'id'),
-                names(Call), nomatch=0)
+                names(Call), nomatch = 0)
   if (indx[1]==0) stop("a formula argument is required")
-  Call$formula <- eval.parent(formula)
+  Call$formula <- eval(formula)
 
   temp <- Call[c(1, indx)]
   temp[[1L]] <- quote(stats::model.frame)
@@ -155,15 +162,15 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry,
   samptype <- match.arg(samptype)
   na.action <- match.arg(na.action)
 
-  # ## Extract the predictors
-  # xvar.names <- attr(Terms, 'term.labels')
-  # if (length(xvar.names) == 0) X <- factor(rep(1,n))  # ~1 on the right
-  # else X <- mf[xvar.names]
-
   ## Transformation for LTRC data
   # pull y-variable names
   yvar.names <- all.vars(formula(paste(as.character(formula)[2], "~ .")), max.names = 1e7)
   yvar.names <- yvar.names[-length(yvar.names)]
+  if (length(yvar.names) > 3) stop("Please check the formula!")
+  # try an example:
+  # Formula = Surv(pbcsample$Start, pbcsample$Stop, pbcsample$Event, type="counting") ~ pbcsample$age + pbcsample$alk.phos + pbcsample$ast + pbcsample$chol + pbcsample$edema
+  # and see the difference from:
+  # yvar.names <- as.character(Formula[[2]])[2:4]
 
   Status <- y[,3L]
   Times <- y[,2L]
@@ -249,42 +256,43 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry,
 
   if (is.null(mtry)){
     data$id = id # this is a must, otherwise id cannot be passed to the next level
-    mtry <- tune.ltrcrsf(formula=formula,
-                         data=data,
-                         id=id,
-                         bootstrap=bootstrap,
-                         samptype=samptype,
-                         sampfrac=sampfrac,
-                         samp=samp,
-                         nodesizeTry=nodesize,
-                         nodedepth=nodedepth,
-                         nsplit=nsplit,
-                         na.action=na.action,
-                         ntime=ntime,
-                         stepFactor=stepFactor,
-                         trace=trace,
+    mtry <- tune.ltrcrsf(formula = formula,
+                         data = data,
+                         id = id,
+                         bootstrap = bootstrap,
+                         samptype = samptype,
+                         sampfrac = sampfrac,
+                         samp = samp,
+                         ntreeTry = ntree,
+                         nodesizeTry = nodesize,
+                         nodedepth = nodedepth,
+                         nsplit = nsplit,
+                         na.action = na.action,
+                         ntime = ntime,
+                         stepFactor = stepFactor,
+                         trace = trace,
                          doBest = FALSE)
     print(sprintf("mtry is tuned to be %1.0f", mtry))
   }
   ## Use randomSurvivalForest package
-  forest.fit <- rfsrc(formula=Formula,
-                      data=data,
-                      ntree=ntree,
-                      mtry=mtry,
-                      nodesize=nodesize,
-                      nodedepth=nodedepth,
+  forest.fit <- rfsrc(formula = Formula,
+                      data = data,
+                      ntree = ntree,
+                      mtry = mtry,
+                      nodesize = nodesize,
+                      nodedepth = nodedepth,
                       splitrule = "custom1",
-                      nsplit=nsplit,
-                      bootstrap=bootstrap,
-                      samptype=samptype,
-                      sampsize=sampsize,
-                      samp=samp,
-                      forest=FALSE,
-                      membership=TRUE,
-                      na.action=na.action,
-                      ntime=ntime)
+                      nsplit = nsplit,
+                      bootstrap = bootstrap,
+                      samptype = samptype,
+                      sampsize = sampsize,
+                      samp = samp,
+                      forest = FALSE,
+                      membership = TRUE,
+                      na.action = na.action,
+                      ntime = ntime)
   forest.fit$yvarLTRC.names <- yvar.names
-  forest.fit$yvarLTRC = as.matrix(data[, yvar.names, drop = FALSE])
+  forest.fit$yvarLTRC = as.data.frame(as.matrix(data[, yvar.names, drop = FALSE]))
   forest.fit$id = id
   forest.fit$err.rate = NULL
   forest.fit$survival = NULL

@@ -13,16 +13,17 @@ observations in the time-varying case).}
 
 \item{id}{an optional vector as subject identifiers for \code{obj}.}
 
-\item{pred}{predicted values. This should be a list containint either a matrix
-or a list of vectors of survival probabilies named \code{surv.probs}, a sequence
-of time points \code{surv.times}, a vector of upper time limits \code{surv.tau}.
-Please see the values returned by \code{\link{predLTRCCF}} and
-\code{\link{predLTRCRSF}}.}
+\item{pred}{a list. This should contain 1) either a matrix
+or a list of survival probabilies named \code{survival.probs}; 2) a sequence
+of time points \code{survival.times}; 3) a vector of upper time limits
+\code{survival.tau}.
+Please see the values returned by \code{\link{pred.ltrccf}} and
+\code{\link{pred.ltrcrsf}}.}
 
-\item{type}{a character string denoting the type of scores returned. If \code{type="IBS"},
+\item{type}{a character string denoting the type of scores returned. If \code{type = "IBS"},
 the integrated Brier score up to the last time point in \code{pred$surv.times} that is
 not larger than the minimmum value of \code{pred$surv.tau} is returned.
-If \code{type="BS"}, the Brier score at every time point in \code{pred$surv.times} up to
+If \code{type = "BS"}, the Brier score at every time point in \code{pred$surv.times} up to
 the minimum value of \code{pred$surv.tau} is returned.}
 }
 \value{
@@ -33,14 +34,14 @@ and \code{Time}, the time points at which the scores are computed.
 }
 \description{
 Compute the (integrated) Brier score to evaluate the model fit for
-right-censored survival data with time-varying covariates, as well as
-left-truncated right-censored data with time-invariant covariates.
+(left-truncated) right-censored survival data with time-varying covariates,
+as well as left-truncated right-censored data with time-invariant covariates.
 }
 \examples{
 ### Example with dataset pbcsample
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRC conditional inference forest on time-varying data
-LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry=3, ntree = 50L)
+LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 
 # Time points
 tpnt = seq(0, 6000, by = 200)

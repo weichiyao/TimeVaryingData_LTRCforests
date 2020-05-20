@@ -23,7 +23,8 @@ tune.ltrcrsf(
   stepFactor = 2,
   ntime,
   trace = TRUE,
-  doBest = FALSE
+  doBest = FALSE,
+  plot = FALSE
 )
 }
 \arguments{
@@ -33,12 +34,8 @@ object, with form
 
 \code{Surv(tleft, tright, event)}.}
 
-\item{data}{a data frame containing left-truncated right-censored pseudo-subject
-observations based on the Andersen-Gill reformulation method. The data frame is
-required to contain a variable named \code{id}, indicating the subject id for each
-pseudo-subject observation; a variable named \code{tleft} and a variable named
-\code{tright}, indicating the left truncation and the right censoring time point
-for each pseudo-subject observation.}
+\item{data}{a a data frame containing \code{n} rows of
+left-truncated right-censored observations.}
 
 \item{id}{variable name of subject identifiers. If this is present, it will be
 searched for in the \code{data} data frame. Each group of rows in \code{data}
@@ -69,7 +66,7 @@ is that this parameter is ignored.}
 \item{nsplit}{an non-negative integer value for number of random splits to consider
 for each candidate splitting variable. This significantly increases speed.
 When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-splits considered. \code{nsplit=10} by default.}
+splits considered. \code{nsplit = 10} by default.}
 
 \item{bootstrap}{bootstrap protocol.
 (1) If \code{id} is present,
@@ -90,13 +87,13 @@ the bootstrap specified by \code{samp} is used.}
 without replacement.}
 
 \item{sampfrac}{a fraction, determining the proportion of subjects to draw
-without replacement when \code{samptype="swor"}. The default value is \code{0.632}.
+without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
 To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
 pseudo-subject observations are drawn without replacement (\code{N} denotes the
 number of subjects); otherwise, \code{0.632 * n} is the requested size
 of the sample.}
 
-\item{samp}{Bootstrap specification when \code{bootstype="by.user"}.
+\item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
 inbag in the bootstrap for each tree.}
 
@@ -125,9 +122,9 @@ If no value is specified, the default action is to use all observed event times.
 \item{plot}{whether to plot the out-of-bag error as a function of \code{mtry}.}
 }
 \value{
-If \code{doBest=FALSE} (default), this returns the optimal mtry value of those searched.
+If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 
-If \code{doBest=TRUE}, this returns the \code{\link{ltrcrsf}} object produced with the optimal \code{mtry}.
+If \code{doBest = TRUE}, this returns the \code{\link{ltrcrsf}} object produced with the optimal \code{mtry}.
 }
 \description{
 Starting with the default value of \code{mtry}, search for the optimal value
@@ -135,7 +132,10 @@ Starting with the default value of \code{mtry}, search for the optimal value
 }
 \examples{
 ### Example with data pbcsample
-
+Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
+mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+                     ntreeTry = 50L, plot = TRUE)
 }
 \seealso{
 \code{\link{sbrier_ltrc}} for evaluation of model fit for the optimal value of \code{mtry}.
