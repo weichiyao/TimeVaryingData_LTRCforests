@@ -305,3 +305,8 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   class(forest.fit) <- c("ltrcrsf", class(forest.fit))
   return(forest.fit)
 }
+
+print.ltrcrsf <- function(x, ...){
+  class(x) = class(x)[2:4]
+  randomForestSRC::print.rfsrc(x, ...)
+}
