@@ -1,6 +1,6 @@
 # TimeVaryingData_LTRCforests
 Analysis codes for "Ensemble Methods for Right-Censored Survival-Time Data with Time-Varying Covariates"
-- The **pkg** folder contains the R package [ICcforest](https://github.com/cran/ICcforest), which is also available at CRAN.
+- The **pkg** folder contains the R package [LTRCforests].
 - The **analysis** folder provides analysis code in the paper:
   - The subfolder **data** contains functions to create simulated dataset.
   - The subfolder **util** contains the source functions used to compute the L_2 errors. 
