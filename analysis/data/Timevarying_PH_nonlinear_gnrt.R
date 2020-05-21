@@ -1,6 +1,4 @@
 #####################################################################################################
-## Created -- April 11th
-#####################################################################################################
 ## Range_T function returns simulated survival time 
 Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
   u = U
@@ -44,6 +42,7 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
   }else if(DIST == "WI"){
     R0 = exp(-log(x6+x3/10+x5/20+1/5)-x1*(x2*2)^(4*x4))
     V = 1.8
+    Lambda = 0.0025
     Alpha = 0
     Beta = rep(0,6)
     R = Lambda*R0[-tlen] * (TALL[-1]^V - TALL[-tlen]^V)

@@ -1,0 +1,15 @@
+Package: trtf
+Title: Transformation Trees and Forests
+Version: 0.3-5
+Date: 2019-02-01
+Authors@R: person("Torsten", "Hothorn", role = c("aut", "cre"),
+                  email = "Torsten.Hothorn@R-project.org", comment = c(ORCID = "0000-0001-8301-0471"))
+Description: Recursive partytioning of transformation models with
+  corresponding random forest for conditional transformation models 
+  as described in 'Transformation Forests' (Hothorn and Zeileis, 2017, <arXiv:1701.02110>) 
+  and 'Top-Down Transformation Choice' (Hothorn, 2018, <DOI:10.1177/1471082X17748081>).
+Depends: partykit (>= 1.2-1)
+Imports: Formula, sandwich, grid, stats, variables, libcoin, utils
+Suggests: survival, TH.data, coin
+License: GPL-2
+NeedsCompilation: no

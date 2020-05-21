@@ -1,0 +1,591 @@
+
+R Under development (unstable) (2018-04-18 r74618) -- "Unsuffered Consequences"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library("tram")
+Loading required package: mlt
+Loading required package: basefun
+Loading required package: variables
+> library("survival")
+> 
+> ### Windows diffs...
+> options(digits = 3)
+> 
+> tol <- .Machine$double.eps^(1/5)
+> 
+> cmp <- function(x, y)
++     stopifnot(isTRUE(all.equal(x, y, tolerance = tol, check.attributes = FALSE)))
+> 
+> data("GBSG2", package = "TH.data")
+> 
+> fm <- Surv(time, cens) ~ pnodes + age
+> tfm <- Surv(time, cens) ~ pnodes + age
+> fms <- Surv(time, cens) ~ pnodes + age + strata(horTh)
+> tfms <- Surv(time, cens) | 0 + horTh ~ pnodes + age
+> 
+> (smod <- survreg(fm, data = GBSG2, dist = "weibull"))
+Call:
+survreg(formula = fm, data = GBSG2, dist = "weibull")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.76486    -0.04720     0.00323 
+
+Scale= 0.748 
+
+Loglik(model)= -2609   Loglik(intercept only)= -2637
+	Chisq= 57 on 2 degrees of freedom, p= 4e-13 
+n= 686 
+> (Smod <- Survreg(tfm, data = GBSG2, dist = "weibull"))
+
+  Weibull Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "weibull")
+
+Coefficients:
+  pnodes      age 
+-0.06311  0.00433 
+
+Log-Likelihood:
+ -2609 (df = 4)
+
+> cmp(coef(smod), coef(Smod, as.survreg = TRUE))
+> cmp(logLik(smod), logLik(Smod))
+> Smod$invscale
+log(Surv(time, cens)) 
+                0.748 
+> summary(Smod)
+
+  Weibull Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "weibull")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.06311    0.00674   -9.36   <2e-16 ***
+age     0.00433    0.00582    0.74     0.46    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2609 (df = 4)
+Likelihood-ratio Test: Chisq = 57 on 2 degrees of freedom; p = 4.24e-13
+
+> 
+> (smod <- survreg(fms, data = GBSG2, dist = "weibull"))
+Call:
+survreg(formula = fms, data = GBSG2, dist = "weibull")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.85569    -0.04890     0.00186 
+
+Scale:
+   no   yes 
+0.802 0.646 
+
+Loglik(model)= -2606   Loglik(intercept only)= -2636
+	Chisq= 59.7 on 2 degrees of freedom, p= 1e-13 
+n= 686 
+> (Smod <- Survreg(tfms, data = GBSG2, dist = "weibull"))
+
+  Weibull Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "weibull")
+
+Coefficients:
+   pnodes       age 
+-0.061906  0.000259 
+
+Log-Likelihood:
+ -2604 (df = 6)
+
+> try(coef(Smod, as.survreg = TRUE))
+Error in coef.Lm(object, as.lm = as.survreg, ...) : 
+  cannot compute scaled coefficients with strata
+> Smod$invscale
+ log(Surv(time, cens)):horThno log(Surv(time, cens)):horThyes 
+                         0.743                          0.737 
+> summary(Smod)
+
+  Weibull Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "weibull")
+
+Coefficients:
+        Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.061906   0.006641   -9.32   <2e-16 ***
+age     0.000259   0.005975    0.04     0.97    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2604 (df = 6)
+Likelihood-ratio Test: Chisq = 55.9 on 2 degrees of freedom; p = 7.14e-13
+
+> 
+> (smod <- survreg(fm, data = GBSG2, dist = "exponential"))
+Call:
+survreg(formula = fm, data = GBSG2, dist = "exponential")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.92597    -0.05684     0.00416 
+
+Scale fixed at 1 
+
+Loglik(model)= -2624   Loglik(intercept only)= -2648
+	Chisq= 47.5 on 2 degrees of freedom, p= 5e-11 
+n= 686 
+> (Smod <- Survreg(tfm, data = GBSG2, dist = "exponential"))
+
+  Exponential Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "exponential")
+
+Coefficients:
+  pnodes      age 
+-0.05684  0.00416 
+
+Log-Likelihood:
+ -2624 (df = 3)
+
+> cmp(coef(smod), coef(Smod, as.survreg = TRUE))
+> cmp(logLik(smod), logLik(Smod))
+> Smod$invscale
+log(Surv(time, cens)) 
+                    1 
+> summary(Smod)
+
+  Exponential Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "exponential")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.05684    0.00677   -8.40   <2e-16 ***
+age     0.00416    0.00578    0.72     0.47    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2624 (df = 3)
+Likelihood-ratio Test: Chisq = 47.5 on 2 degrees of freedom; p = 4.84e-11
+
+> 
+> try(smod <- survreg(fms, data = GBSG2, dist = "exponential"))
+Error in survreg(fms, data = GBSG2, dist = "exponential") : 
+  The scale argument is not valid with multiple strata
+> (Smod <- Survreg(tfms, data = GBSG2, dist = "exponential"))
+
+  Exponential Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "exponential")
+
+Coefficients:
+   pnodes       age 
+-0.055711  0.000456 
+
+Log-Likelihood:
+ -2620 (df = 4)
+
+> try(coef(Smod, as.survreg = TRUE))
+Error in coef.Lm(object, as.lm = as.survreg, ...) : 
+  cannot compute scaled coefficients with strata
+> Smod$invscale
+ log(Surv(time, cens)):horThno log(Surv(time, cens)):horThyes 
+                             1                              1 
+> summary(Smod)
+
+  Exponential Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "exponential")
+
+Coefficients:
+        Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.055711   0.006686   -8.33   <2e-16 ***
+age     0.000456   0.005941    0.08     0.94    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2620 (df = 4)
+Likelihood-ratio Test: Chisq = 46.4 on 2 degrees of freedom; p = 8.5e-11
+
+> 
+> (smod <- survreg(fm, data = GBSG2, dist = "rayleigh"))
+Call:
+survreg(formula = fm, data = GBSG2, dist = "rayleigh")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.64496    -0.03752     0.00217 
+
+Scale fixed at 0.5 
+
+Loglik(model)= -2649   Loglik(intercept only)= -2688
+	Chisq= 78.7 on 2 degrees of freedom, p= <2e-16 
+n= 686 
+> (Smod <- Survreg(tfm, data = GBSG2, dist = "rayleigh"))
+
+  Rayleigh Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "rayleigh")
+
+Coefficients:
+  pnodes      age 
+-0.07504  0.00435 
+
+Log-Likelihood:
+ -2649 (df = 3)
+
+> cmp(coef(smod), coef(Smod, as.survreg = TRUE))
+> cmp(logLik(smod), logLik(Smod))
+> Smod$invscale
+log(Surv(time, cens)) 
+                  0.5 
+> summary(Smod)
+
+  Rayleigh Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "rayleigh")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.07504    0.00649  -11.56   <2e-16 ***
+age     0.00435    0.00588    0.74     0.46    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2649 (df = 3)
+Likelihood-ratio Test: Chisq = 78.7 on 2 degrees of freedom; p = <2e-16
+
+> 
+> try(smod <- survreg(fms, data = GBSG2, dist = "rayleigh"))
+Error in survreg(fms, data = GBSG2, dist = "rayleigh") : 
+  The scale argument is not valid with multiple strata
+> (Smod <- Survreg(tfms, data = GBSG2, dist = "rayleigh"))
+
+  Rayleigh Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "rayleigh")
+
+Coefficients:
+   pnodes       age 
+-0.073082 -0.000173 
+
+Log-Likelihood:
+ -2642 (df = 4)
+
+> try(coef(Smod, as.survreg = TRUE))
+Error in coef.Lm(object, as.lm = as.survreg, ...) : 
+  cannot compute scaled coefficients with strata
+> Smod$invscale
+ log(Surv(time, cens)):horThno log(Surv(time, cens)):horThyes 
+                           0.5                            0.5 
+> summary(Smod)
+
+  Rayleigh Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "rayleigh")
+
+Coefficients:
+        Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.073082   0.006383  -11.45   <2e-16 ***
+age    -0.000173   0.006014   -0.03     0.98    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2642 (df = 4)
+Likelihood-ratio Test: Chisq = 76.7 on 2 degrees of freedom; p = <2e-16
+
+> 
+> (smod <- survreg(fm, data = GBSG2, dist = "lognormal"))
+Call:
+survreg(formula = fm, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.28762    -0.06271     0.00822 
+
+Scale= 1.04 
+
+Loglik(model)= -2588   Loglik(intercept only)= -2619
+	Chisq= 61.7 on 2 degrees of freedom, p= 4e-14 
+n= 686 
+> (Smod <- Survreg(tfm, data = GBSG2, dist = "lognormal"))
+
+  Lognormal Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+ pnodes     age 
+-0.0602  0.0079 
+
+Log-Likelihood:
+ -2588 (df = 4)
+
+> cmp(coef(smod), coef(Smod, as.survreg = TRUE))
+> cmp(logLik(smod), logLik(Smod))
+> summary(Smod)
+
+  Lognormal Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.06023    0.00773   -7.79  6.4e-15 ***
+age     0.00790    0.00432    1.83    0.068 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2588 (df = 4)
+Likelihood-ratio Test: Chisq = 61.7 on 2 degrees of freedom; p = 4e-14
+
+> 
+> (smod <- survreg(fms, data = GBSG2, dist = "lognormal"))
+Call:
+survreg(formula = fms, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.36158    -0.06372     0.00711 
+
+Scale:
+   no   yes 
+1.087 0.952 
+
+Loglik(model)= -2587   Loglik(intercept only)= -2618
+	Chisq= 63.2 on 2 degrees of freedom, p= 2e-14 
+n= 686 
+> (Smod <- Survreg(tfms, data = GBSG2, dist = "lognormal"))
+
+  Lognormal Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+  pnodes      age 
+-0.06088  0.00474 
+
+Log-Likelihood:
+ -2583 (df = 6)
+
+> try(coef(Smod, as.survreg = TRUE))
+Error in coef.Lm(object, as.lm = as.survreg, ...) : 
+  cannot compute scaled coefficients with strata
+> Smod$invscale
+ log(Surv(time, cens)):horThno log(Surv(time, cens)):horThyes 
+                          1.02                           1.05 
+> summary(Smod)
+
+  Lognormal Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "lognormal")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.06088    0.00774   -7.87  3.6e-15 ***
+age     0.00474    0.00446    1.06     0.29    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2583 (df = 6)
+Likelihood-ratio Test: Chisq = 61.5 on 2 degrees of freedom; p = 4.4e-14
+
+> 
+> (smod <- survreg(fm, data = GBSG2, dist = "loglogistic"))
+Call:
+survreg(formula = fm, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+(Intercept)      pnodes         age 
+    7.32407    -0.06540     0.00742 
+
+Scale= 0.606 
+
+Loglik(model)= -2596   Loglik(intercept only)= -2628
+	Chisq= 64.2 on 2 degrees of freedom, p= 1e-14 
+n= 686 
+> (Smod <- Survreg(tfm, data = GBSG2, dist = "loglogistic"))
+
+  Loglogistic Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+ pnodes     age 
+-0.1080  0.0122 
+
+Log-Likelihood:
+ -2596 (df = 4)
+
+> cmp(coef(smod), coef(Smod, as.survreg = TRUE))
+> cmp(logLik(smod), logLik(Smod))
+> Smod$invscale
+log(Surv(time, cens)) 
+                0.606 
+> summary(Smod)
+
+  Loglogistic Linear Regression Model 
+
+Call:
+Survreg(formula = tfm, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.10797    0.01439   -7.50  6.2e-14 ***
+age     0.01224    0.00754    1.62      0.1    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2596 (df = 4)
+Likelihood-ratio Test: Chisq = 64.2 on 2 degrees of freedom; p = 1.15e-14
+
+> 
+> (smod <- survreg(fms, data = GBSG2, dist = "loglogistic"))
+Call:
+survreg(formula = fms, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+(Intercept)      pnodes         age 
+     7.3741     -0.0658      0.0067 
+
+Scale:
+   no   yes 
+0.631 0.559 
+
+Loglik(model)= -2595   Loglik(intercept only)= -2628
+	Chisq= 65.1 on 2 degrees of freedom, p= 7e-15 
+n= 686 
+> (Smod <- Survreg(tfms, data = GBSG2, dist = "loglogistic"))
+
+  Loglogistic Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+ pnodes     age 
+-0.1093  0.0068 
+
+Log-Likelihood:
+ -2591 (df = 6)
+
+> try(coef(Smod, as.survreg = TRUE))
+Error in coef.Lm(object, as.lm = as.survreg, ...) : 
+  cannot compute scaled coefficients with strata
+> Smod$invscale
+ log(Surv(time, cens)):horThno log(Surv(time, cens)):horThyes 
+                         0.593                          0.608 
+> summary(Smod)
+
+  Loglogistic Linear Regression Model 
+
+Call:
+Survreg(formula = tfms, data = GBSG2, dist = "loglogistic")
+
+Coefficients:
+       Estimate Std. Error z value Pr(>|z|)    
+pnodes -0.10926    0.01434   -7.62  2.5e-14 ***
+age     0.00680    0.00774    0.88     0.38    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Log-Likelihood:
+ -2591 (df = 6)
+Likelihood-ratio Test: Chisq = 64.5 on 2 degrees of freedom; p = 9.75e-15
+
+> 
+> (tobinfit <- survreg(Surv(durable, durable>0, type='left') ~ age + quant,
++                          data=tobin, dist='gaussian'))
+Call:
+survreg(formula = Surv(durable, durable > 0, type = "left") ~ 
+    age + quant, data = tobin, dist = "gaussian")
+
+Coefficients:
+(Intercept)         age       quant 
+    15.1449     -0.1291     -0.0455 
+
+Scale= 5.57 
+
+Loglik(model)= -28.9   Loglik(intercept only)= -29.5
+	Chisq= 1.1 on 2 degrees of freedom, p= 0.6 
+n= 20 
+> (tobinfit2 <- Survreg(Surv(durable, durable>0, type='left') ~ age + quant,
++                          data=tobin, dist='gaussian'))
+
+  Gaussian Linear Regression Model 
+
+Call:
+Survreg(formula = Surv(durable, durable > 0, type = "left") ~ 
+    age + quant, data = tobin, dist = "gaussian")
+
+Coefficients:
+     age    quant 
+-0.02318 -0.00817 
+
+Log-Likelihood:
+ -28.9 (df = 4)
+
+> cmp(coef(tobinfit), coef(tobinfit2, as.survreg = TRUE))
+> cmp(logLik(tobinfit), logLik(tobinfit2))
+> summary(tobinfit2)
+
+  Gaussian Linear Regression Model 
+
+Call:
+Survreg(formula = Surv(durable, durable > 0, type = "left") ~ 
+    age + quant, data = tobin, dist = "gaussian")
+
+Coefficients:
+      Estimate Std. Error z value Pr(>|z|)
+age   -0.02318    0.03855   -0.60     0.55
+quant -0.00817    0.01074   -0.76     0.45
+
+Log-Likelihood:
+ -28.9 (df = 4)
+Likelihood-ratio Test: Chisq = 1.1 on 2 degrees of freedom; p = 0.576
+
+> 
+> proc.time()
+   user  system elapsed 
+  7.572   0.224   7.788 

@@ -1,6 +1,4 @@
 #####################################################################################################
-## Created -- May 13th
-#####################################################################################################
 itct_term_WI <- function(beta,x1,x2,x3,x4,x5,x6){
   R1 = x1*x2-log(x3+x4)-x6/x5
   R2 = -beta[1]*x1-beta[2]*x2-beta[3]*x3-beta[4]*x4-beta[5]*x5-beta[6]*x6
@@ -61,7 +59,7 @@ Comp_xi_WI <- function(TALL, M, Fstar, U){  # TALL = c(0,TS)
 
 #####################======== Large number of pseudo-subjects ===============#####################
 Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","interaction"), 
-                                      censor.rate = 1, partial = TRUE){
+                                   censor.rate = 1, partial = TRUE){
   npseu = 11
   if (model == "linear"){
     Nadd = 100
@@ -238,13 +236,14 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
   Data$X18 = 0
   Data$X20 = 0
   for (Count in unique(Data$ID)){
-    Data[Data$ID==Count,]$X7 <- runif(1,0,1)
-    Data[Data$ID==Count,]$X8 <- runif(1,1,2)
-    Data[Data$ID==Count,]$X9 <- sample(c(1:5),1,replace=TRUE)
-    Data[Data$ID==Count,]$X10 <- runif(1,0,1)
-    Data[Data$ID==Count,]$X11 <- sample(c(0,1),1,replace=TRUE)
-    Data[Data$ID==Count,]$X12 <- sample(c(0,1,2),1,replace=TRUE)
+    Data[Data$ID==Count, ]$X7 <- runif(1,0,1)
+    Data[Data$ID==Count, ]$X8 <- runif(1,1,2)
+    Data[Data$ID==Count, ]$X9 <- sample(c(1:5),1,replace=TRUE)
+    Data[Data$ID==Count, ]$X10 <- runif(1,0,1)
+    Data[Data$ID==Count, ]$X11 <- sample(c(0,1),1,replace=TRUE)
+    Data[Data$ID==Count, ]$X12 <- sample(c(0,1,2),1,replace=TRUE)
     
+    n0 = nrow(Data[Data$ID==Count, ])
     x13r <- sample(npseu-1,1)
     Data[Data$ID==Count,]$X13 <- c(numeric(x13r),rep(1,npseu-x13r))[1:n0]
 

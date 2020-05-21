@@ -1,0 +1,21 @@
+Package: mlt
+Title: Most Likely Transformations
+Version: 1.0-4
+Date: 2018-12-03
+Authors@R: person("Torsten", "Hothorn", role = c("aut", "cre"),
+                  email = "Torsten.Hothorn@R-project.org", comment = c(ORCID = "0000-0001-8301-0471"))  
+Description: Likelihood-based estimation of conditional transformation
+  models via the most likely transformation approach described in
+  Hothorn et al. (2018) <DOI:10.1111/sjos.12291>.
+Depends: basefun (>= 0.0-39), variables (>= 0.0-30)
+Imports: BB, alabama, stats, coneproj, graphics, methods, grDevices,
+        sandwich, numDeriv, survival
+Suggests: MASS, nnet, TH.data, multcomp
+License: GPL-2
+Encoding: UTF-8
+NeedsCompilation: no
+Packaged: 2018-12-03 15:26:19 UTC; hothorn
+Author: Torsten Hothorn [aut, cre] (<https://orcid.org/0000-0001-8301-0471>)
+Maintainer: Torsten Hothorn <Torsten.Hothorn@R-project.org>
+Repository: CRAN
+Date/Publication: 2018-12-03 16:40:04 UTC

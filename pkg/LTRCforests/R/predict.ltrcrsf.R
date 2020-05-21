@@ -104,19 +104,20 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
       r.ID <- findInterval(tpnt, c(0, newi[, Rname]))
       r.ID[tpnt >= newi[, Rname][n_newi]] = n_newi
-      jall <- unique(r.ID)
+
+      jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
       if (nj == 1){
-        survival <- rep(0, tlen)
+        survival <- matrix(0, nrow = 1, ncol = tlen)
+        ## deal with left-truncation
+        survival[1, r.ID == 0] <- 1
 
-        j <- nj
         ## find out which trees does not contain the I[jall[j]]-th wi-th data
-        id_tree_wi_j <- which(wt[newi$I[jall[j]], ] == 0)
+        id_tree_wi_j <- which(wt[newi$I[jall[nj]], ] == 0)
 
         for (ti in 1:length(id_tree_wi_j)){
-          Shat_ti = rep(0, tlen)
           ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
-          id_node_witi_j <- node_all[newi$I[jall[j]], id_tree_wi_j[ti]]
+          id_node_witi_j <- node_all[newi$I[jall[nj]], id_tree_wi_j[ti]]
           ## id of samples that fall into the same node
           id_samenode_witi_j <- which(node_all[,id_tree_wi_j[ti]] == id_node_witi_j)
           ## Pick out those appearing in the bootstrapped samples
@@ -125,21 +126,18 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## Build the survival tree
           KM <- survival::survfit(formula = formula, data = traindata[id_buildtree_j, ])
           ## Get survival probabilities
-          Shat_ti[r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
+          Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
 
-          survival <- survival + Shat_ti
+          survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_ti / Shat_ti[1]
         }
 
-        survival <- survival / length(id_tree_wi_j)
-        RES <- survival
-      } else {
-        ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-        r.IDmax <- c(1,sapply(jall[-nj], function(j){
-          max(which(r.ID == j)) + 1
-        }))
-
-        # on [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
+        survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] / length(id_tree_wi_j)
+        RES <- survival[1, ]
+      } else if (nj > 1) {
+        # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
+        # deal with left-truncation
+        survival[1, r.ID == 0] <- 1
         # c(1, S_{1}(R_{1})/S_{1}(L_{1}),...,S_{n-1}(R_{n-1})/S_{n-1}(L_{n-1})),S_n(R_n)/S_n(L_n))
         survivalR <- matrix(0, nrow = 1, ncol = nj + 1)
         for (j in 1:nj){
@@ -170,7 +168,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] / length(id_tree_wi_j)
           survivalR[1, j + 1] <- survivalR[1, j + 1] / length(id_tree_wi_j)
         }
+
         survivalR[1, 1] <- 1
+
         m <- cumprod(survivalR[1, 1:nj])
         for (j in 2:nj){
           survival[1, r.ID == jall[j]] <- m[j] * survival[1, r.ID == jall[j]]
@@ -213,7 +213,6 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     id_uniq <- unique(newdata$id) # id of subjects
     n_uniq <- length(id_uniq) # number of subjects
 
-
     if (is.null(time.tau)){
       time.tau <- rep(max(time.eval), n_uniq)
     } else {
@@ -229,41 +228,40 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
       r.ID <- findInterval(tpnt, c(0, newi[, Rname]))
       r.ID[tpnt >= newi[, Rname][n_newi]] <- n_newi
-      jall <- unique(r.ID)
+      jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
+
       if (nj == 1){
-        survival <- rep(0, tlen)
-        for (b in 1:ntree){
-          Shat_b = rep(0, tlen)
-          j <- nj
-          # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
-          IDnew <- which(nIDxdata[,b] == nIDxnewdata[newi$I[jall[j]], b])
-          # ID of observations in the b-th bootstrap samples
-          rw <- which(wt[,b] == 1)
-          IDnew <- IDnew[IDnew %in% rw]
-          KM <- survival::survfit(formula = formula, data = traindata[IDnew, ])
-          Shat_b[r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
-          survival <- survival + Shat_b
-        }
-
-        RES = survival/ntree
-      } else {
-        ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-        r.IDmax <- c(1,sapply(jall[-nj], function(j){
-          max(which(r.ID == j)) + 1
-        }))
-
-
         # on [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
+        # deal with left truncation
+        survival[1, r.ID == 0] <- 1
+        for (b in 1:ntree){
+          # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
+          IDnew <- which(nIDxdata[,b] == nIDxnewdata[newi$I[jall[nj]], b])
+          # ID of observations in the b-th bootstrap samples
+          rw <- which(wt[, b] == 1)
+          IDnew <- IDnew[IDnew %in% rw]
+          KM <- survival::survfit(formula = formula, data = traindata[IDnew, ])
+          Shat_b <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
+          survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_b / Shat_b[1]
+        }
+
+        survival[1, r.ID == jall[nj]] = survival[1, r.ID == jall[nj]] / ntree
+        RES = survival[1, ]
+      } else if (nj > 1) {
+        # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
+        survival <- matrix(0, nrow = 1, ncol = tlen)
+
         # c(1, S_{1}(R_{1})/S_{1}(L_{1}),...,S_{n-1}(R_{n-1})/S_{n-1}(L_{n-1}))
         survivalR <- matrix(0,nrow = 1, ncol = nj)
         for (b in 1:ntree){
-          # on [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
-          Shat_b <- matrix(0, nrow = 1, ncol = tlen)
+          # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
+          # deal with left truncation ==> all 1 to start, so that Shat_b[, r.ID == 0] == 1
+          Shat_b <- matrix(1, nrow = 1, ncol = tlen)
 
           ShatR_b <- matrix(1, nrow = 1, ncol = nj + 1)
-          # # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
+          # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
           qL = rep(0, nj)
           for (j in 1:nj){
             # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples

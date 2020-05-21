@@ -1,0 +1,128 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library("mlt")
+Loading required package: basefun
+Loading required package: variables
+> set.seed(29)
+> 
+> n <- 100
+> p <- 2
+> x <- matrix(runif(n * p), nrow = n)
+> beta <- c(1, -1)
+> y <- factor(rbinom(n, size = 1, prob = plogis(x %*% beta)))
+> df <- data.frame(y = y, x)
+> 
+> m1 <- glm(y ~ X1 + X2, data = df, family = binomial())
+> coef(m1)
+(Intercept)          X1          X2 
+  0.7372381  -0.3848546  -0.8292045 
+> 
+> m <- ctm(~ y, shift = ~ X1 + X2, todist = "Logis", data = df)
+> m2 <- mlt(m, data = df, fixed = c("y1" = 0))
+Warning message:
+In R.factor(object = data[[response]]) : response is unordered factor;
+             results may depend on order of levels
+> coef(m2)
+(Intercept)          y1          X1          X2 
+ -0.7372250   0.0000000   0.3848409   0.8291921 
+> 
+> max(abs(coef(m1) + coef(m2)[-2]))
+[1] 1.363248e-05
+> 
+> logLik(m1)
+'log Lik.' -68.12815 (df=3)
+> logLik(m2)
+'log Lik.' -68.12815 (df=3)
+> 
+> ### compare multinomial models; iris was not good because
+> ### of complete separation
+> library("nnet")
+> 
+> n <- 5000
+> p <- 1
+> x <- as.data.frame(matrix(runif(n * p), nrow = n))
+> x$y <- cut(x$V1, breaks = c(0, .25, .5, .75, 1))
+> x$V1 <- x$V1 + rnorm(n, sd = .1)
+> x$V1 <- x$V1 - min(x$V1)
+> 
+> m1 <- multinom(y ~ ., data = x)
+# weights:  12 (6 variable)
+initial  value 6931.471806 
+iter  10 value 3015.580388
+iter  20 value 2550.483531
+final  value 2550.158016 
+converged
+> coef(m1)
+           (Intercept)       V1
+(0.25,0.5]   -9.305578 17.19805
+(0.5,0.75]  -23.879104 35.48939
+(0.75,1]    -40.319032 51.31745
+> logLik(m1)
+'log Lik.' -2550.158 (df=6)
+> 
+> ox <- x
+> ox$y <- ordered(ox$y)
+> 
+> r <- as.basis(ox$y)
+> 
+> fm <- as.formula(paste("~ ", paste(names(x)[grep("^V", names(x))], collapse = "+")))
+> ### don't scale, otherwise comparison with glm() is impossible
+> m <- ctm(r, interacting = as.basis(fm, data = ox, scale = FALSE),
++            todistr = "Logis")
+Warning message:
+In model.matrix.box_bases(object = list(iresponse = function (data,  :
+  use scale = TRUE in as.basis.formula with sumcontr = TRUE
+> m2 <- mlt(m, data = ox, scale = TRUE)
+Warning messages:
+1: In model.matrix.box_bases(object = list(iresponse = function (data,  :
+  use scale = TRUE in as.basis.formula with sumcontr = TRUE
+2: In model.matrix.box_bases(object = list(iresponse = function (data,  :
+  use scale = TRUE in as.basis.formula with sumcontr = TRUE
+3: In model.matrix.box_bases(object = list(iresponse = function (data,  :
+  use scale = TRUE in as.basis.formula with sumcontr = TRUE
+4: In model.matrix.box_bases(object = list(iresponse = function (data,  :
+  use scale = TRUE in as.basis.formula with sumcontr = TRUE
+> coef(m2)
+y1:(Intercept) y2:(Intercept) y3:(Intercept)          y1:V1          y2:V1 
+      9.642082      15.583592      17.447408     -17.893593     -19.588233 
+         y3:V1 
+    -16.747988 
+> logLik(m2)
+'log Lik.' -2556.062 (df=6)
+> 
+> s <- sort(unique(ox$y))
+> 
+> pp2 <- predict(m2, newdata = ox, q = s, type = "density")
+> 
+> pp1 <- predict(m1, newdata = x, type = "prob")
+> 
+> max(abs(pp1 - t(pp2)))
+[1] 0.01437037
+> 
+> cf1 <- coef(glm(I(y %in% levels(y)[1]) ~ V1, data = x, family = binomial()))
+> cf2 <- coef(glm(I(y %in% levels(y)[1:2]) ~ V1, data = x, family = binomial()))
+> cf3 <- coef(glm(I(y %in% levels(y)[1:3]) ~ V1, data = x, family = binomial()))
+> 
+> logLik(m2, parm = c(rbind(cf1, cf2, cf3)))
+'log Lik.' -2556.123 (df=6)
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  2.656   0.072   2.729 

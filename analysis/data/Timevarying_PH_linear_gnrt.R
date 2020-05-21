@@ -1,6 +1,4 @@
 #####################################################################################################
-## Created -- April 11th
-#####################################################################################################
 Range_T_linr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
   u = U
   x1 = X$X1
@@ -75,8 +73,8 @@ Range_T_linr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
 }
 
 #####################======== Large number of pseudo-subjects ===============#####################
-Timevarying_PH_linear_gnrt <- function(N = 200, Distribution = "Exp", censor.rate = 1, npseu = 11,
-                                    partial=TRUE){
+Timevarying_PH_linear_gnrt <- function(N = 200, Distribution = "Exp", censor.rate = 1,
+                                       partial=TRUE){
   npseu = 11
   Data <- as.data.frame(matrix(NA,npseu*N,27))
   names(Data)<-c("I","ID","X1","X2","X3","X4","X5","X6","X7","X8","X9","X10", 

@@ -98,7 +98,7 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     if (missing(newdata.id)){
       newdata$`id` <- 1:nrow(newdata)
     } else {
-      names(newdata)[names(newdata)==deparse(substitute(newdata.id))] <- idname
+      names(newdata)[names(newdata) == deparse(substitute(newdata.id))] <- idname
     }
     newdata <- as.data.frame(newdata[, c(yvar.names, idname)])
   }
@@ -135,40 +135,52 @@ shatfunc <- function(Ni, data, pred, tpnt, tau){
   ## the i-th data
   TestData <- data[id.seu == id.sub[Ni], ]
 
-  TestT <- c(0, TestData[, 2])
+  TestT <- c(TestData[1, 1], TestData[, 2])
   TestTIntN <- nrow(TestData)
 
   tpnt <- tpnt[tpnt <= tau[Ni]]
   tlen <- length(tpnt)
 
+  ## Compute the estimated survival probability of the Ni-th subject
+  Shat_temp <- matrix(0, nrow = 1, ncol = tlen)
+
   r.ID <- findInterval(tpnt, TestT)
-  r.ID[tpnt >= TestData[, 2][TestTIntN]] <- TestTIntN
-  jall <- unique(r.ID)
+  # r.ID[tpnt >= TestData[, 2][TestTIntN]] <- TestTIntN
+  r.ID[r.ID >= TestTIntN] <- TestTIntN
+
+  jall <- unique(r.ID[r.ID > 0])
   nj <- length(jall)
 
-  Shat_temp <- matrix(0, nrow = 1, ncol = tlen)
-  ## Compute the estimated survival probability of the Ni-th subject
+  ## Deal with left-truncation
+  Shat_temp[1, r.ID == 0] = 1
   if(nj == 1){
     ## Get the index of the Pred to compute Shat
-    II <- which(id.seu == id.sub[Ni])[1] + jall[1] - 1
-    Shat_temp[1, r.ID == jall[1]] <- ipred::getsurv(pred[[II]], tpnt[r.ID == jall[1]])
-  } else {
+    II <- which(id.seu == id.sub[Ni])[jall[nj]]
+    Shat_i = ipred::getsurv(pred[[II]], tpnt[r.ID == jall[nj]])
+    Shat_temp[1, r.ID == jall[nj]] <- Shat_i / Shat_i[1]
+  } else if (nj > 1) {
     # c(1, S_{1}(R_{1}), ..., S_{nj}(R_{nj}))
-    ShatR_temp <- matrix(1, nrow = 1, ncol = nj + 1)
-    ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-    r.IDmax <- c(1, sapply(jall[-nj], function(j){
+    ShatR_temp <- matrix(0, nrow = 1, ncol = nj + 1)
+    ShatR_temp[1, 1] <- 1
+    ## Get the position of L_1, ..., L_n.
+    ## Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
+    r.IDmax <- c(min(which(r.ID == jall[1])), sapply(jall[-nj], function(j){
       max(which(r.ID == j)) + 1
     }))
+
+    # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
+    qL = rep(0, nj)
     for (j in 1:nj){
       ## Get the index of the Pred to compute Shat
       II <- which(id.seu == id.sub[Ni])[1] + jall[j] - 1
-      KM <- pred[[II]]
-      Shat_temp[1, r.ID == jall[j]] <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
-      # j-th S_{j-1}(R_{j-1}) = S_{j-1}(L_{j})
-      ShatR_temp[1, j + 1] <- ipred::getsurv(KM, TestT[j + 1])
+      Shat_j = ipred::getsurv(pred[[II]], tpnt[r.ID == jall[j]])
+
+      qL[j] <- Shat_j[1]
+      # S_{j}(R_{j}), j=1,...nj-1
+      jR = ipred::getsurv(pred[[II]], TestT[j + 1])
+      ShatR_temp[1, j + 1] = jR / qL[j]
+      Shat_temp[1, r.ID == jall[j]] <- Shat_j / qL[j]
     }
-    # c(1, S_{1}(R_{1}), ..., S_{nj-1}(R_{nj-1}))
-    ShatR_temp <- ShatR_temp[1, 1:nj]
 
     # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
     qL <- Shat_temp[1, r.IDmax]
@@ -178,25 +190,17 @@ shatfunc <- function(Ni, data, pred, tpnt, tau){
       maxqlnot0 <- max(which(qL > 0))
       for(j in ql0){
         if (j < maxqlnot0) {
-          Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] + .000000001
+          ShatR_temp[1, j + 1] <- 1
+          Shat_temp[1, r.ID == jall[j]] <- 1
+        } else{
+          ShatR_temp[1, j + 1] <- 0
+          Shat_temp[1, r.ID == jall[j]] <- 0
         }
       }
     }
-
-    # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
-    qL <- Shat_temp[1, r.IDmax]
-    # S_1(L_1), S_1(R_1), S_2(R_2), ..., S_{nj-1}(R_{nj-1})
-    qR <- ShatR_temp
-
-    # If S_1(L_1) = 1, then the following two are equivalent
-    # m <- cumprod(qR / qL)
-    # for (j in 1:nj){
-    #   Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] * m[j]
-    # }
-    # This is the more general version, can be applied to left-truncated right-censored data
-    m <- c(1, cumprod(qR[2:nj] / qL[1:(nj - 1)]))
+    m <- cumprod(ShatR_temp[1, 1:nj])
     for (j in 1:nj){
-      Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] / qL[j] * m[j]
+      Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] * m[j]
     }
   }
 

@@ -1,0 +1,20 @@
+Package: tram
+Title: Transformation Models
+Version: 0.2-5
+Date: 2019-02-25
+Authors@R: person("Torsten", "Hothorn", role = c("aut", "cre"),
+                  email = "Torsten.Hothorn@R-project.org", comment = c(ORCID = "0000-0001-8301-0471"))
+Description: Formula-based user-interfaces to specific transformation models
+  implemented in package 'mlt'. Available models include Cox models, some parametric 
+  survival models (Weibull, etc.), models for ordered categorical variables,
+  normal and non-normal (Box-Cox type) linear models, and continuous outcome logistic regression
+  (Lohse et al., 2017, <DOI:10.12688/f1000research.12934.1>). The underlying theory
+  is described in Hothorn et al. (2018) <DOI:10.1111/sjos.12291>.
+Imports: Formula, multcomp, variables (>= 1.0-0), basefun (>= 1.0-3),
+        sandwich, stats, survival, graphics
+Suggests: MASS, TH.data, trtf (>= 0.3-3), mlbench, knitr, quantreg,
+        ordinal, colorspace, ATR
+VignetteBuilder: knitr
+Encoding: UTF-8
+License: GPL-2
+

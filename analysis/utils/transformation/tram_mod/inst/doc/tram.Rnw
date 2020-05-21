@@ -1,0 +1,1160 @@
+
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{tram}
+%\VignetteDepends{tram, survival, MASS, mlbench, multcomp, ordinal, colorspace, quantreg, ATR}
+
+\documentclass[article,nojss,shortnames]{jss}
+
+%% packages
+\usepackage{thumbpdf}
+\usepackage{amsfonts,amstext,amsmath,amssymb,amsthm}
+\usepackage{accents}
+\usepackage{color}
+\usepackage{rotating}
+\usepackage{verbatim}
+\usepackage[utf8]{inputenc}
+%% need no \usepackage{Sweave.sty}
+%%\usepackage[nolists]{endfloat}
+
+\newcommand{\cmd}[1]{\texttt{#1()}}
+
+<<setup, echo = FALSE, results = "hide", message = FALSE>>=
+set.seed(290875)
+
+sapply(c("tram", "survival", "MASS", "lattice", "mlbench", 
+         "multcomp", "ordinal", "colorspace", "quantreg", "trtf", "ATR"), library, char = TRUE)
+
+
+trellis.par.set(list(plot.symbol = list(col=1,pch=20, cex=0.7),
+                     box.rectangle = list(col=1),
+                     box.umbrella = list(lty=1, col=1),
+                     strip.background = list(col = "white")))
+ltheme <- canonical.theme(color = FALSE)     ## in-built B&W theme
+ltheme$strip.background$col <- "transparent" ## change strip bg
+lattice.options(default.theme = ltheme)
+
+knitr::opts_chunk$set(echo = TRUE, results = 'markup', error = FALSE,
+                      warning = FALSE, message = FALSE,
+                      tidy = FALSE, cache = FALSE, size = "small",
+                      fig.width = 6, fig.height = 4, fig.align = "center",
+                      out.width = NULL, ###'.6\\linewidth', 
+                      out.height = NULL,
+                      fig.scap = NA)
+knitr::render_sweave()  # use Sweave environments
+knitr::set_header(highlight = '')  # do not \usepackage{Sweave}
+## R settings
+options(prompt = "R> ", continue = "+  ", useFancyQuotes = FALSE)  # JSS style
+options(width = 75)
+library("colorspace")
+col <- diverge_hcl(2, h = c(246, 40), c = 96, l = c(65, 90))
+fill <- diverge_hcl(2, h = c(246, 40), c = 96, l = c(65, 90), alpha = .3)
+@
+
+\newcommand{\TODO}[1]{{\color{red} #1}}
+
+\newcommand\Torsten[1]{{\color{blue}Torsten: ``#1''}}
+
+% File with math commands etc.
+\input{defs.tex}
+
+\renewcommand{\thefootnote}{}
+
+%% code commands
+\newcommand{\Rclass}[1]{`\code{#1}'}
+%% JSS
+\author{Torsten Hothorn \\ Universit\"at Z\"urich}
+\Plainauthor{Hothorn}
+
+\title{Transformation Models: The \pkg{tram} Package}
+\Plaintitle{Transformation Models: The tram Package}
+\Shorttitle{The \pkg{tram} Package}
+
+\Abstract{
+The \pkg{tram} package allows a range of stratified linear transformation
+models to be fitted using standard formula-based \proglang{R} interfaces. 
+Functions for the estimation of potentially stratified Cox models, several
+survival regression models including log-normal or log-logistic models,
+models for ordered categorical responses (proportional odds, proportional
+hazards, probit) are available.  Likelihood-based inference, also in the
+presense of random left-, right-, and interval-censoring and arbitrary forms
+of truncation, is performed using infrastructure from package \pkg{mlt}. 
+More complex models, allowing non-linear and interaction functions of
+covariates, can be estimated using corresponding transformation trees and
+forests in package \pkg{trtf} with the same simple user interface.
+}
+
+\Keywords{Linear model, Cox model, survival regression, ordered regression,
+censoring, truncation}
+\Plainkeywords{Linear model, Cox model, survival regression, ordered regression,
+censoring, truncation}
+
+\Address{
+  Torsten Hothorn\\
+  Institut f\"ur Epidemiologie, Biostatistik und Pr\"avention \\
+  Universit\"at Z\"urich \\
+  Hirschengraben 84, CH-8001 Z\"urich, Switzerland \\
+  \texttt{Torsten.Hothorn@uzh.ch} \\
+  \url{http://tiny.uzh.ch/bh}
+}
+
+\begin{document}
+
+<<citation, echo = FALSE>>=
+year <- substr(packageDescription("tram")$Date, 1, 4)
+version <- packageDescription("tram")$Version
+@
+\footnote{Please cite this document as: Torsten Hothorn (\Sexpr{year})
+Transformation Models: The \pkg{tram} Package. 
+R package vignette version \Sexpr{version}, 
+URL \url{https://CRAN.R-project.org/package=tram}.}
+
+% \input{todo}
+
+\section{Introduction}
+
+The \pkg{tram} package offers standard formula-based \proglang{R} interfaces
+for stratified linear transformation models.  The package uses general
+infrastructure for likelihood-based inference in conditional transformation
+models provided by package \pkg{mlt} \citep{Hothorn_2018,pkg:mlt}.  The underlying
+theory is presented by \cite{Hothorn_Moest_Buehlmann_2017} and an
+introduction to the \pkg{mlt} package is given by \cite{Hothorn_2018}.
+An interface to
+package \pkg{trtf} \citep{pkg:trtf} also allows more complex models to be
+fitted by recursive partitioning and random forest technology \citep{Hothorn_Zeileis_2017}.
+
+In a nutshell, the model class covered by package \pkg{tram} consists of transformation 
+models of the form
+\begin{eqnarray} \label{tram}
+\Prob(\rY \le \ry \mid \rS = \rs, \rX = \rx) = \pZ(\h_\rY(\ry \mid \rs) - \tilde{\rx}^\top \shiftparm + \text{offset})
+\end{eqnarray}
+where $\rY$ is an at least ordered univariate response variable, $\rS$ are
+stratum variables and $\rX$ covariates with observations $\ry, \rs$, and
+$\rx$, respectively. We use the term `stratum' in a little more general
+sense and allow factors and also numeric variables in $\rS$. The $P$-vector $\tilde{\rx}^\top$ is a row of
+the design matrix corresponding to the observed covariate status $\rx$. The package allows different
+choices of the `link' function $\pZ$ and the monotone increasing (in its $\ry$ argument) `baseline transformation' $\h_\rY$
+and, consequently, the estimation of a rather broad class of models.
+
+A little more specifically, the monotone increasing baseline
+stratum-specific transformation $\h_\rY$ is of the form
+\begin{eqnarray*}
+\h_\rY(\ry \mid \rs) = \tilde{\rs}^\top\baseparm(\ry)
+\end{eqnarray*}
+with $J$-vector $\tilde{\rs}^\top$ being the row of
+the design matrix corresponding to the observed strata $\rs$.
+Each element of the parameter vector $\baseparm(\ry) = (\basisy(\ry)^\top \parm_1, \dots,
+\basisy(\ry)^\top\parm_J) \in \RR^J$ is parameterised as $\basisy(\ry)^\top\parm_j, j = 1, \dots, J$.
+Thus, the `response-varying' coefficients of $\tilde{\rs}^\top$ depend on the response
+$\ry$.
+The key part is a basis transformation $\basisy(\ry)$ of the response.
+Different choices of this basis allow the model class to handle different
+types of response variables and models of different complexity.
+In the absence of any stratum variables, we have
+\begin{eqnarray*}
+\h_\rY(\ry) = \basisy(\ry)^\top\parm_1
+\end{eqnarray*}
+and this function can be interpreted as an intercept function.
+With a single factor coding $J$ strata, we obtain
+\begin{eqnarray*}
+\h_\rY(\ry \mid \rs = j) = \basisy(\ry)^\top\parm_j.
+\end{eqnarray*}
+In this case, one intercept function is fitted for level $j$.
+We treat numeric variables with response-varying coefficients in a similar
+way. With $\rs = s \in \RR$, the baseline transformation 
+\begin{eqnarray*}
+\h_\rY(\ry \mid \rs) = \alpha_1(\ry) + s \alpha_2(\ry) = \basisy(\ry)^\top\parm_1 + s
+\basisy(\ry)^\top\parm_2
+\end{eqnarray*}
+consists of an intercept function $\alpha_1(\ry)$ and a response-varying effect
+$\alpha_2(\ry)$ of $s$. The latter function is called `time-varying' in
+survival analysis and some people use the more general term `distribution
+regression' when refering to models with response-varying coefficients.
+Because the intercept function is contained in $\h_\rY$, the linear predictor
+$\tilde{\rx}^\top \shiftparm$ must not contain an intercept. The design row
+$\tilde{\rs}^\top$, however, is expected to include an intercept term,
+explicitly or implicitly.
+
+All model interfaces implemented in the \pkg{tram} package expect models to
+be specified by calls of the form
+<<tram, echo = TRUE, eval = FALSE>>=
+tram(y | s ~ x, ...)
+@
+where \code{y} is a variable containing the observed response (possibly
+under all forms random censoring and truncation), \code{s} specifies the
+design row $\tilde{\rs}^\top$ and \code{x} the row $\tilde{\rx}^\top$ in the
+design matrix using standard \proglang{R} formula language. Specific
+modelling functions for normal linear regression models (\cmd{Lm}),
+non-normal linear regression models (\cmd{BoxCox}, \cmd{Colr}), ordinal
+linear regression models (\cmd{Polr}), and survival regression models (\cmd{Survreg},
+\cmd{Coxph}) implement transformation models tailored to these specific
+domains. The corresponding user interfaces resemble the interfaces of
+existing modeling functions (such as \cmd{lm}, \cmd{polr}, \cmd{survreg}, or
+\cmd{coxph}) are closely as possible.
+
+This document describes the underlying models and illustrates the
+application of the \pkg{tram} package for the estimation of specific
+stratified linear transformation models.
+
+\section{Normal Linear Regression Models}
+
+The normal linear regression model
+\begin{eqnarray*}
+\rY = \tilde{\alpha} + \tilde{\rx}^\top \tilde{\shiftparm} + \varepsilon, \quad \varepsilon \sim \ND(0, \sigma^2)
+\end{eqnarray*}
+is a transformation model of the general form (\ref{tram}) because we can
+rewrite it in the form
+\begin{eqnarray} \label{Lm}
+\Prob(\rY \le \ry \mid \rX = \rx) & = & \Phi\left(\frac{\ry - \tilde{\alpha} - \tilde{\rx}^\top \tilde{\shiftparm}}{\sigma}\right) \\ \nonumber
+& = & \Phi(\eparm_1 + \eparm_2 \ry - \tilde{\rx}^\top \shiftparm).
+\end{eqnarray}
+With $\eparm_1 = -\tilde{\alpha} / \sigma, \eparm_2 = 1 / \sigma$ and $\shiftparm = \tilde{\shiftparm} / \sigma$
+we see that the model is of the form
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \pZ(\h_\rY(\ry) - \tilde{\rx}^\top \shiftparm)
+\end{eqnarray*}
+with distribution function $\pZ = \Phi$ and linear transformation $\h_\rY(\ry) =
+\eparm_1 + \eparm_2 \ry$ such that 
+\begin{eqnarray*}
+\Ex(\h_\rY(\rY) \mid \rX = \rx) = \Ex(\eparm_1 + \eparm_2 \rY \mid \rX = \rx) = \tilde{\rx}^\top
+\shiftparm.
+\end{eqnarray*}
+
+The Boston Housing data are a prominent test-bed for parametric and
+non-parametric alternatives to a normal linear regression model.
+Assuming a conditional normal distribution for the 
+median value of owner-occupied homes (medv, in USD $1000$'s, we use the corrected version) 
+in the normal linear model with constant variance
+\begin{eqnarray*}
+\text{medv} \mid \rX = \rx \sim \ND(\tilde{\alpha} + \tilde{\rx}^\top \tilde{\shiftparm}, \sigma^2)
+\end{eqnarray*}
+we can fit this model using the \cmd{lm} function:
+<<BostonHousing-lm>>=
+data("BostonHousing2", package = "mlbench")
+lm_BH <- lm(cmedv ~ crim + zn + indus + chas + nox + rm + age + dis + 
+            rad + tax + ptratio + b + lstat, data = BostonHousing2)
+@
+The \pkg{tram} package implements a function \cmd{Lm} for fitting the normal
+linear regression model in the parameterisation (\ref{Lm})
+<<BostonHousing-numeric, echo = FALSE>>=
+BostonHousing2$rad <- as.numeric(BostonHousing2$rad)
+BostonHousing2$tax <- as.numeric(BostonHousing2$tax)
+@
+<<BostonHousing-Lm1, cache = TRUE>>=
+Lm_BH_1 <- Lm(cmedv ~ crim + zn + indus + chas + nox + rm + age + dis + 
+              rad + tax + ptratio + b + lstat, data = BostonHousing2)
+@
+The model fit is the same
+<<BostonHousing-logLik>>=
+logLik(lm_BH)
+logLik(Lm_BH_1)
+@
+so why would one want to set \cmd{lm} aside in favour of \cmd{Lm}? The
+parameterisation in (\ref{Lm}) seems a little odd, because the parameters
+are $\eparm_1 = - \tilde{\alpha}/\sigma$ and $\shiftparm = \tilde{\shiftparm} / \sigma$
+instead of the mean $\tilde{\alpha}$ and the regression coefficients $\tilde{\shiftparm}$.
+The parameters on the scale of $\tilde{\shiftparm}$, including the intercept
+$\tilde{\alpha}$ can be obtained via
+<<BostonHousing-coef>>=
+coef(lm_BH)
+coef(Lm_BH_1, as.lm = TRUE)
+@
+The standard deviation is the inverse interaction term with the response
+$\eparm_2^{-1}$
+<<BostonHousing-sd>>=
+summary(lm_BH)$sigma
+1 / coef(Lm_BH_1, with_baseline = TRUE)["cmedv"]
+@
+The latter estimate is the maximum-likelihood estimator of $\hat{\sigma}$
+and not the usual REML estimate reported by \cmd{lm}.
+
+One subtle difficulty with the observed response is that median housing
+values larger than $50$ are actually right-censored. This fact was ignored
+in both model fits. In contrast to \cmd{lm}, \cmd{Lm} is able to deal with
+this situation
+<<BostonHousing-Lm2, cache = TRUE>>=
+BostonHousing2$y <- with(BostonHousing2, Surv(cmedv, cmedv < 50))
+Lm_BH_2 <- Lm(y ~ crim + zn + indus + chas + nox + 
+              rm + age + dis + rad + tax + ptratio + b + lstat, 
+              data = BostonHousing2)
+logLik(Lm_BH_2)
+@
+Why is the extention to censored responses such a big deal? \code{lm}
+estimates the regression coefficients $\tilde{\shiftparm}$ by least-squares
+$(\ry - \tilde{\rx}^\top\tilde{\shiftparm})^2$.
+In the presence of censoring (here at \code{cmedv} $>50$), the likelihood
+contribution is
+\begin{eqnarray*}
+\Prob(\text{medv} > 50 \mid \rX = \rx) = 1 - \pZ(\eparm_1 + \eparm_2 50 - \tilde{\rx}^\top \shiftparm)
+\end{eqnarray*}
+and one cannot treat the inverse standard deviation $\sigma = \eparm_2^{-1}$
+as a nuisance parameter. Thus, the variance needs to be estimated simultaneously with the
+shift parameters. As we will see later, this model can also be estimated by
+\cmd{survreg}, for example.
+
+One of the variables (\code{chas}) gives us information about 
+proximity to the Charles River. The model above only allows for mean changes
+in this variable, but how about models that allow different variances? This
+is simple in \cmd{Lm} because we can use \code{chas} as a stratum variable.
+This means that we estimate $\eparm_1$ and $\eparm_2$ separately for each of
+the two groups in the model
+<<BostonHousing-Lm3, cache = TRUE>>=
+Lm_BH_3 <- Lm(y | 0 + chas ~ crim + zn + indus + nox + 
+              rm + age + dis + rad + tax + ptratio + b + lstat, 
+              data = BostonHousing2)
+logLik(Lm_BH_3)
+@
+Here, it seems the standard deviation is almost twice as large in areas
+without access to the Charles River. Because the stratum-specific inverse
+standard deviations are parameters in our model, 
+<<BostonHousing-chas-coef>>=
+1 / coef(Lm_BH_3, with_baseline = TRUE)[c(2, 4)]
+@
+we can construct a test for
+the null of equal variances as a test for a linear hypothesis
+<<BostonHousing-chas-glht>>=
+summary(glht(as.mlt(Lm_BH_3), linfct = c("y:chas0 - y:chas1 = 0")))
+@
+
+We could go one step further and include an interaction term between each
+covariate and the response by treating all covariates as strata
+<<BostonHousing-Lm4, cache = TRUE>>=
+Lm_BH_4 <- Lm(y | 0 + chas + crim + zn + indus + nox + 
+              rm + age + dis + rad + tax + ptratio + b + lstat ~ 0, 
+              data = BostonHousing2)
+logLik(Lm_BH_4)
+@
+For each variable $x$ (or factor level) in the model, we obtain two
+parameters, \ie $\eparm_1 x + \eparm_2 \ry x = (\eparm_1 + \eparm_2 y) x$.
+Thus, each regression coefficient for $x$ may vary with the response in a
+linear way. Technically, this extention of the notion of a stratum to
+numeric covariates leads to the simplest form of `distribution regression',
+that is, a model with linear response-varying regression coefficients.
+Because our transformation function is still linear in $\ry$, the class of
+conditional distributions of our response $\rY \mid \rX = \rx$ is still
+normal. The next section discusses how we can fit models without such an
+restrictive assumption.
+
+\section{Box-Cox Models}
+
+Maybe the question causing most headaches in normal linear regression is `Is
+my response conditionally normal?'. In their seminal paper,
+\cite{BoxCox_1964} suggested to transform the response to normality. They
+used a rather simple function, today known as the Box-Cox transformation,
+whereas the \pkg{tram} package uses rather flexible Bernstein polynomials
+for the `baseline transformation' $\h_\rY$. Although the technical details
+are different, the spirit is the same and we thus refer to the model
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rS = \rs, \rX = \rx) = \Phi(\h_\rY(\ry \mid \rs) - \tilde{\rx}^\top \shiftparm + \text{offset})
+\end{eqnarray*}
+with smooth (with respect to $\ry$) baseline transformation $\h_\rY$ as a `Box-Cox'
+model. For the Boston Housing data, we first fit the model
+\begin{eqnarray*}
+\Prob(\text{medv} \le \ry \mid \rX = \rx) = \Phi(\h_\rY(\ry) - \tilde{\rx}^\top \shiftparm)
+\end{eqnarray*}
+<<BostonHousing-BC-1, cache = TRUE>>=
+BC_BH_1 <- BoxCox(y ~ chas + crim + zn + indus + nox + 
+                  rm + age + dis + rad + tax + ptratio + b + lstat, 
+                  data = BostonHousing2)
+logLik(BC_BH_1)
+@
+Inspection of the fitted baseline transformation $\hat{\h}_\rY(\ry)$ is a
+simple device for detecting deviations from normality. An approximately 
+linear function $\hat{\h}_\rY(\ry)$ suggests that the normal assumption is
+appropriate whereas deviations from linearity correspond to deviations from
+this assumption. Figure~\ref{BostonHousing-BC-1-plot} indicates that there
+is a deviation from normality in the upper tail.
+
+\begin{figure}[t]
+<<BostonHousing-BC-1-plot>>=
+nd <- model.frame(BC_BH_1)[1,-1,drop = FALSE]
+plot(BC_BH_1, which = "baseline only", newdata = nd, col = col,
+     confidence = "interval", fill = fill, lwd = 2,
+     xlab = "Median Value", ylab = expression(h[Y]))
+@
+\caption{Boston Housing: Baseline transformation $\h_\rY$ in model  
+         \code{BC\_BH\_1} with pointwise confidence intervals. \label{BostonHousing-BC-1-plot}}
+\end{figure}
+
+When we add proximity to Charles River as stratum in the model
+<<BostonHousing-BC-2, cache = TRUE>>=
+BC_BH_2 <- BoxCox(y | 0 + chas ~ crim + zn + indus + nox + 
+                  rm + age + dis + rad + tax + ptratio + b + lstat, 
+                  data = BostonHousing2)
+logLik(BC_BH_2)
+@
+We see, in Figure~\ref{BostonHousing-BC-2-plot}, that the two baseline transformations differ only for median values
+smaller than USD $15,000$ with a large variance in houses near Charles River
+(indicating that there are hardly any cheap houses in this area).
+
+\begin{figure}[t]
+<<BostonHousing-BC-2-plot>>=
+nd <- model.frame(BC_BH_2)[1:2, -1]
+nd$chas <- factor(c("0", "1"))
+plot(BC_BH_2, which = "baseline only", newdata = nd, col = col,
+     confidence = "interval", fill = fill, lwd = 2,
+     xlab = "Median Value", ylab = expression(h[Y]))
+legend("bottomright", lty = 1, col = col, 
+       title = "Near Charles River", legend = c("no", "yes"), bty = "n")
+@
+\caption{Boston Housing: Stratified baseline transformation $\h_\rY$ in model  
+         \code{BC\_BH\_2} with pointwise confidence intervals. \label{BostonHousing-BC-2-plot}}
+\end{figure}
+
+The heterogeneous variances in our model \code{Lm_BH_3} where caused by the
+same effect and Figure~\ref{BostonHousing-Lm-3-plot} shows that allowing
+the model to deviate from normality leads to better model interpretation.
+
+\begin{figure}[t]
+<<BostonHousing-Lm-3-plot>>=
+plot(Lm_BH_3, which = "baseline only", newdata = nd, col = col,
+     confidence = "interval", fill = fill, lwd = 2)
+legend("bottomright", lty = 1, col = col, 
+       title = "Near Charles River", legend = c("no", "yes"), bty = "n")
+@
+\caption{Boston Housing: Stratified linear baseline transformation $\h_\rY$ in model  
+         \code{Lm\_BH\_2} with pointwise confidence intervals. \label{BostonHousing-Lm-3-plot}}
+\end{figure}
+
+We could now look at a model with smooth response-varying effects 
+<<BostonHousing-BC-3, eval = FALSE>>=
+BoxCox(y | 0 + chas + crim + zn + indus + nox + 
+       rm + age + dis + rad + tax + ptratio + b + lstat ~ 0, 
+       data = BostonHousing2)
+@
+but save this exercise for Section~\ref{sec:rq}.
+
+\section{Continuous Outcome Logistic Regression} \label{sec:colr}
+
+One problem with the above discussed Box-Cox-type linear regression models
+is that we loose the nice interpretation of the regression coefficients
+$\tilde{\shiftparm}$ we all enjoy in normal linear regression models. The
+only way of interpreting the linear predictor in the model
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \Phi(\h_\rY(\ry) - \tilde{\rx}^\top \shiftparm)
+\end{eqnarray*}
+with smooth baseline transformation $\h_\rY$ is based on the relationship 
+$\Ex(\h_\rY(\rY) \mid \rX = \rx) = \tilde{\rx}^\top \shiftparm$. That means
+that the conditional expectation of the \emph{transformed} response $\rY$ is
+given by the linear predictor. We can still judge whether a relationship is
+positive or negative by the sign of the regression coefficients $\shiftparm$
+but the nice way of saying `a one-unit increase in $x$ corresponds to an
+increase of $\beta$ in the conditional mean of $\rY$ (all other covariables
+being fix)' just goes away. Better
+interpretability guides the choice of models in this section.
+
+Consider the linear transformation model (we skip strata and offset here,
+for simplicity)
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \pSL(\h_\rY(\ry) + \tilde{\rx}^\top
+\shiftparm)) = \frac{\exp(\h_\rY(\ry) + \tilde{\rx}^\top
+\shiftparm)}{1 + \exp(\h_\rY(\ry) + \tilde{\rx}^\top \shiftparm)}
+\end{eqnarray*}
+where we replace the cumulative distribution function of the standard normal
+$\Phi$ with the cumulative distribution function of the standard logistic.
+Note that we add the linear predictor instead of substracting it (as in the
+Cox model, see Section~\ref{sec:survival}).
+In this model, the conditional odds is given by
+\begin{eqnarray*}
+\frac{\Prob(\rY \le \ry \mid \rX = \rx)}{\Prob(\rY > \ry \mid \rX = \rx)} =
+\exp(\h_\rY(\ry))\exp(\tilde{\rx}^\top \shiftparm).
+\end{eqnarray*}
+The odds ratio between a subject with covariate status $\rx$ and 
+a subject with covariates such that $\tilde{\rx}^\top
+\shiftparm = 0$ is simply $\exp(\tilde{\rx}^\top \shiftparm)$ (and not
+$\exp(-\tilde{\rx}^\top \shiftparm)$, therefore a positive shift makes sense
+in this model). The
+response-varying baseline transformations conveniently cancel out in this
+odds ratio. We can interpret $\beta$ as log-odds ratios, simultaneously for
+all possible binary logistic regression models with cutpoint $\ry$. The
+baseline transformation $\h_\rY(\ry)$ is the intercept in the logistic
+regression model corresponding to cutpoint $\ry$.
+\cite{Lohse_Rohrmann_Faeh_2017} introduced the name `Continuous Outcome Logistic
+Regression' (COLR) for this formulation of the model.
+
+Using proximity to Charles River as single stratum variable $\rs$, we can fit this
+model with smooth baseline transformation $\h_\rY(\ry \mid \rs)$  
+<<BostonHousing-Colr-1, cache = TRUE>>=
+Colr_BH_1 <- Colr(y | 0 + chas ~ crim + zn + indus + nox + 
+                  rm + age + dis + rad + tax + ptratio + b + lstat, 
+                  data = BostonHousing2)
+logLik(Colr_BH_1)
+@
+In comparison to the BoxCox-type model \code{BC_BH_2} with the exact same
+structure of the model (except the link function) with likelihood
+\Sexpr{round(logLik(BC_BH_2), 2)}, the continuous outcome logistic regression improved
+the model fit.
+
+The estimated odds-ratios, along with likelihood-based confidence intervals,
+can be computed as 
+<<BostonHousing-Colr-CI, cache = TRUE>>=
+round(cbind(exp(coef(Colr_BH_1)), exp(confint(Colr_BH_1))), 3)
+@
+A display of the model and observed median housing values is given in
+Figure~\ref{BostonHousing-Colr-1-plot}. For each observation, the linear
+predictor is plotted against the observed value and this scatterplot is
+overlayed with the conditional decile curves.
+
+\begin{figure}[t]
+<<BostonHousing-Colr-1-plot, echo = FALSE>>=
+nd <- BostonHousing2
+nd$y <- NULL
+q <- 0:50
+d <- predict(Colr_BH_1, newdata = nd, q = q, which = "distribution", type="distribution")
+lp <- c(predict(Colr_BH_1, newdata = nd, type = "lp"))
+nd2 <- expand.grid(q = q, lp = -lp)
+nd2$d <- c(d)
+nd2$chas <- rep(nd$chas, rep(length(q), length(lp)))
+BHtmp <- BostonHousing2
+levels(BHtmp$chas) <- levels(nd2$chas) <- levels(nd$chas) <- c("Off Charles River", "Near Charles River")
+pfun <- function(x, y, z, subscripts, at, ...) {
+    panel.contourplot(x, y, z, subscripts, at = 1:9/10, ...)
+    ch <- as.character(unique(nd2$chas[subscripts]))
+    panel.xyplot(x = -lp[nd$chas == ch], y = subset(BHtmp, chas == ch)$cmedv, pch = 20, 
+                 col = rgb(.1, .1, .1, .2))   
+}
+plot(contourplot(d ~ lp + q | chas, data = nd2, panel = pfun, xlab = "Linear predictor", 
+     ylab = "Median Value", col = col[1]))#, main = "Continuous Outcome Logistic Regression"))
+@
+\caption{Boston Housing: Scatterplot of linear predictors vs.~observed
+         median values obtained from the Continuous Outcome Logistic Regression 
+         model \code{Colr\_BH\_1}. The observations are overlayed with lines
+         representing conditional quantiles of median value given the
+         linear predictor. \label{BostonHousing-Colr-1-plot}}
+\end{figure}
+
+\section{Connection to Quantile Regression} \label{sec:rq}
+
+There is a strong relationship between quantile regression models and
+transformation models. In essence, quantile regression (as the name
+suggests) models the conditional quantile function whereas transformation
+models describe the conditional distribution function (that is, the inverse
+conditional quantile function). Under which circumstances can we expect to
+obtain similar results?
+
+To answer this question, consider a linear quantile regression model for the $p$th conditional
+quantile $Q_\rY(p \mid \rX = \rx)$ of $\rY$:
+\begin{eqnarray*}
+Q_\rY(p \mid \rX = \rx) = \tilde{\alpha}(p) + \tilde{\rx}^\top
+\tilde{\shiftparm}(p).
+\end{eqnarray*}
+Typically (for example in package \pkg{quantreg}), separate models are
+fitted for varying probabilities $p \in (0, 1)$, potentially causing a
+`quantile crossing' problem.
+
+One nice feature of this model is its invariance wrt.~monotone
+transformations, say $\h_\rY$, because we have
+\begin{eqnarray*}
+\h_\rY(Q_\rY(p \mid \rX = \rx)) = Q_{\h_\rY(\rY)}(p \mid \rX = \rx).
+\end{eqnarray*}
+With $\ry = Q_\rY(p \mid \rX = \rx)$ and a linear transformation model we
+obtain the relationship
+\begin{eqnarray*}
+& & p = \Prob(\rY \le \ry \mid \rX = \rx) = \pZ(\h_Y(\ry) - \tilde{\rx}^\top\shiftparm) \\
+& \iff & \h_\rY(Q_\rY(p \mid \rX = \rx)) = \pZ^{-1}(p) +
+\tilde{\rx}^\top\shiftparm.
+\end{eqnarray*}
+This means that a linear transformation model is a model for a transformed
+quantile with constant regression effects $\shiftparm$ (only the intercept
+depends on $p$). When we allow for response-varying effects
+$\shiftparm(\ry)$ in our transformation model, the relationship
+\begin{eqnarray*}
+& & p = \Prob(\rY \le \ry \mid \rX = \rx) = \pZ(\h_Y(\ry) - \tilde{\rx}^\top\shiftparm(\ry)) \\
+& \iff & \h_\rY(Q_\rY(p \mid \rX = \rx)) = \pZ^{-1}(p) +
+\tilde{\rx}^\top\tilde{\shiftparm}(p)
+\end{eqnarray*}
+with $\tilde{\shiftparm}(p) = \shiftparm(Q_\rY(p \mid \rX = \rx))$ shows
+that a transformation model with response-varying effects (aka `distribution
+regression') is a linear quantile regression models for a transformed
+quantile. In this sense, quantile regression and transformation models
+assume additivity of the effects on a different scale, but are otherwise
+comparable (also in terms of model complexity). A big advantage of
+transformation models is that we can estimate one model for all effects
+simultaneously and tedious post-processing to re-order crossing quantiles is
+not necessary.
+
+But how well do the two approaches coincide for the Boston Housing data?
+We first fit a number of linear quantile regressions for a grid of
+probabilities $p \in \{.1, \dots, .9\}$ and, second, 
+estimate a continuous outcome logistic regression with response-varying effects
+(restricting ourselves to very smooth regression coefficient functions
+parameterised as Bernstein polynomials with three parameters by
+the choice \code{order = 2}):
+<<BostonHousing-rq-1, cache = TRUE>>=
+tau <- 2:18 / 20
+fm <- cmedv ~ crim + zn + indus + chas + nox + rm + age + dis + 
+              rad + tax + ptratio + b + lstat
+rq_BH_1 <- lapply(tau, function(p) rq(fm, data = BostonHousing2, tau = p))
+Colr_BH_2 <- Colr(cmedv | crim + zn + indus + chas + nox + rm + age + dis + 
+                  rad + tax + ptratio + b + lstat ~ 0, 
+                  data = BostonHousing2, order = 2)
+@
+
+For nine selected observations from the dataset, we then plot the estimated
+conditional distribution function obtained from both approaches.
+Figure~\ref{BostonHousing-rq-1-plot} shows good agreement between the two
+models. Overall, the transformation models gives smoother conditional
+distribution functions and for some observations, for example for number
+153, the estimated conditional quantiles are very rough and, in fact, not
+monotone.
+
+\begin{figure}[t]
+<<BostonHousing-rq-1-plot, echo = FALSE, fig.width = 9, fig.height = 9>>=
+idx <- order(BostonHousing2$cmedv)[ceiling(1:9/10 * NROW(BostonHousing2))]
+layout(matrix(1:9, nrow = 3))
+for (i in idx) {
+  qrq <- sapply(rq_BH_1, function(x) predict(x, newdata = BostonHousing2[i,]))
+  nd <- BostonHousing2[i,]
+  nd$cmedv <- NULL
+  plot(Colr_BH_2, newdata = nd, which = "distribution", type = "distribution", 
+       q = 5:36, main = paste("Obs.", i), ylab = "Distribution", xlab =
+       "Median Value", col = col[1], lwd = 2)
+  points(qrq, tau, type = "b", col = col[2], cex = 1.5)
+  arrows(BostonHousing2[i, "cmedv"], 0, BostonHousing2[i, "cmedv"], .2,
+         length = .15, angle = 15)
+#  abline(v = BostonHousing2[i, "cmedv"])
+}
+@
+\caption{Boston Housing: Comparison of distribution regression via a
+         transformation model (model \code{Colr\_BH\_2}, solid lines) 
+         and quantile regression (model \code{rq\_BH\_1}, dots). The plot
+         shows the estimated conditional distribution functions along
+         with the actually observed median value (arrows). 
+         \label{BostonHousing-rq-1-plot}}
+\end{figure}
+
+
+\section{Survival Analysis} \label{sec:survival}
+
+Yet another choice of $\pZ$ is motivated by the desire to obtain simple model
+interpretation. In survival analysis, we are interested in the conditional
+survivor function (omitting $\rs$ and offset again)
+\begin{eqnarray*}
+S(\ry \mid \rX = \rx) = 1 - \Prob(\rY \le \ry \mid \rX = \rx) =
+\exp(-\Lambda(\ry \mid \rX = \rx))
+\end{eqnarray*}
+with conditional cumulative hazard function $\Lambda(\ry \mid \rX = \rx)$.
+Because $\Lambda$ is always positive, one can parameterise $\Lambda$ via the
+log-cumulative hazard function
+\begin{eqnarray*}
+\Lambda(\ry \mid \rX = \rx) = \exp(\h_\rY(\ry) - \tilde{\rx}^\top\shiftparm) 
+                            = \exp(\h_\rY(\ry))\exp(-\tilde{\rx}^\top\shiftparm)
+\end{eqnarray*}
+Here, $\exp(- \tilde{\rx}^\top\shiftparm)$ is the hazard ratio of the cumulative
+hazard between a subject with covariate status $\rx$ and a subject with $\tilde{\rx}^\top\shiftparm
+= 0$. The hazard function is 
+\begin{eqnarray*}
+\lambda(\ry \mid \rX = \rx) = \frac{\partial \Lambda(\ry \mid \rX =
+\rx)}{\partial \ry} = \exp(\h_\rY(\ry)) \frac{\partial \h_\rY(\ry)}{\partial \ry} \exp(- \tilde{\rx}^\top\shiftparm) 
+= \lambda(\ry) \exp(- \tilde{\rx}^\top\shiftparm)
+\end{eqnarray*}
+with `baseline hazard function' $\lambda$. The ratio of two hazard functions
+is again $\exp(- \tilde{\rx}^\top\shiftparm)$. Putting everything together
+we see that we formulate the conditional distribution function as
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp(-\exp(\h_\rY(\ry) - \tilde{\rx}^\top\shiftparm)
+\end{eqnarray*}
+which corresponds to our linear transformation model (\ref{tram}) with
+$\pZ() = 1 - \exp(-\exp())$ being the cumulative distribution function of
+the standard minimum extreme value distribution.
+
+Like in the normal case, special choices of $\h_\rY$ correspond to simple
+parametric models. The Weibull linear regression model features a linear
+baseline transformation $\h_\rY$ of $\log(\ry)$
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp(-\exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top
+\shiftparm)), \eparm_2 > 0
+\end{eqnarray*}
+which, with $\eparm_2 = 1$, simplifies to an exponential distribution
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp(-\ry \exp(\eparm_1 - \tilde{\rx}^\top \shiftparm))
+\end{eqnarray*}
+with parameter $\lambda = \exp(\eparm_1 - \tilde{\rx}^\top \shiftparm)$.
+With $\eparm = 2$, the distribution is known as Rayleigh distribution. 
+
+\cmd{survreg} \citep{pkg:survival} uses a different parameterisation of the same model with scale parameter
+$\sigma$
+of the form
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp\left(-\exp\left(\frac{\tilde{\alpha} + \log(\ry) - \tilde{\rx}^\top
+\tilde{\shiftparm}}{\sigma}\right)\right).
+\end{eqnarray*}
+
+As an example, consider time-to-death data from the German Breast Cancer Study Group 2
+randomised clinical trial on hormonal treatment of breast cancer
+(\code{horTh} being the treatment indicator). The Weibull model can be
+fitted by these two functions
+<<GBSG2-Weibull-1, cache = TRUE>>=
+data("GBSG2", package = "TH.data")
+Survreg_GBSG2_1 <- Survreg(Surv(time, cens) ~ horTh, data = GBSG2)
+logLik(Survreg_GBSG2_1)
+survreg_GBSG2_1 <- survreg(Surv(time, cens) ~ horTh, data = GBSG2)
+logLik(survreg_GBSG2_1)
+@
+The results are equivalent, but the parameters differ. To obtain the
+log-hazard ratio, we need to scale the estimate from \cmd{survreg}
+<<GBSG2-Weibull-coef>>=
+c(coef(Survreg_GBSG2_1),
+  coef(survreg_GBSG2_1)["horThyes"] / survreg_GBSG2_1$scale)
+@
+We get the log-hazard ratio $\beta = \Sexpr{round(coef(Survreg_GBSG2_1),
+2)}$ as the log-hazard ratio between treated and untreated
+patients. The hazard ratio $\exp(-\beta) = \Sexpr{round(exp(-coef(Survreg_GBSG2_1)), 2)}$ 
+means that the hazard of a treated patient is $\Sexpr{round(exp(-coef(Survreg_GBSG2_1)),
+2) * 100}\%$ the hazard of an untreated patient. The corresponding confidence interval is
+<<GBSG2-Weibull-ci>>=
+exp(-rev(confint(Survreg_GBSG2_1)))
+@
+The assumption of `proportional hazards', \ie the belief that the
+conditional hazard functions given treatment differ by a time-constant
+parameter $\beta$, might be questionable. We might want to ask `How well do
+the corresponding conditional survivor functions (Figure~\ref{GBSG2-Weibull-1-plot}, obtained under
+proportional hazards) reflect what is going on in the data?'. 
+
+\begin{figure}[t]
+<<GBSG2-Weibull-1-plot>>=
+nd <- data.frame(horTh = factor(c("no", "yes")))
+plot(Survreg_GBSG2_1, newdata = nd, which = "distribution", 
+     type = "survivor", confidence = "interval", fill = fill, 
+     col = col, ylab = "Probability", xlab = "Survival Time")
+legend("bottomleft", lty = 1, title = "Hormonal Therapy", 
+       legend = levels(nd$horTh), bty = "n", col = col)
+@
+\caption{German Breast Cancer Study Group 2: Conditional survivor curves
+         of treated and control patients obtained from the Weibull model
+         \code{Survreg\_GBSG2\_1} under proportional hazards assumption. \label{GBSG2-Weibull-1-plot}}
+\end{figure}
+
+The question is simple to answer when we use the treatment as a stratum and,
+in essence, fit two unconditional models (for each treatment arm) at once
+<<GBSG2-Weibull-2, cache = TRUE>>=
+Survreg_GBSG2_2 <- Survreg(Surv(time, cens) | 0 + horTh ~ 1, data = GBSG2)
+logLik(Survreg_GBSG2_2)
+survreg_GBSG2_2 <- survreg(Surv(time, cens) ~ strata(horTh) + horTh - 1, 
+                           data = GBSG2)
+logLik(survreg_GBSG2_2)
+coef(Survreg_GBSG2_2, with_baseline = TRUE)
+c(1 / survreg_GBSG2_2$scale, -coef(survreg_GBSG2_2) / 
+                              survreg_GBSG2_2$scale)
+@
+It should be noted that the \code{strata} command in \cmd{survreg} only
+leads to stratum-specific scale parameters, so we added a treatment specific
+intercept to make the two models comparable. The log-likelihood is roughly
+identical to the log-likelihood of the proportional hazards model and we can
+treat the assumption as reasonable.
+
+As in the normal linear model, we might want to allow deviations from the
+strong distributional assumptions inherit in a Weibull model. In our
+framework, this simply means we allow for more flexible baseline log-hazard
+functions $\h_\rY$. The model featuring a smooth function $\h_\rY$
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp(-\exp(\h_\rY(\ry) - \tilde{\rx}^\top \shiftparm))
+\end{eqnarray*}
+with $\Lambda(\ry \mid \rX = \rx) = \exp(\h_\rY(\ry))\exp(- \tilde{\rx}^\top
+\shiftparm)$ and thus baseline cumulative hazard $\Lambda_\rY(\ry) =
+\exp(\h_\rY(\ry))$ is called `Cox proportional hazards model'. 
+The term $\exp(- \tilde{\rx}^\top \shiftparm)$ is the
+odds ratio. Typically (for example in \cmd{coxph} and our \cmd{Coxph}), the model is
+parameterised as
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = 1 - \exp(-\exp(\h_\rY(\ry) + \tilde{\rx}^\top \shiftparm))
+\end{eqnarray*}
+with positive linear predictors being related to larger hazards (and smaller
+means). Thus, the hazard ratio is $\exp(\tilde{\rx}^\top \shiftparm)$. The
+classical (and not so classical) literature very often associates the Cox
+model with an unspecified baseline hazard function and the corresponding
+partial likelihood estimator for $\shiftparm$. The \pkg{tram} package uses a
+parametric yet very flexible form for $\h_\rY$, leading to simpler inference
+and smooth estimated conditional survivor curves.
+
+For the breast cancer data, we get with
+<<GBSG2-Cox-1, cache = TRUE>>=
+Coxph_GBSG2_1 <- Coxph(Surv(time, cens) ~ horTh, data = GBSG2)
+logLik(Coxph_GBSG2_1)
+coef(Coxph_GBSG2_1)
+@
+a model very similar to \code{Survreg_GBSG2_1} and stratification with
+respect to treatment does not improve the fit by much
+<<GBSG2-Cox-2, cache = TRUE>>=
+Coxph_GBSG2_2 <- Coxph(Surv(time, cens) | 0 + horTh ~ 1 , data = GBSG2)
+logLik(Coxph_GBSG2_2)
+@
+
+When we compare the survivor curves from these two models with the
+Kaplan-Meier curves in Figure~\ref{GBSG2-Cox-1-plot} we essentially get a
+smooth interpolation of this nonparametric maximum likelihood estimator by
+the two parametric Cox models.
+\begin{figure}[t]
+<<GBSG2-Cox-1-plot>>=
+plot(survfit(Surv(time, cens) ~ horTh, data = GBSG2), col = col, 
+     ylab = "Probability", xlab = "Survival Time")
+plot(Coxph_GBSG2_1, newdata = nd, which = "distribution", 
+     type = "survivor", col = col, add = TRUE, lty = 1)
+plot(Coxph_GBSG2_2, newdata = nd, which = "distribution", 
+     type = "survivor", col = col, add = TRUE, lty = 2)
+legend("bottomleft", lty = 1, title = "Hormonal Therapy", 
+       legend = levels(nd$horTh), bty = "n", col = col)
+@
+\caption{German Breast Cancer Study Group 2: Conditional survivor curves
+         of treated and control patients obtained from the Kaplan-Meier estimator, model 
+         \code{Coxph\_GBSG2\_1} under proportional hazards assumption, and 
+         \code{Coxph\_GBSG2\_2} under non-proportional hazards. \label{GBSG2-Cox-1-plot}}
+\end{figure}
+
+Survival models with conditional log-logistic distribution are
+transformation models with $\pZ = \text{expit}$ and linear baseline transformation
+of a log-transformed response:
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \frac{\exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)}{1
++ \exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)}, \eparm_2 > 0
+\end{eqnarray*}
+Similar to continuous outcome logistic regression (Section~\ref{sec:colr}),
+the parameters $\shiftparm$ can be interpreted as log-odds ratios because the
+conditional odds
+\begin{eqnarray*}
+\frac{\Prob(\rY \le \ry \mid \rX = \rx)}{\Prob(\rY > \ry \mid \rX = \rx)} = 
+  \frac{\frac{\exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)}
+             {1 + \exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)}}
+        {\frac{1}{1 + \exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)}}
+= \exp(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm)
+\end{eqnarray*}
+consists of the baseline odds $\exp(\eparm_1 + \eparm_2 \log(\ry))$ and the
+odds ratio $\exp(- \tilde{\rx}^\top \shiftparm)$. This model can be fitted
+using \cmd{Survreg} by the choice \code{distribution = "loglogistic"}.
+
+Switching to a conditional log-normal distribution (\code{distribution = "lognormal"}) simply means using $\pZ =
+\Phi$ in the model
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \Phi(\eparm_1 + \eparm_2 \log(\ry) - \tilde{\rx}^\top \shiftparm))
+\end{eqnarray*}
+so that we get $\log(\rY) \sim \ND((-\eparm_1, \shiftparm) / \eparm_2, 1 /
+\eparm^2)$. 
+
+It should be noted that both \cmd{Survreg} and \cmd{Coxph} are able to fit
+models in the presence of random censoring (left, right and interval) as
+well as truncation of any form (left, right, interval, each of these possibly
+subject-specific).
+
+\section{Ordinal Regression}
+
+For ordinal responses $\rY \in \{\ry_1, \dots, \ry_K\}$ at $K$ levels, the baseline
+transformation attaches one parameter to each level (except the last one) in
+the parameterisation
+\begin{eqnarray*}
+\h_\rY(\ry_k) = \eparm_k \in \RR, \quad 1 \le k < K \quad \eparm_1 < \dots,
+\eparm_{K - 1}.
+\end{eqnarray*}
+With $\pZ = \text{expit}$, our linear transformation model
+is known as proportional odds model and can be fitted by the three
+implementations from packages \pkg{ordinal} \citep{pkg:ordinal}, \pkg{MASS} \citep{pkg:MASS} and \pkg{tram} as
+follows (using the wine tasting data as example)
+<<wine-polr>>=
+data("wine", package = "ordinal")
+polr_wine <- polr(rating ~ temp + contact, data = wine)
+logLik(polr_wine)
+coef(polr_wine)
+@
+<<wine-clm-1, cache = TRUE>>=
+clm_wine_1 <- clm(rating ~ temp + contact, data = wine)
+logLik(clm_wine_1)
+coef(clm_wine_1)
+@
+<<wine-Polr-1, cache = TRUE>>=
+Polr_wine_1 <- Polr(rating ~ temp + contact, data = wine)
+logLik(Polr_wine_1)
+coef(Polr_wine_1, with_baseline = TRUE)
+@
+with identical results. Treating one of the variables as stratum is possible
+in \cmd{clm} and \cmd{Polr} (we use treatment contrasts for $\tilde{\rs}$
+here)
+<<wine-clm-2, cache = TRUE>>=
+clm_wine_2 <- clm(rating ~ temp, nominal = ~ contact, data = wine)
+logLik(clm_wine_2)
+coef(clm_wine_2)
+@
+<<wine-Polr-2, cache = TRUE>>=
+Polr_wine_2 <- Polr(rating | 1 + contact ~ temp, data = wine)
+logLik(Polr_wine_2)
+coef(Polr_wine_2, with_baseline = TRUE)
+@
+and again the fit is equivalent. Changing the link function $\pZ$ from
+$\text{expit}$ to $\Phi$ is also possible in both functions
+<<wine-clm-3, cache = TRUE>>=
+clm_wine_3 <- clm(rating ~ temp, nominal = ~ contact, data = wine, 
+                  link = "probit")
+logLik(clm_wine_3)
+coef(clm_wine_3)
+@
+<<wine-Polr-3, cache = TRUE>>=
+Polr_wine_3 <- Polr(rating | 1 + contact ~ temp, data = wine, 
+                    method = "probit")
+logLik(Polr_wine_3)
+coef(clm_wine_3)
+@
+
+The identical results obtain from \pkg{ordinal} and \pkg{tram} increase our
+empirical evidence that the implementation of linear transformation models
+for ordinal responses in both packages are correct. Let us look at one
+situation where \pkg{tram} can fit a model that would be hard to obtain (for
+me!) in \pkg{ordinal}. Suppose on of the wine tasters (judge 9, say) had a bad day 
+and didn't feel comfortable to deliver her ratings accurately. Instead, she
+choose to check-off a range of three scores (maybe `2--4' instead of just
+`3'). We can represent this discrete interval-censored version of the
+response using the \cmd{R} function as follows
+<<wine-censored>>=
+erating <- wine$rating
+lrating <- erating
+rrating <- erating
+l9 <- lrating[wine$judge == 9] 
+l9[l9 > 1] <- levels(l9)[unclass(l9[l9 > 1]) - 1]
+r9 <- rrating[wine$judge == 9] 
+r9[r9 < 5] <- levels(r9)[unclass(r9[r9 < 5]) + 1]
+lrating[wine$judge != 9] <- rrating[wine$judge != 9] <- NA
+erating[wine$judge == 9] <- NA
+lrating[wine$judge == 9] <- l9
+rrating[wine$judge == 9] <- r9
+which(wine$judge == 9)
+(wine$crating <- R(erating, cleft = lrating, cright = rrating))
+@
+\cmd{Polr} is able to deal with such types of response variables and the
+model can be fitted in the very same way as before
+<<wine-censored-Polr, echo = TRUE>>=
+Polr_wine_4 <- Polr(crating | contact ~ temp, data = wine, 
+                    method = "probit")
+logLik(Polr_wine_4)
+coef(Polr_wine_4)
+@
+As expected, the difference is not very large, but more extreme forms of
+censoring (or truncation) might very well lead to substantially different
+models.
+
+\section{Transformation Trees and Forests}
+
+Models involving a linear predictor $\tilde{\rx}^\top \shiftparm$ suggest a
+simple linear impact of the covariates on the distribution of the response.
+This assumption might be questioned by allowing more flexible regression
+relationships in the transformation model
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx) = \pZ(\basisy(\ry)^\top \parm(\rx))
+\end{eqnarray*}
+where the parameters of the baseline transformation 
+can be unspecified functions of $\rx$. When we assume a simple tree
+structure, the model can be fitted using function \cmd{trafotree} from
+\pkg{trtf}.
+
+A transformation tree for the Boston Housing data (taking censoring in the
+median housing values into account) consists of two steps. First, we set-up
+an unconditional transformation model. We choose a model with smooth and
+flexible transformation function
+<<BostonHousing-BC-4-0, cache = TRUE>>=
+BC_BH_0 <- BoxCox(y ~ 1, data = BostonHousing2)
+logLik(BC_BH_0)
+@
+This model is then plugged into \cmd{trafotree}, along with a formula
+describing the response and partitioning ($\rx$) variables
+<<BostonHousing-BC-4, cache = TRUE>>=
+library("trtf")
+BC_BH_4 <- trafotree(BC_BH_0, 
+    formula = y ~ chas + crim + zn + indus + nox + 
+              rm + age + dis + rad + tax + ptratio + b + lstat, data =
+    BostonHousing2, control = ctree_control(minbucket = 30))
+logLik(BC_BH_4)
+@
+In each terminal node of the corresponding tree (depicted in
+Figure~\ref{BostonHousing-BC-4-plot}), a density representing the
+conditional distribution of median housing values given the splits in the
+partitioning variables is given. Location, scale and shape of these
+distributions vary across the tree.
+
+\begin{sidewaysfigure}
+<<BostonHousing-BC-4-plot, fig.width = 14, fig.height = 10, echo = FALSE>>=
+library("ATR")
+plot(rotate(BC_BH_4), terminal_panel = trtf:::node_mlt, 
+     tp_args = list(type = "density", K = 100, fill = col[1], id = FALSE))
+@
+\caption{Boston Housing: Transformation tree with conditional transformation
+models in each terminal node depicted via the corresponding density
+function. \label{BostonHousing-BC-4-plot}}
+\end{sidewaysfigure}
+
+One could go one step further and estimate a whole forest of such
+transformation trees by the \cmd{traforest} function
+<<BostonHousing-BC-5, eval = FALSE>>=
+BC_BH_5 <- traforest(BC_BH_0, 
+    formula = y ~ chas + crim + zn + indus + nox + 
+              rm + age + dis + rad + tax + ptratio + b + lstat, data =
+    BostonHousing2)
+@
+
+Another interesting option is to partition more complex models by
+\cmd{trafotree}. Suppose we are interested in the identification of
+potential treatment effect modifiers in a Cox model of the form
+\begin{eqnarray*}
+\Prob(\rY \le \ry \mid \rX = \rx, \text{horTh}) = 1 - \exp(-\exp(\basisy(\ry)^\top \parm(\rx) +
+I(\text{horTh}) \beta(\rx)))
+\end{eqnarray*}
+\citep[details on tree-based subgroup analyses are given
+in][]{Seibold_Zeileis_Hothorn_2015}.
+Here we are interested in an $\rx$-varying log-hazard ratio
+$\beta(\rx)$, \ie, the dependency of the success (or failure) of hormonal
+therapy on baseline variables $\rx$. We start with the model 
+<<GBSG2-Cox-3-0>>=
+Coxph_GBSG2_1 <- Coxph(Surv(time, cens) ~ horTh, data = GBSG2)
+logLik(Coxph_GBSG2_1)
+coef(Coxph_GBSG2_1)
+@
+This model estimates a global treatment effect, \ie, a treatment effect
+which applies uniformly to all patients. We now try to find out if this
+model can be improved by a transformation tree (where splits are looked for
+with respect to the parameters defining the log-cumulative baseline hazard
+function, \ie the intercept, and the treatment effect parameter):
+<<GBSG2-Cox-3>>=
+Coxph_GBSG2_3 <- trafotree(Coxph_GBSG2_1, 
+    formula = Surv(time, cens) ~ horTh | age + menostat + tsize + 
+                                 tgrade + pnodes + progrec + estrec, 
+    data = GBSG2)
+logLik(Coxph_GBSG2_3)
+coef(Coxph_GBSG2_3)[, "horThyes"]
+@
+These log-hazard ratios and the tree in Figure~\ref{GBSG2-Cox-3-plot} show 
+that the global treatment effect vanishes in patients with many positive 
+lymph nodes and a larger tumor
+grading.
+\begin{figure}[t]
+<<GBSG2-Cox-3-plot>>=
+nd <- data.frame(horTh = sort(unique(GBSG2$horTh)))
+plot(Coxph_GBSG2_3, newdata = nd, 
+     tp_args = list(type = "survivor", col = col))
+@
+\caption{German Breast Cancer Study Group 2: Transformation tree with
+conditional survivor functions given treatment (blue is hormonal treatment,
+yellow refers to the control group) in each terminal node. \label{GBSG2-Cox-3-plot}}
+\end{figure}
+
+If one is only interested in proportional hazards alternatives, one can add
+an explicit intercept parameter (constrained to zero) to the model such that
+the log-rank scores and the scores for the treatment effect parameters
+define the splits:
+<<GBSG2-Cox-4>>=
+GBSG2$int <- 1
+Coxph_GBSG2_3 <- Coxph(Surv(time, cens) ~ int + horTh, data = GBSG2, 
+                       fixed = c("int" = 0))
+(Coxph_GBSG2_4 <- trafotree(Coxph_GBSG2_3, 
+    formula = Surv(time, cens) ~ int + horTh | age + menostat + tsize + 
+                                 tgrade + pnodes + progrec + estrec, 
+    data = GBSG2, parm = c("int", "horThyes"), 
+    mltargs = list(fixed = c("int" = 0))))
+logLik(Coxph_GBSG2_4)
+coef(Coxph_GBSG2_4)[, "horThyes"]
+@
+
+In our last example \citep[inspired by][]{Seibold_Zeileis_Hothorn_2017}
+we restrict out attention to an age-varying log-hazard ratio
+$\beta(\text{age})$. We again start with the Cox model \code{Coxph\_GBSG2\_1}
+featuring a smooth baseline hazard function and a global treatment effect
+$\eshiftparm$. We fit $100$ trees to subsamples of the data and study splits
+in age only
+forest
+<<GBSG2-Cox-5, cache = TRUE>>=
+ctrl <- ctree_control(minsplit = 30, minbucket = 15, mincriterion = 0)
+Coxph_GBSG2_5 <- traforest(Coxph_GBSG2_1, 
+    formula = Surv(time, cens) ~ horTh | age, control = ctrl, 
+    ntree = 100, mtry = 1, data = GBSG2)
+@
+The age-depending treatment-effects are plotted in \ref{GBSG2-Cox-4-plot}. 
+Very young women seem to profit most from the treatment, whereas women in
+the mid-forties seem not to profit or even have an increased risk under
+hormonal therapy.
+
+\begin{figure}[t]
+<<GBSG2-Cox-5-plot, cache = TRUE>>=
+nd <- data.frame(age = 30:70)
+cf <- predict(Coxph_GBSG2_5, newdata = nd, type = "coef")
+nd$logHR <- sapply(cf, function(x) x["horThyes"])
+plot(logHR ~ age, data = nd, pch = 19, xlab = "Age", 
+     ylab = "log-Hazard Ratio")
+abline(h = coef(Coxph_GBSG2_1)["horThyes"])
+@
+\caption{German Breast Cancer Study Group 2: Treatment effects depending on
+age. The solid horizontal line corresponds to the global treatment effect
+obtained from model \code{Coxph\_GBSG2\_1}. \label{GBSG2-Cox-4-plot}}
+\end{figure}
+
+\section{Summary}
+
+The \pkg{tram} package simplifies model estimation, interpretation and
+inference for some members of the broad family of conditional transformation
+models. Where implementations for special cases already exist, practically
+equivalent results are obtained. In some aspects, such as different ways of
+handling stratum variables, response-varying coefficients, likelihood
+estimation for interval-censored or truncated data, etc., the \pkg{tram}
+package offers additional functionality. Users requiring more control over
+model specification are welcome to study facilities for model specification,
+estimation and inference provided by package \pkg{mlt}.
+
+\clearpage
+
+\bibliography{mlt,packages}
+
+<<funs, echo = FALSE, results='hide', purl = FALSE, cache = FALSE>>=
+if (file.exists("packages.bib")) file.remove("packages.bib")
+pkgversion <- function(pkg) {
+    pkgbib(pkg)
+    packageDescription(pkg)$Version
+}
+pkgbib <- function(pkg) {
+    x <- citation(package = pkg, auto = TRUE)[[1]]
+    b <- toBibtex(x)
+    b <- gsub("Buehlmann", "B{\\\\\"u}hlmann", b)
+
+    i <- grep("title = \\{ICsurv", b)
+    if (length(i) == 1)
+       b[i] <- "  title = {ICsurv: A Package for Semiparametric Regression Analysis of Interval-censored Data},"
+
+    i <- grep("title = \\{dynsurv", b)
+    if (length(i) == 1)
+       b[i] <- "  title = {dynsurv: Dynamic Models for Survival Data},"
+
+    i <- grep("title = \\{np", b)
+    if (length(i) == 1)
+       b[i] <- "  title = {np: Nonparametric Kernel Smoothing Methods for Mixed Data Types},"
+
+    i <- grep("Kenneth Hess", b)
+    if (length(i) == 1)
+       b[i] <- "  author = {Kenneth Hess and Robert Gentleman},"
+
+    b <- gsub("with contributions from", "and", b)
+
+    b <- gsub("Göran Broström", "G\\\\\"oran Brostr\\\\\"om", b)
+
+    b <- gsub(" The publishers web page is", "},", b)
+    b <- gsub("http://www.crcpress.com/product/isbn/9781584885740},", "", b)
+
+    b <- gsub("R package", "\\\\proglang{R} package", b)
+
+    b[1] <- paste("@Manual{pkg:", pkg, ",", sep = "")
+    if (is.na(b["url"])) {
+        b[length(b)] <- paste("   URL = {http://CRAN.R-project.org/package=",
+                              pkg, "}", sep = "")
+        b <- c(b, "}")
+    }
+    cat(b, sep = "\n", file = "packages.bib", append = TRUE)
+}
+pkg <- function(pkg)
+    paste("\\\\pkg{", pkg, "} \\\\citep[version~",
+          pkgversion(pkg), ",][]{pkg:", pkg, "}", sep = "")
+
+pkgs <- c("mlt", "variables", "basefun", "survival", "MASS", 
+  "ordinal", "trtf")
+out <- sapply(pkgs, pkg)
+
+x <- readLines("packages.bib")
+for (p in pkgs)
+    x <- gsub(paste("\\{", p, ":", sep = ""), paste("\\{\\\\pkg{", p, "}:", sep = ""), x)
+cat(x, sep = "\n", file = "packages.bib", append = FALSE)
+@
+
+<<sessionInfo, echo = FALSE, results = "hide">>=
+sessionInfo()
+@
+
+\end{document}

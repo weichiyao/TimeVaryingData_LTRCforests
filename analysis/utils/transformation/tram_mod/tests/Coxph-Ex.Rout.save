@@ -1,0 +1,90 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library("tram")
+Loading required package: mlt
+Loading required package: basefun
+Loading required package: variables
+> library("survival")
+> library("trtf")
+Loading required package: partykit
+Loading required package: grid
+
+Attaching package: 'grid'
+
+The following object is masked from 'package:variables':
+
+    unit
+
+Loading required package: libcoin
+Loading required package: mvtnorm
+> 
+> ### Windows diffs...
+> options(digits = 3)
+> 
+> data("GBSG2", package = "TH.data")
+> 
+> cmod <- coxph(Surv(time, cens) ~ progrec + pnodes + strata(horTh, tgrade),
++                data = GBSG2)
+> Cmod <- Coxph(Surv(time, cens) | 0 + horTh:tgrade ~ progrec + pnodes, 
++               data = GBSG2)
+> 
+> round(max(abs(coef(cmod) - coef(Cmod))), 4)
+[1] 0.0018
+> round(max(abs(diag(vcov(cmod)) - diag(vcov(Cmod)))), 4)
+[1] 0
+> 
+> Cmod_lf <- Coxph(Surv(time, cens) | 0 + horTh:tgrade ~ progrec + pnodes, 
++                 data = GBSG2, log_first = TRUE)
+> 
+> round(max(abs(coef(cmod) - coef(Cmod_lf))), 4)
+[1] 0
+> round(max(abs(diag(vcov(cmod)) - diag(vcov(Cmod_lf)))), 4)
+[1] 0
+> 
+> 
+> cmod_2 <- coxph(Surv(time, cens) ~ ., data = GBSG2)
+> Cmod_2 <- Coxph(Surv(time, cens) ~ ., data = GBSG2)
+> 
+> round(max(abs(coef(cmod_2) - coef(Cmod_2))), 4)
+[1] 0.0146
+> round(max(abs(diag(vcov(cmod_2)) - diag(vcov(Cmod_2)))), 4)
+[1] 0
+> 
+> cmod <- Coxph(Surv(time, cens) ~ horTh, data = GBSG2)
+> (tmod <- trafotree(cmod, formula = Surv(time, cens) ~ horTh | ., data = GBSG2))
+
+Model formula:
+Surv(time, cens) ~ horTh + (age + menostat + tsize + tgrade + 
+    pnodes + progrec + estrec)
+
+Fitted party:
+[1] root
+|   [2] pnodes <= 4: 2372 (n = 433)
+|   [3] pnodes > 4
+|   |   [4] tgrade <= II: 1146 (n = 179)
+|   |   [5] tgrade > II: 600 (n = 74)
+
+Number of inner nodes:    2
+Number of terminal nodes: 3
+> logLik(tmod)
+'log Lik.' -2582 (df=24)
+> 
+> proc.time()
+   user  system elapsed 
+  6.288   0.136   6.420 

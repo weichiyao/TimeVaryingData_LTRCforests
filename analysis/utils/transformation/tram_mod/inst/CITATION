@@ -1,0 +1,32 @@
+
+citHeader("To cite tram in publications use either of these two references.")
+
+citEntry(entry="Article",
+         title = "Most Likely Transformations",
+         author = personList(as.person("Torsten Hothorn"), as.person("Lisa Möst"), 
+                             as.person("Peter Bühlmann")),
+         journal      = "Scandinavian Journal of Statistics",
+         year         = "2018",
+         volume       = "45",
+         number       = "1",
+         pages        = "110--134",
+
+         textVersion =
+         paste("Torsten Hothorn, Lisa Moest, Peter Buehlmann (2018).",
+               "Most Likely Transformations.",
+               "Scandinavian Journal of Statistics, 45(1), 110--134."),
+         header = "For theoretical issues cite:"
+)
+
+citEntry(entry="Article",
+         title = "Most Likely Transformations: The mlt Package",
+         author = personList(as.person("Torsten Hothorn")),
+         journal      = "Journal of Statistical Software",
+         year         = "2018",
+
+         textVersion =
+         paste("Torsten Hothorn (2018).",
+               "Most Likely Transformations: The mlt Package.",
+               "Journal of Statistical Software, forthcoming."),
+         header = "For software implementation issues cite:"
+)

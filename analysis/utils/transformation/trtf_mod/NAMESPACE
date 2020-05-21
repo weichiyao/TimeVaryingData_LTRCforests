@@ -1,0 +1,30 @@
+
+import("mlt")
+import("partykit")
+import("Formula")
+importFrom("sandwich", "estfun")
+importFrom("variables", "mkgrid", "support")
+importFrom("libcoin", "ctabs")
+
+importFrom("utils",
+  "setTxtProgressBar",
+  "txtProgressBar"
+)
+
+import("grid")
+importFrom("graphics", "plot")
+importFrom("stats", "coef", "logLik", "model.frame", "model.weights",
+           "na.pass", "predict", "update", "simulate", "variable.names")
+
+
+export(trafotree, traforest)
+
+S3method("coef", "trafotree")
+S3method("logLik", "trafotree")
+S3method("logLik", "traforest")
+S3method("predict", "trafotree")
+S3method("plot", "trafotree")
+S3method("predict", "traforest")
+S3method("simulate", "traforest")
+S3method("simulate", "trafotree")
+S3method("gettree", "traforest")

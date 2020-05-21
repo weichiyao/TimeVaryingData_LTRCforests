@@ -1,0 +1,401 @@
+
+%%% mlt
+%% rv
+\newcommand{\rZ}{Z}
+\newcommand{\rY}{Y}
+\newcommand{\rX}{\mX}
+\newcommand{\rS}{\mS}
+\newcommand{\rs}{\svec}
+\newcommand{\rz}{z}
+\newcommand{\ry}{y}
+\newcommand{\rx}{\xvec}
+\newcommand{\erx}{x}
+%% sigma algebra
+\newcommand{\sA}{\mathfrak{A}}
+\newcommand{\sAZ}{\mathfrak{B}}
+\newcommand{\sAY}{\mathfrak{C}}
+\newcommand{\esA}{A}
+\newcommand{\esAZ}{B}
+\newcommand{\esAY}{C}
+%% sample spaces
+\newcommand{\sam}{\Omega}
+\newcommand{\samZ}{\RR}
+\newcommand{\samY}{\Xi}
+\newcommand{\samX}{\chi}
+%% measureable spaces
+\newcommand{\ms}{(\sam, \sA)}
+\newcommand{\msZ}{(\samZ, \sAZ)}
+\newcommand{\msY}{(\samY, \sAY)}
+%% probability spaces
+\newcommand{\ps}{(\sam, \sA, \Prob)}
+\newcommand{\psZ}{(\samZ, \sAZ, \Prob_\rZ)}
+\newcommand{\psY}{(\samY, \sAY, \Prob_\rY)}
+%% distributions
+\newcommand{\pZ}{F_\rZ}
+\newcommand{\pY}{F_\rY}
+\newcommand{\hatpY}{\hat{F}_{\rY,N}}
+\newcommand{\hatpYx}{\hat{F}_{\rY | \rX = \rx, N}}
+\newcommand{\pN}{\Phi}
+\newcommand{\pSL}{F_{\SL}}
+\newcommand{\pMEV}{F_{\MEV}}
+\newcommand{\pSW}{F_{\SW}}
+\newcommand{\pYx}{F_{\rY | \rX = \rx}}
+\newcommand{\pYA}{F_{\rY | \rX = A}}
+\newcommand{\pYB}{F_{\rY | \rX = B}}
+\newcommand{\qZ}{F^{-1}_\rZ}
+\newcommand{\qY}{F^{-1}_\rY}
+\newcommand{\dZ}{f_\rZ}
+\newcommand{\dY}{f_\rY}
+\newcommand{\hatdY}{\hat{f}_{\rY, N}}
+\newcommand{\dYx}{f_{\rY | \rX = \rx}}
+\newcommand{\hazY}{\lambda_{\rY}}
+\newcommand{\HazY}{\Lambda_{\rY}}
+\newcommand{\hathazY}{\hat{\lambda}_{\rY, N}}
+\newcommand{\hatHazY}{\hat{\Lambda}_{\rY, N}}
+%% measures
+\newcommand{\measureY}{\mu}
+\newcommand{\lebesgue}{\mu_L}
+\newcommand{\counting}{\mu_C}
+%% trafo
+\newcommand{\g}{g}
+\newcommand{\h}{h}
+\newcommand{\s}{\svec}
+\newcommand{\hY}{h_\rY}
+\newcommand{\hx}{h_\rx}
+\newcommand{\hs}{\mathcal{H}}
+\newcommand{\basisy}{\avec}
+\newcommand{\bern}[1]{\avec_{\text{Bs},#1}}
+\newcommand{\bernx}[1]{\bvec_{\text{Bs},#1}}
+\newcommand{\basisx}{\bvec}
+\newcommand{\basisyx}{\cvec}
+\newcommand{\m}{m}
+\newcommand{\lik}{\mathcal{L}}
+\newcommand{\parm}{\varthetavec}
+\newcommand{\eparm}{\vartheta}
+\newcommand{\dimparm}{P}
+\newcommand{\dimparmx}{Q}
+\newcommand{\shiftparm}{\betavec}
+\newcommand{\baseparm}{\alphavec}
+\newcommand{\eshiftparm}{\beta}
+
+\newcommand{\ie}{\textit{i.e.}~}
+\newcommand{\eg}{\textit{e.g.}~}
+
+\renewcommand{\Prob}{\mathbb{P}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\prodname}{tensor }
+\newcommand{\Null}{\mathbf{0}}
+\newcommand{\FI}{\mF}
+
+\usepackage{dsfont}
+\newcommand{\I}{\mathds{1}}
+
+
+
+\def \dsP {\text{$\mathds{P}$}}
+\def \dsE {\text{$\mathds{E}$}}
+\def \dsR {\text{$\mathds{R}$}}
+\def \dsN {\text{$\mathds{N}$}}
+
+
+% Math Operators
+
+ \DeclareMathOperator{\logit}{logit}
+ \DeclareMathOperator{\LRT}{LRT}
+ \DeclareMathOperator{\RLRT}{RLRT}
+ \DeclareMathOperator{\Cov}{Cov}
+ \DeclareMathOperator{\Cor}{Cor}
+ \DeclareMathOperator{\Var}{Var}
+ \DeclareMathOperator{\EW}{\dsE}
+ \DeclareMathOperator{\D}{D}
+ \DeclareMathOperator{\Bias}{Bias}
+ \DeclareMathOperator{\MSE}{MSE}
+ \DeclareMathOperator{\PLS}{PLS}
+ \DeclareMathOperator{\rank}{rank}
+ \DeclareMathOperator{\ncol}{ncol}
+ \DeclareMathOperator{\pen}{pen}
+ \DeclareMathOperator{\const}{const}
+ \DeclareMathOperator{\diag}{diag}
+ \DeclareMathOperator{\blockdiag}{blockdiag}
+ \DeclareMathOperator{\df}{df}
+ \DeclareMathOperator{\trace}{tr}
+ \DeclareMathOperator{\iid}{i.i.d.}
+ \DeclareMathOperator{\ind}{ind.}
+ \DeclareMathOperator{\obs}{obs}
+ \DeclareMathOperator{\acos}{acos}
+ \DeclareMathOperator{\spat}{spat}
+ \DeclareMathOperator{\fix}{{fix}}
+ \DeclareMathOperator{\ran}{{ran}}
+ \DeclareMathOperator*{\argmin}{{arg\,min}}
+ \DeclareMathOperator*{\argmax}{{arg\,max}}
+ \DeclareMathOperator{\BIC}{{BIC}}
+ \DeclareMathOperator{\DIC}{{DIC}}
+ \DeclareMathOperator{\AIC}{{AIC}}
+ \DeclareMathOperator{\mAIC}{{mAIC}}
+ \DeclareMathOperator{\cAIC}{{cAIC}}
+
+% Distributions
+
+ \DeclareMathOperator{\ND}{N}
+ \DeclareMathOperator{\TND}{TN}
+ \DeclareMathOperator{\UD}{U}
+ \DeclareMathOperator{\GaD}{Ga}
+ \DeclareMathOperator{\tD}{t}
+ \DeclareMathOperator{\IGD}{IG}
+ \DeclareMathOperator{\IWD}{IW}
+ \DeclareMathOperator{\PoD}{Po}
+ \DeclareMathOperator{\ExpD}{Exp}
+ \DeclareMathOperator{\LapD}{Lap}
+ \DeclareMathOperator{\MuD}{Mu}
+ \DeclareMathOperator{\DirD}{Dir}
+ \DeclareMathOperator{\PDD}{PD}
+ \DeclareMathOperator{\BeD}{Be}
+ \DeclareMathOperator{\BD}{B}
+ \DeclareMathOperator{\DPD}{DP}
+ \DeclareMathOperator{\KSD}{KS}
+ \DeclareMathOperator{\SL}{SL}
+ \DeclareMathOperator{\MEV}{MEV}
+ \DeclareMathOperator{\SW}{SW}
+ \DeclareMathOperator{\Chi1}{\chi^2_1}
+
+
+
+% Boldface vectors and matrices
+
+\def \avec {\text{\boldmath$a$}}    \def \mA {\text{\boldmath$A$}}
+\def \bvec {\text{\boldmath$b$}}    \def \mB {\text{\boldmath$B$}}
+\def \cvec {\text{\boldmath$c$}}    \def \mC {\text{\boldmath$C$}}
+\def \dvec {\text{\boldmath$d$}}    \def \mD {\text{\boldmath$D$}}
+\def \evec {\text{\boldmath$e$}}    \def \mE {\text{\boldmath$E$}}
+\def \fvec {\text{\boldmath$f$}}    \def \mF {\text{\boldmath$F$}}
+\def \gvec {\text{\boldmath$g$}}    \def \mG {\text{\boldmath$G$}}
+\def \hvec {\text{\boldmath$h$}}    \def \mH {\text{\boldmath$H$}}
+\def \ivec {\text{\boldmath$i$}}    \def \mI {\text{\boldmath$I$}}
+\def \jvec {\text{\boldmath$j$}}    \def \mJ {\text{\boldmath$J$}}
+\def \kvec {\text{\boldmath$k$}}    \def \mK {\text{\boldmath$K$}}
+\def \lvec {\text{\boldmath$l$}}    \def \mL {\text{\boldmath$L$}}
+\def \mvec {\text{\boldmath$m$}}    \def \mM {\text{\boldmath$M$}}
+\def \nvec {\text{\boldmath$n$}}    \def \mN {\text{\boldmath$N$}}
+\def \ovec {\text{\boldmath$o$}}    \def \mO {\text{\boldmath$O$}}
+\def \pvec {\text{\boldmath$p$}}    \def \mP {\text{\boldmath$P$}}
+\def \qvec {\text{\boldmath$q$}}    \def \mQ {\text{\boldmath$Q$}}
+\def \rvec {\text{\boldmath$r$}}    \def \mR {\text{\boldmath$R$}}
+\def \svec {\text{\boldmath$s$}}    \def \mS {\text{\boldmath$S$}}
+\def \tvec {\text{\boldmath$t$}}    \def \mT {\text{\boldmath$T$}}
+\def \uvec {\text{\boldmath$u$}}    \def \mU {\text{\boldmath$U$}}
+\def \vvec {\text{\boldmath$v$}}    \def \mV {\text{\boldmath$V$}}
+\def \wvec {\text{\boldmath$w$}}    \def \mW {\text{\boldmath$W$}}
+\def \xvec {\text{\boldmath$x$}}    \def \mX {\text{\boldmath$X$}}
+\def \yvec {\text{\boldmath$y$}}    \def \mY {\text{\boldmath$Y$}}
+\def \zvec {\text{\boldmath$z$}}    \def \mZ {\text{\boldmath$Z$}}
+
+ \def \calA {\mathcal A}
+ \def \calB {\mathcal B}
+ \def \calC {\mathcal C}
+ \def \calD {\mathcal D}
+ \def \calE {\mathcal E}
+ \def \calF {\mathcal F}
+ \def \calG {\mathcal G}
+ \def \calH {\mathcal H}
+ \def \calI {\mathcal I}
+ \def \calJ {\mathcal J}
+ \def \calK {\mathcal K}
+ \def \calL {\mathcal L}
+ \def \calM {\mathcal M}
+ \def \calN {\mathcal N}
+ \def \calO {\mathcal O}
+ \def \calP {\mathcal P}
+ \def \calQ {\mathcal Q}
+ \def \calR {\mathcal R}
+ \def \calS {\mathcal S}
+ \def \calT {\mathcal T}
+ \def \calU {\mathcal U}
+ \def \calV {\mathcal V}
+ \def \calW {\mathcal W}
+ \def \calX {\mathcal X}
+ \def \calY {\mathcal Y}
+ \def \calZ {\mathcal Z}
+
+\def \ahatvec {\text{\boldmath$\hat a$}}    \def \mhatA {\text{\boldmath$\hat A$}}
+\def \bhatvec {\text{\boldmath$\hat b$}}    \def \mhatB {\text{\boldmath$\hat B$}}
+\def \chatvec {\text{\boldmath$\hat c$}}    \def \mhatC {\text{\boldmath$\hat C$}}
+\def \dhatvec {\text{\boldmath$\hat d$}}    \def \mhatD {\text{\boldmath$\hat D$}}
+\def \ehatvec {\text{\boldmath$\hat e$}}    \def \mhatE {\text{\boldmath$\hat E$}}
+\def \fhatvec {\text{\boldmath$\hat f$}}    \def \mhatF {\text{\boldmath$\hat F$}}
+\def \ghatvec {\text{\boldmath$\hat g$}}    \def \mhatG {\text{\boldmath$\hat G$}}
+\def \hhatvec {\text{\boldmath$\hat h$}}    \def \mhatH {\text{\boldmath$\hat H$}}
+\def \ihatvec {\text{\boldmath$\hat i$}}    \def \mhatI {\text{\boldmath$\hat I$}}
+\def \jhatvec {\text{\boldmath$\hat j$}}    \def \mhatJ {\text{\boldmath$\hat J$}}
+\def \khatvec {\text{\boldmath$\hat k$}}    \def \mhatK {\text{\boldmath$\hat K$}}
+\def \lhatvec {\text{\boldmath$\hat l$}}    \def \mhatL {\text{\boldmath$\hat L$}}
+\def \mhatvec {\text{\boldmath$\hat m$}}    \def \mhatM {\text{\boldmath$\hat M$}}
+\def \nhatvec {\text{\boldmath$\hat n$}}    \def \mhatN {\text{\boldmath$\hat N$}}
+\def \ohatvec {\text{\boldmath$\hat o$}}    \def \mhatO {\text{\boldmath$\hat O$}}
+\def \phatvec {\text{\boldmath$\hat p$}}    \def \mhatP {\text{\boldmath$\hat P$}}
+\def \qhatvec {\text{\boldmath$\hat q$}}    \def \mhatQ {\text{\boldmath$\hat Q$}}
+\def \rhatvec {\text{\boldmath$\hat r$}}    \def \mhatR {\text{\boldmath$\hat R$}}
+\def \shatvec {\text{\boldmath$\hat s$}}    \def \mhatS {\text{\boldmath$\hat S$}}
+\def \thatvec {\text{\boldmath$\hat t$}}    \def \mhatT {\text{\boldmath$\hat T$}}
+\def \uhatvec {\text{\boldmath$\hat u$}}    \def \mhatU {\text{\boldmath$\hat U$}}
+\def \vhatvec {\text{\boldmath$\hat v$}}    \def \mhatV {\text{\boldmath$\hat V$}}
+\def \whatvec {\text{\boldmath$\hat w$}}    \def \mhatW {\text{\boldmath$\hat W$}}
+\def \xhatvec {\text{\boldmath$\hat x$}}    \def \mhatX {\text{\boldmath$\hat X$}}
+\def \yhatvec {\text{\boldmath$\hat y$}}    \def \mhatY {\text{\boldmath$\hat Y$}}
+\def \zhatvec {\text{\boldmath$\hat z$}}    \def \mhatZ {\text{\boldmath$\hat Z$}}
+
+
+\def \atildevec {\text{\boldmath$\tilde a$}}    \def \mtildeA {\text{\boldmath$\tilde A$}}
+\def \btildevec {\text{\boldmath$\tilde b$}}    \def \mtildeB {\text{\boldmath$\tilde B$}}
+\def \ctildevec {\text{\boldmath$\tilde c$}}    \def \mtildeC {\text{\boldmath$\tilde C$}}
+\def \dtildevec {\text{\boldmath$\tilde d$}}    \def \mtildeD {\text{\boldmath$\tilde D$}}
+\def \etildevec {\text{\boldmath$\tilde e$}}    \def \mtildeE {\text{\boldmath$\tilde E$}}
+\def \ftildevec {\text{\boldmath$\tilde f$}}    \def \mtildeF {\text{\boldmath$\tilde F$}}
+\def \gtildevec {\text{\boldmath$\tilde g$}}    \def \mtildeG {\text{\boldmath$\tilde G$}}
+\def \htildevec {\text{\boldmath$\tilde h$}}    \def \mtildeH {\text{\boldmath$\tilde H$}}
+\def \itildevec {\text{\boldmath$\tilde i$}}    \def \mtildeI {\text{\boldmath$\tilde I$}}
+\def \jtildevec {\text{\boldmath$\tilde j$}}    \def \mtildeJ {\text{\boldmath$\tilde J$}}
+\def \ktildevec {\text{\boldmath$\tilde k$}}    \def \mtildeK {\text{\boldmath$\tilde K$}}
+\def \ltildevec {\text{\boldmath$\tilde l$}}    \def \mtildeL {\text{\boldmath$\tilde L$}}
+\def \mtildevec {\text{\boldmath$\tilde m$}}    \def \mtildeM {\text{\boldmath$\tilde M$}}
+\def \ntildevec {\text{\boldmath$\tilde n$}}    \def \mtildeN {\text{\boldmath$\tilde N$}}
+\def \otildevec {\text{\boldmath$\tilde o$}}    \def \mtildeO {\text{\boldmath$\tilde O$}}
+\def \ptildevec {\text{\boldmath$\tilde p$}}    \def \mtildeP {\text{\boldmath$\tilde P$}}
+\def \qtildevec {\text{\boldmath$\tilde q$}}    \def \mtildeQ {\text{\boldmath$\tilde Q$}}
+\def \rtildevec {\text{\boldmath$\tilde r$}}    \def \mtildeR {\text{\boldmath$\tilde R$}}
+\def \stildevec {\text{\boldmath$\tilde s$}}    \def \mtildeS {\text{\boldmath$\tilde S$}}
+\def \ttildevec {\text{\boldmath$\tilde t$}}    \def \mtildeT {\text{\boldmath$\tilde T$}}
+\def \utildevec {\text{\boldmath$\tilde u$}}    \def \mtildeU {\text{\boldmath$\tilde U$}}
+\def \vtildevec {\text{\boldmath$\tilde v$}}    \def \mtildeV {\text{\boldmath$\tilde V$}}
+\def \wtildevec {\text{\boldmath$\tilde w$}}    \def \mtildeW {\text{\boldmath$\tilde W$}}
+\def \xtildevec {\text{\boldmath$\tilde x$}}    \def \mtildeX {\text{\boldmath$\tilde X$}}
+\def \ytildevec {\text{\boldmath$\tilde y$}}    \def \mtildeY {\text{\boldmath$\tilde Y$}}
+\def \ztildevec {\text{\boldmath$\tilde z$}}    \def \mtildeZ {\text{\boldmath$\tilde Z$}}
+
+\def \alphavec        {\text{\boldmath$\alpha$}}
+\def \betavec         {\text{\boldmath$\beta$}}
+\def \gammavec        {\text{\boldmath$\gamma$}}
+\def \deltavec        {\text{\boldmath$\delta$}}
+\def \epsilonvec      {\text{\boldmath$\epsilon$}}
+\def \varepsilonvec   {\text{\boldmath$\varepsilon$}}
+\def \zetavec         {\text{\boldmath$\zeta$}}
+\def \etavec          {\text{\boldmath$\eta$}}
+\def \thetavec        {\text{\boldmath$\theta$}}
+\def \varthetavec     {\text{\boldmath$\vartheta$}}
+\def \iotavec         {\text{\boldmath$\iota$}}
+\def \kappavec        {\text{\boldmath$\kappa$}}
+\def \lambdavec       {\text{\boldmath$\lambda$}}
+\def \muvec           {\text{\boldmath$\mu$}}
+\def \nuvec           {\text{\boldmath$\nu$}}
+\def \xivec           {\text{\boldmath$\xi$}}
+\def \pivec           {\text{\boldmath$\pi$}}
+\def \varpivec        {\text{\boldmath$\varpi$}}
+\def \rhovec          {\text{\boldmath$\rho$}}
+\def \varrhovec       {\text{\boldmath$\varrho$}}
+\def \sigmavec        {\text{\boldmath$\sigma$}}
+\def \varsigmavec     {\text{\boldmath$\varsigma$}}
+\def \tauvec          {\text{\boldmath$\tau$}}
+\def \upsilonvec      {\text{\boldmath$\upsilon$}}
+\def \phivec          {\text{\boldmath$\phi$}}
+\def \varphivec       {\text{\boldmath$\varphi$}}
+\def \psivec          {\text{\boldmath$\psi$}}
+\def \chivec          {\text{\boldmath$\chi$}}
+\def \omegavec        {\text{\boldmath$\omega$}}
+
+\def \alphahatvec        {\text{\boldmath$\hat \alpha$}}
+\def \betahatvec         {\text{\boldmath$\hat \beta$}}
+\def \gammahatvec        {\text{\boldmath$\hat \gamma$}}
+\def \deltahatvec        {\text{\boldmath$\hat \delta$}}
+\def \epsilonhatvec      {\text{\boldmath$\hat \epsilon$}}
+\def \varepsilonhatvec   {\text{\boldmath$\hat \varepsilon$}}
+\def \zetahatvec         {\text{\boldmath$\hat \zeta$}}
+\def \etahatvec          {\text{\boldmath$\hat \eta$}}
+\def \thetahatvec        {\text{\boldmath$\hat \theta$}}
+\def \varthetahatvec     {\text{\boldmath$\hat \vartheta$}}
+\def \iotahatvec         {\text{\boldmath$\hat \iota$}}
+\def \kappahatvec        {\text{\boldmath$\hat \kappa$}}
+\def \lambdahatvec       {\text{\boldmath$\hat \lambda$}}
+\def \muhatvec           {\text{\boldmath$\hat \mu$}}
+\def \nuhatvec           {\text{\boldmath$\hat \nu$}}
+\def \xihatvec           {\text{\boldmath$\hat \xi$}}
+\def \pihatvec           {\text{\boldmath$\hat \pi$}}
+\def \varpihatvec        {\text{\boldmath$\hat \varpi$}}
+\def \rhohatvec          {\text{\boldmath$\hat \rho$}}
+\def \varrhohatvec       {\text{\boldmath$\hat \varrho$}}
+\def \sigmahatvec        {\text{\boldmath$\hat \sigma$}}
+\def \varsigmahatvec     {\text{\boldmath$\hat \varsigma$}}
+\def \tauhatvec          {\text{\boldmath$\hat \tau$}}
+\def \upsilonhatvec      {\text{\boldmath$\hat \upsilon$}}
+\def \phihatvec          {\text{\boldmath$\hat \phi$}}
+\def \varphihatvec       {\text{\boldmath$\hat \varphi$}}
+\def \psihatvec          {\text{\boldmath$\hat \psi$}}
+\def \chihatvec          {\text{\boldmath$\hat \chi$}}
+\def \omegahatvec        {\text{\boldmath$\hat \omega$}}
+
+\def \alphatildevec        {\text{\boldmath$\tilde \alpha$}}
+\def \betatildevec         {\text{\boldmath$\tilde \beta$}}
+\def \gammatildevec        {\text{\boldmath$\tilde \gamma$}}
+\def \deltatildevec        {\text{\boldmath$\tilde \delta$}}
+\def \epsilontildevec      {\text{\boldmath$\tilde \epsilon$}}
+\def \varepsilontildevec   {\text{\boldmath$\tilde \varepsilon$}}
+\def \zetatildevec         {\text{\boldmath$\tilde \zeta$}}
+\def \etatildevec          {\text{\boldmath$\tilde \eta$}}
+\def \thetatildevec        {\text{\boldmath$\tilde \theta$}}
+\def \varthetatildevec     {\text{\boldmath$\tilde \vartheta$}}
+\def \iotatildevec         {\text{\boldmath$\tilde \iota$}}
+\def \kappatildevec        {\text{\boldmath$\tilde \kappa$}}
+\def \lambdatildevec       {\text{\boldmath$\tilde \lambda$}}
+\def \mutildevec           {\text{\boldmath$\tilde \mu$}}
+\def \nutildevec           {\text{\boldmath$\tilde \nu$}}
+\def \xitildevec           {\text{\boldmath$\tilde \xi$}}
+\def \pitildevec           {\text{\boldmath$\tilde \pi$}}
+\def \varpitildevec        {\text{\boldmath$\tilde \varpi$}}
+\def \rhotildevec          {\text{\boldmath$\tilde \rho$}}
+\def \varrhotildevec       {\text{\boldmath$\tilde \varrho$}}
+\def \sigmatildevec        {\text{\boldmath$\tilde \sigma$}}
+\def \varsigmatildevec     {\text{\boldmath$\tilde \varsigma$}}
+\def \tautildevec          {\text{\boldmath$\tilde \tau$}}
+\def \upsilontildevec      {\text{\boldmath$\tilde \upsilon$}}
+\def \phitildevec          {\text{\boldmath$\tilde \phi$}}
+\def \varphitildevec       {\text{\boldmath$\tilde \varphi$}}
+\def \psitildevec          {\text{\boldmath$\tilde \psi$}}
+\def \chitildevec          {\text{\boldmath$\tilde \chi$}}
+\def \omegatildevec        {\text{\boldmath$\tilde \omega$}}
+
+\def \mGamma   {\mathbf{\Gamma}}
+\def \mDelta   {\mathbf{\Delta}}
+\def \mTheta   {\mathbf{\Theta}}
+\def \mLambda  {\mathbf{\Lambda}}
+\def \mXi      {\mathbf{\Xi}}
+\def \mPi      {\mathbf{\Pi}}
+\def \mSigma   {\mathbf{\Sigma}}
+\def \mUpsilon {\mathbf{\Upsilon}}
+\def \mPhi     {\mathbf{\Phi}}
+\def \mPsi     {\mathbf{\Psi}}
+\def \mOmega   {\mathbf{\Omega}}
+
+\def \mhatGamma   {\mathbf{\hat \Gamma}}
+\def \mhatDelta   {\mathbf{\hat \Delta}}
+\def \mhatTheta   {\mathbf{\hat \Theta}}
+\def \mhatLambda  {\mathbf{\hat \Lambda}}
+\def \mhatXi      {\mathbf{\hat \Xi}}
+\def \mhatPi      {\mathbf{\hat \Pi}}
+\def \mhatSigma   {\mathbf{\hat \Sigma}}
+\def \mhatUpsilon {\mathbf{\hat \Upsilon}}
+\def \mhatPhi     {\mathbf{\hat \Phi}}
+\def \mhatPsi     {\mathbf{\hat \Psi}}
+\def \mhatOmega   {\mathbf{\hat \Omega}}
+
+\def \nullvec {\mathbf{0}}
+\def \onevec {\mathbf{1}}
+
+%%% theorems
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{coro}{Corollary}
+\newtheorem{defn}{Definition}
+\newtheorem{remark}{Remark}
+
+\newcommand{\ubar}[1]{\underaccent{\bar}{#1}}
+

@@ -94,13 +94,13 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
   }
 
   if (type[1] == "IBS"){
-    ret <- sapply(1:n.sub, function(Ni) ibsfunc(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred))
+    ret <- sapply(1:n.sub, function(Ni) ibsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred))
     ret <- mean(ret)
     names(ret) = "Integrated Brier score"
   } else if (type[1] == "BS"){
     # Brier score will be evaluated up to the last time point where survival probabilities of all data are computed.
     tpnt <- pred$survival.times[pred$survival.times <= min(pred$survival.tau)]
-    bsres <- sapply(1:n.sub, function(Ni) bsfunc(Ni = Ni, id = id, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
+    bsres <- sapply(1:n.sub, function(Ni) bsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
     bsres <- rowMeans(bsres)
     ret <- data.frame(matrix(0, ncol = 2, nrow = length(tpnt)))
     colnames(ret) <- c("Time", "BScore")
@@ -112,16 +112,17 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
   return(ret)
 }
 
-ibsfunc <- function(Ni, id, data_sbrier, pred){
-  id_uniq <- unique(id)
-
+ibsfunc <- function(Ni, data_sbrier, pred){
+  id_uniq <- unique(data_sbrier$id)
+  tpnt = pred$survival.times[pred$survival.times <= pred$survival.tau[Ni]]
+  tlen = length(tpnt)
   ## Get the estimated survival probabilities
   if (class(pred$survival.probs)[1] == "matrix"){
-    Shat = pred$survival.probs[, Ni]
+    Shat = pred$survival.probs[1:tlen, Ni]
   } else if(class(pred$survival.probs)[1] == "list"){
-    Shat = pred$survival.probs[[Ni]]
+    Shat = pred$survival.probs[[Ni]][1:tlen]
   }
-  tpnt = pred$survival.times[pred$survival.times <= pred$survival.tau[Ni]]
+
   ######================ reverse Kaplan-Meier: estimate censoring distribution ====== ########
   # deal with ties
   hatcdist <- prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
@@ -150,8 +151,8 @@ ibsfunc <- function(Ni, id, data_sbrier, pred){
   ibs
 }
 
-bsfunc <- function(Ni, id, data_sbrier, pred, tpnt){
-  id_uniq <- unique(id)
+bsfunc <- function(Ni, data_sbrier, pred, tpnt){
+  id_uniq <- unique(data_sbrier$id)
   tlen = length(tpnt)
   ## Get the estimated survival probabilities
   if (class(pred$survival.probs)[1] == "matrix"){

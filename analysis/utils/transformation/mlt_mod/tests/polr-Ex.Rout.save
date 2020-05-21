@@ -1,0 +1,165 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library("MASS")
+> 
+> mp <- polr(Sat ~ Infl, weights = Freq, data = housing)
+> 
+> library("mlt")
+Loading required package: basefun
+Loading required package: variables
+> 
+> s <- as.basis(~ Infl, data = housing, remove_intercept = TRUE)
+> r <- as.basis(housing$Sat)
+> #r <- as.basis(~ Sat, data = housing, remove_intercept = TRUE,
+> #              contrasts.arg = list(Sat = function(n) 
+> #                  contr.treatment(n, base = 3)),
+> #              ui = diff(diag(2)), ci = 0)
+> 
+> m <- ctm(r, shift = s, todist = "Logi")
+> 
+> mod <- mlt(m, data = housing, weights = housing$Freq)
+> 
+> logLik(mp)
+'log Lik.' -1771.708 (df=4)
+> logLik(mod)
+'log Lik.' -1771.708 (df=4)
+> 
+> coef(mp)
+InflMedium   InflHigh 
+ 0.5635756  1.2486832 
+> mp$zeta
+ Low|Medium Medium|High 
+ -0.2013727   0.9484658 
+> coef(mod)
+      Sat1       Sat2 InflMedium   InflHigh 
+-0.2013745  0.9484782 -0.5635842 -1.2486779 
+> 
+> sqrt(diag(vcov(mp)))
+
+Re-fitting to get Hessian
+
+ InflMedium    InflHigh  Low|Medium Medium|High 
+ 0.10357053  0.12479361  0.07662596  0.08024304 
+> sqrt(diag(vcov(mod)))
+      Sat1       Sat2 InflMedium   InflHigh 
+0.07662595 0.08024303 0.10357053 0.12479363 
+> 
+> mp <- polr(Sat ~ Infl, weights = Freq, data = housing, method = "loglog")
+> 
+> s <- as.basis(~ Infl, data = housing, remove_intercept = TRUE)
+> r <- as.basis(housing$Sat)
+> m <- ctm(r, shift = s, todist = "MaxExtrVal")
+> 
+> mod <- mlt(m, data = housing, weights = housing$Freq)
+> 
+> logLik(mp)
+'log Lik.' -1776.416 (df=4)
+> logLik(mod)
+'log Lik.' -1776.416 (df=4)
+> 
+> coef(mp)
+InflMedium   InflHigh 
+ 0.3851078  0.7837681 
+> mp$zeta
+ Low|Medium Medium|High 
+  0.2425732   1.0315129 
+> coef(mod)
+      Sat1       Sat2 InflMedium   InflHigh 
+ 0.2425772  1.0315177 -0.3851189 -0.7837785 
+> 
+> sqrt(diag(vcov(mp)))
+
+Re-fitting to get Hessian
+
+ InflMedium    InflHigh  Low|Medium Medium|High 
+ 0.07219408  0.07953692  0.05453940  0.06090649 
+> sqrt(diag(vcov(mod)))
+      Sat1       Sat2 InflMedium   InflHigh 
+0.05453958 0.06090668 0.07219424 0.07953700 
+> 
+> mp <- polr(Sat ~ Infl, weights = Freq, data = housing, method = "cloglog")
+> 
+> s <- as.basis(~ Infl, data = housing, remove_intercept = TRUE)
+> r <- as.basis(housing$Sat)
+> m <- ctm(r, shift = s, todist = "MinExtrVal")
+> 
+> mod <- mlt(m, data = housing, weights = housing$Freq)
+> 
+> logLik(mp)
+'log Lik.' -1772.924 (df=4)
+> logLik(mod)
+'log Lik.' -1772.924 (df=4)
+> 
+> coef(mp)
+InflMedium   InflHigh 
+ 0.3662567  0.8792058 
+> mp$zeta
+ Low|Medium Medium|High 
+ -0.5679040   0.2655082 
+> coef(mod)
+      Sat1       Sat2 InflMedium   InflHigh 
+-0.5679043  0.2655074 -0.3662565 -0.8792066 
+> 
+> sqrt(diag(vcov(mp)))
+
+Re-fitting to get Hessian
+
+ InflMedium    InflHigh  Low|Medium Medium|High 
+ 0.06980195  0.09157487  0.05441248  0.04894207 
+> sqrt(diag(vcov(mod)))
+      Sat1       Sat2 InflMedium   InflHigh 
+0.05441250 0.04894209 0.06980196 0.09157492 
+> 
+> mp <- polr(Sat ~ Infl, weights = Freq, data = housing, method = "probit")
+> 
+> s <- as.basis(~ Infl, data = housing, remove_intercept = TRUE)
+> r <- as.basis(housing$Sat)
+> m <- ctm(r, shift = s, todist = "Normal")
+> 
+> mod <- mlt(m, data = housing, weights = housing$Freq)
+> 
+> logLik(mp)
+'log Lik.' -1772.056 (df=4)
+> logLik(mod)
+'log Lik.' -1772.056 (df=4)
+> 
+> coef(mp)
+InflMedium   InflHigh 
+ 0.3465900  0.7608878 
+> mp$zeta
+ Low|Medium Medium|High 
+ -0.1246930   0.5834263 
+> coef(mod)
+      Sat1       Sat2 InflMedium   InflHigh 
+-0.1246927  0.5834267 -0.3465902 -0.7608882 
+> 
+> sqrt(diag(vcov(mp)))
+
+Re-fitting to get Hessian
+
+ InflMedium    InflHigh  Low|Medium Medium|High 
+ 0.06360385  0.07529229  0.04741187  0.04867417 
+> sqrt(diag(vcov(mod)))
+      Sat1       Sat2 InflMedium   InflHigh 
+0.04741187 0.04867418 0.06360385 0.07529229 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  1.832   0.028   1.860 

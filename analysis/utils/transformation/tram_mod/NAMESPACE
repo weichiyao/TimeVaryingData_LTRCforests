@@ -1,0 +1,34 @@
+
+import("mlt")
+import("variables")
+import("basefun")
+import("Formula")
+importFrom("sandwich", "vcovCL", "estfun")
+importFrom("multcomp", "cftest", "adjusted_calpha", "univariate_calpha")
+importFrom("stats", "model.matrix", "coef", "vcov", "nobs", "predict", "quantile", "na.omit",
+           "logLik", "model.response", "model.weights", "model.offset", "terms", "as.formula",
+           "printCoefmat", "qqline", "qqplot", "qunif", "variable.names", "pchisq",
+           "model.frame")
+importFrom("survival", "survfit", "Surv")
+importFrom("graphics", "plot", "lines", "polygon")
+importFrom("stats", "update")
+
+export(tram, tram_data, Coxph, Colr, Polr, Lm, BoxCox, Survreg, Lehmann)
+
+S3method("as.mlt", "tram")
+S3method("model.matrix", "tram")
+S3method("coef", "tram")
+S3method("coef", "Lm")
+S3method("coef", "Survreg")
+S3method("vcov", "tram")
+S3method("nobs", "tram")
+S3method("logLik", "tram")
+S3method("estfun", "tram")
+S3method("predict", "tram")
+S3method("summary", "tram")
+S3method("model.frame", "tram")
+S3method("terms", "tram")
+S3method("print", "tram")
+S3method("print", "summary.tram")
+S3method("plot", "tram")
+S3method("update", "tram")

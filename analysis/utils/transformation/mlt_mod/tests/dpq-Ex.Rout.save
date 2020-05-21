@@ -1,0 +1,169 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library("mlt")
+Loading required package: basefun
+Loading required package: variables
+> set.seed(29)
+> 
+> n <- 20
+> ### just for interface checking
+> ### we need something better!
+> d <- data.frame(x1 = 1:n, x2 = sample(1:n) + 1, y = rnorm(n))
+> m <- ctm(polynomial_basis(numeric_var("y", support = range(d$y)),
++                             coef = c(TRUE, TRUE), ci = c(-Inf, 0)),
++            shift = ~ x1 + x2, data = d)
+> mod <- mlt(m, data = d)
+> coef(mod)
+ (Intercept)            y           x1           x2 
+-0.605727929  1.055386378  0.027840842  0.006260632 
+> 
+> p <- predict(mod, newdata = d)
+> 
+> K <- 15
+> q <- mkgrid(m, n = K)[["y"]]
+> p1 <- predict(mod, newdata = d[, c("x1", "x2")], q = q)
+> p2 <- predict(mod, newdata = d[, c("x1", "x2")], K = K)
+> stopifnot(all.equal(p1, p2))
+> 
+> p0 <- predict(mod$model$model, 
++     newdata = expand.grid(d), coef = coef(mod))
+> p1 <- predict(mod, newdata = as.list(d))
+> p2 <- predict(mod, newdata = d, q = d$y[1])
+> 
+> max(abs(p0 - as.vector(p1)))
+[1] 0
+> 
+> all.equal(p1[cbind(1:n, 1:n, 1), drop = TRUE],
++           drop(p2))
+[1] TRUE
+> 
+> all.equal(p1[cbind(1:n, 1:n, 1:n), drop = TRUE],
++           drop(p), check.attributes = FALSE)
+[1] TRUE
+> 
+> predict(mod, newdata = list(x1 = 1:3, x2 = 2:3), prob = c(.25, .5), type = "quantile")
+, , x2 =     2
+
+       x1
+prob             1          2          3
+   0.25 -0.1035274 -0.1301827 -0.1566080
+    0.5  0.5356901  0.5093221  0.4829329
+
+, , x2 =     3
+
+       x1
+prob             1          2          3
+   0.25 -0.1093401 -0.1361691 -0.1624829
+    0.5  0.5297605  0.5033911  0.4769976
+
+> 
+> simulate(mod, nsim = 1, seed = 291, interpolate = FALSE)
+ [1] (-1.29976528, -1.2253383] ( 1.15632490,  1.2307519]
+ [3] (-0.70434948, -0.6299225] ( 1.23075188,  1.3051789]
+ [5] ( 0.70976305,  0.7841900] ( 0.63533608,  0.7097631]
+ [7] ( 2.19830256,        Inf] ( 1.45403280,  1.5284598]
+ [9] ( 0.03992027,  0.1143473] ( 1.30517885,  1.3796058]
+[11] (-1.22533830, -1.1509113] ( 0.11434725,  0.1887742]
+[13] ( 0.70976305,  0.7841900] ( 0.18877423,  0.2632012]
+[15] ( 0.63533608,  0.7097631] ( 0.85861700,  0.9330440]
+[17] (-1.37419225, -1.2997653] ( 0.18877423,  0.2632012]
+[19] ( 0.03992027,  0.1143473] ( 1.52845978,  1.6028868]
+> 
+> d$y <- gl(3, 1, ordered = TRUE)[rep(1:3, length = n)]
+> 
+> r <- as.basis(d$y) #as.basis(~ y, data = d, remove_intercept = TRUE,
+> #              contrasts.arg = list(y = function(n)
+> #                  contr.treatment(n, base = 3)),
+> #              ui = diff(diag(2)), ci = 0)
+> 
+> mod2 <- mlt(ctm(r, shift = ~ x1 + x2, data = d), data = d)
+> 
+> predict(mod2, q = unique(d$y))
+   
+y        [,1]      [,2]       [,3]      [,4]       [,5]       [,6]       [,7]
+  1 0.6046781 0.2544986 -1.4408922 0.1146444 -0.3476360 -1.2583201 -0.5995911
+  2 1.7176813 1.3675019 -0.3278889 1.2276477  0.7653673 -0.1453169  0.5134121
+  3       Inf       Inf        Inf       Inf        Inf        Inf        Inf
+   
+y         [,8]       [,9]     [,10]       [,11]     [,12]      [,13]      [,14]
+  1 -0.8376696 -0.9636472 0.3676875 -1.10350139 0.2278333 -0.5707499 -1.4814341
+  2  0.2753336  0.1493560 1.4806907  0.00950184 1.3408365  0.5422533 -0.3684309
+  3        Inf        Inf       Inf         Inf       Inf        Inf        Inf
+   
+y        [,15]      [,16]      [,17]      [,18]      [,19]     [,20]
+  1 -0.8227051 -0.1639760 -0.2899536 -1.3127387 -0.4298078 0.4531231
+  2  0.2902982  0.9490272  0.8230496 -0.1997355  0.6831954 1.5661264
+  3        Inf        Inf        Inf        Inf        Inf       Inf
+> 
+> predict(mod2, prob = 1:9 / 10, type = "quantile")
+  [1] 1 1 1 1 1 1 1 2 2 1 1 1 1 1 1 2 2 2 2 2 2 3 3 3 3 3 3 1 1 1 1 1 2 2 2 3 1
+ [38] 1 1 2 2 2 2 3 3 1 2 2 2 3 3 3 3 3 1 1 2 2 2 2 3 3 3 1 1 2 2 2 2 3 3 3 1 2
+ [75] 2 2 2 3 3 3 3 1 1 1 1 1 1 2 2 2 1 2 2 2 2 3 3 3 3 1 1 1 1 1 2 2 2 2 1 1 2
+[112] 2 2 2 2 3 3 2 2 2 3 3 3 3 3 3 1 1 2 2 2 2 3 3 3 1 1 1 1 2 2 2 2 3 1 1 1 2
+[149] 2 2 2 3 3 2 2 2 2 3 3 3 3 3 1 1 1 2 2 2 2 3 3 1 1 1 1 1 1 2 2 2
+Levels: 1 < 2 < 3
+> 
+> simulate(mod2, nsim = 3, seed = 29)
+[[1]]
+ [1] 1 1 2 1 2 1 3 3 1 1 3 1 2 3 1 2 2 2 3 1
+Levels: 1 < 2 < 3
+
+[[2]]
+ [1] 1 2 3 3 2 2 2 3 3 1 2 1 1 3 2 1 3 2 1 1
+Levels: 1 < 2 < 3
+
+[[3]]
+ [1] 1 1 3 2 1 3 3 3 3 2 2 2 1 3 2 2 2 3 2 1
+Levels: 1 < 2 < 3
+
+> 
+> predict(mod2, q = unique(d$y), type = "density")
+        [,1]       [,2]       [,3]      [,4]      [,5]      [,6]      [,7]
+1 0.72730355 0.60044482 0.07480758 0.5456365 0.3640568 0.1041380 0.2743894
+2 0.22976907 0.31382115 0.29669025 0.3445738 0.4139168 0.3380923 0.4217791
+3 0.04292738 0.08573403 0.62850218 0.1097896 0.2220264 0.5577697 0.3038315
+       [,8]      [,9]     [,10]     [,11]      [,12]     [,13]      [,14]
+1 0.2011081 0.1676114 0.6434469 0.1349047 0.59011209 0.2840846 0.06924547
+2 0.4073619 0.3917522 0.2872086 0.3688859 0.31990115 0.4220934 0.28703052
+3 0.3915300 0.4406364 0.0693445 0.4962094 0.08998676 0.2938220 0.64372401
+      [,15]     [,16]     [,17]     [,18]     [,19]      [,20]
+1 0.2053379 0.4348750 0.3859259 0.0946355 0.3336677 0.67476996
+2 0.4088681 0.3938216 0.4088342 0.3262082 0.4190906 0.26657052
+3 0.3857941 0.1713034 0.2052399 0.5791563 0.2472417 0.05865952
+> 
+> predict(mod2, list(y = unique(d$y), x1 = 1:3, x2 = 2:3), type = "density")
+, ,     2
+
+           1          2          3
+1 0.76324478 0.75894172 0.75459648
+2 0.20311397 0.20636586 0.20963310
+3 0.03364125 0.03469242 0.03577042
+
+, ,     3
+
+           1          2          3
+1 0.72730355 0.72267327 0.71800488
+2 0.22976907 0.23311794 0.23647426
+3 0.04292738 0.04420879 0.04552086
+
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  2.272   0.056   2.325 
