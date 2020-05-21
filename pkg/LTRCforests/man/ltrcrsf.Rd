@@ -147,7 +147,7 @@ print(LTRCRSFobj)
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
-processes, a large sample study. \emph{Annals of Statistics} \strong{10}, 1100-1120.
+processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 }
 \seealso{
 \code{\link{predict.ltrcrsf}} for prediction and \code{\link{tune.ltrcrsf}}

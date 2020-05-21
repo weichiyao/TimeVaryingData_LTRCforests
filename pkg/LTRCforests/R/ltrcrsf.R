@@ -104,7 +104,7 @@
 #' @seealso \code{\link{predict.ltrcrsf}} for prediction and \code{\link{tune.ltrcrsf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
-#' processes, a large sample study. \emph{Annals of Statistics} \strong{10}, 1100-1120.
+#' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 #' @examples
 #' #### Example with time-varying data pbcsample
 #' # Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
