@@ -5,3 +5,4 @@ makepackage/
 *.Rbuildignore
 .Rd2pdf*
 *.Rproj
+.Rhistory
