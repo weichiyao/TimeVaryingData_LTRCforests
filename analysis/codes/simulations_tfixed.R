@@ -1,5 +1,3 @@
-#################################################
-setwd("/Users/wyao/Dropbox/RESEARCH/time-varyingRSF/")
 ##########################################################################
 ## recompile the package randomForestSRC with the updated splitCustom.c
 setwd("./TimeVaryingData_LTRCforests/analysis/utils/randomForestSRC/")
