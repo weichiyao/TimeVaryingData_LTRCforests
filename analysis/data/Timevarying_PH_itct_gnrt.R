@@ -99,6 +99,7 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
   Data$X19 <- sample(c(0,1),npseu*N,replace=TRUE) 
   
   Count = 1
+  tall = rep(0,N)
   while(Count <= N){
     TS <- rep(0, npseu-1)
     if (Distribution == "Exp"){
@@ -151,7 +152,7 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
     t = RT$Time
     rID = RT$Row
     Data[Data$ID==Count,]$Xi <- RT$Xi
-    
+    tall[Count] = t
     if(rID==1){
       Data[Data$ID==Count,][1,]$Stop = t
       Data[Data$ID==Count,][1,]$Event = 1

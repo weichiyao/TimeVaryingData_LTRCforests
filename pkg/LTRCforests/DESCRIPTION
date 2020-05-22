@@ -16,10 +16,10 @@ Depends: R (>= 3.4.0), partykit, prodlim
 Imports: stats, utils, survival, ipred, parallel
 Suggests: LTRCtrees, inum, KMSurv
 Description: Implements the conditional inference forest and random survival
-  forest with Poisson splitting rule algorithm to modeling left-truncated right-censored
+  forest algorithm to modeling left-truncated right-censored
   data with time-invariant covariates, and (left-truncated) right-censored survival data
   with time-varying covariates. It also provides functions to tune the parameters and
-  evaluate the model fit are provided. See Yao et al. (2020) <arXiv:1901.04599>.
+  evaluate the model fit. 
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
