@@ -14,10 +14,17 @@ Print summary output after a LTRCRSF model is built.
 This is the default print method for objects in the class of \code{\link{ltrcrsf}}.
 }
 \examples{
-#' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+library(survival)
+Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 # on the time-varying data by specifying id, with mtry specified:
 LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
+print(LTRCRSFobj)
+
+# Built a LTRCRSF forest (sampling with replacement) on the time-invariant data,
+with mtry specified:
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, samptype = "swr", mtry = 3,
+                     ntree = 50L)
 print(LTRCRSFobj)
 }
 \seealso{

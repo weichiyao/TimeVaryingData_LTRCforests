@@ -14,12 +14,18 @@ Print summary output after a LTRCCF model is built.
 This is the default print method for objects in the class of \code{\link{ltrcrsf}}.
 }
 \examples{
+
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCCF forest on the time-varying data by specifying id, with mtry specified:
 LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
-print(LTRCRSFobj)
+print(LTRCCFobj)
+
+# Built a LTRCCF forest on the time-invariant data, with resampling, with mtry specified:
+LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, perturb = list(replace = TRUE),
+                   mtry = 3, ntree = 50L)
+print(LTRCCFobj)
 }
 \seealso{
 \code{\link{ltrccf}}
-#' @export
 }

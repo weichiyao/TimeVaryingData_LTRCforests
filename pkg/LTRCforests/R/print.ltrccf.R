@@ -7,12 +7,19 @@
 #'
 #' @importFrom survival Surv
 #' @examples
+#'
+#' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCCF forest on the time-varying data by specifying id, with mtry specified:
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
-#' print(LTRCRSFobj)
+#' print(LTRCCFobj)
+#'
+#' # Built a LTRCCF forest on the time-invariant data, with resampling, with mtry specified:
+#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, perturb = list(replace = TRUE),
+#'                    mtry = 3, ntree = 50L)
+#' print(LTRCCFobj)
 #' @seealso \code{\link{ltrccf}}
-#' #' @export
+#' @export
 
 
 
@@ -22,11 +29,11 @@ print.ltrccf <- function(x) {
     stop("This function only works for objects (of subclass) of class `(ltrcrsf, grow).")
   }
   grow.mode <- TRUE
-  
+
   ## x will be processed if it's multivariate - therefore save some values from it
   familyPretty <- "LTRCCF"
   familyOrg <- "surv"
-    
+
   ## error rates
   err.rate <- NULL
   if (x$info$perturb$replace ){
@@ -40,11 +47,11 @@ print.ltrccf <- function(x) {
   ## grow mode
   ##
   #################################################################################
-  
+
   cat(" Number of (pseudo-subject) observations: ", nrow(x$fitted),                 "\n", sep="")
 
   cat("                      Number of subjects: ", length(unique(x$data$`(id)`)),  "\n", sep="")
-  cat("                        Number of deaths: ", sum(as.matrix(x$fitted)[,4]),   "\n", sep="") 
+  cat("                        Number of deaths: ", sum(as.matrix(x$fitted)[,4]),   "\n", sep="")
   cat("                         Number of trees: ", length(x$weights),                     "\n",sep="")
   cat("                                minsplit: ", x$info$control$minsplit,               "\n", sep="")
   cat("                               minbucket: ", x$info$control$minbucket,              "\n", sep="")
@@ -63,13 +70,13 @@ print.ltrccf <- function(x) {
   cat("                                  Family: ", familyOrg,                    "\n", sep="")
 
   cat("                          Splitting rule: ", "conditional inference framework",    "\n", sep="")
-  
-  
+
+
   #################################################################################
   ##
   ## end of grow mode
   ##
   #################################################################################
-  
-  
+
+
 }

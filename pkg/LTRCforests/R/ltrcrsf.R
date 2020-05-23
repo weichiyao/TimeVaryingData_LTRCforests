@@ -100,6 +100,7 @@
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 #' @examples
 #' #### Example with time-varying data pbcsample
+#' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 #' # on the time-varying data by specifying id:
