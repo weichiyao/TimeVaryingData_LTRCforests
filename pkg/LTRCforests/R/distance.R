@@ -1,4 +1,5 @@
-distance <- function (x, 
+#' @useDynLib LTRCforests, .registration = TRUE
+distance <- function (x,
                       method = "euclidean",
                       rowI = NULL,
                       rowJ = NULL,
@@ -48,7 +49,7 @@ distance <- function (x,
         stop("An error has occurred in rfsrcDistance.  Please turn trace on for further analysis.")
     }
     if (length(rowI) > 0) {
-        ## Return only the cell pairs (rowI[], rowJ[]) for processing in the master/slave scripts. 
+        ## Return only the cell pairs (rowI[], rowJ[]) for processing in the master/slave scripts.
         result <- list(rowI = rowI, rowJ = rowJ, distance = nativeOutput$distance)
     }
     else {

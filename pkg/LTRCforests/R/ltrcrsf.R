@@ -93,7 +93,6 @@
 #' @import utils
 #' @import prodlim
 #' @importFrom survival Surv
-#' @import devtools
 #' @seealso \code{\link{predict.ltrcrsf}} for prediction and \code{\link{tune.ltrcrsf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
@@ -117,6 +116,7 @@
 #' # on the time-invariant data by not specifying id, with mtry specified:
 #' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
 #' LTRCRSFobj
+#'
 #'
 #' @export
 ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,

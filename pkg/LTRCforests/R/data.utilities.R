@@ -1,3 +1,4 @@
+#' @useDynLib LTRCforests, .registration = TRUE
 adrop3d.last <- function(x, d, keepColNames = FALSE) {
   ## this function is for arrays only
   if (!is.array(x)) {
@@ -267,7 +268,7 @@ get.auc <- function(y, prob) {
         Aji <-  get.auc.workhorse(cbind(pji, 1 * (y.ij == y.uniq[i])))
         AUC <- c(AUC, (Aij + Aji)/2)
       }
-    } 
+    }
   }
   if (is.null(AUC)) {
     NA
@@ -275,7 +276,7 @@ get.auc <- function(y, prob) {
   else {
     mean(AUC, na.rm = TRUE)
   }
-}                          
+}
 get.bayes.rule <- function(prob, pi.hat = NULL) {
   class.labels <- colnames(prob)
   if (is.null(pi.hat)) {
@@ -291,7 +292,7 @@ get.bayes.rule <- function(prob, pi.hat = NULL) {
   ## added to handle the rfq classifier
   else {
     minority <- which.min(pi.hat)
-    majority <- setdiff(1:2, minority)      
+    majority <- setdiff(1:2, minority)
     rfq.rule <- rep(majority, nrow(prob))
     rfq.rule[prob[, minority] >= min(pi.hat, na.rm = TRUE)] <- minority
     factor(class.labels[rfq.rule], levels = class.labels)
@@ -433,7 +434,7 @@ get.event.info <- function(obj, subset = NULL) {
 ## gmean for imbalanced classification
 get.gmean <- function(y, prob, rfq = FALSE, robust = FALSE) {
   ## determine frequencies: exit if this is not a two-class problem
-  frq <- table(y)  
+  frq <- table(y)
   if (length(frq) > 2) {
     return(NULL)
   }
@@ -620,7 +621,7 @@ fmly <- formula.detail$family
     ## Preliminary check for consistency.
     if (hdim > 0) {
         if(!is.null(nsplit)) {
-            nsplit <- round(nsplit)    
+            nsplit <- round(nsplit)
             if (nsplit < 0) {
                 stop("Invalid nsplit value.  Set nsplit >= 0.")
             }
@@ -631,7 +632,7 @@ fmly <- formula.detail$family
     }
     else {
         if(!is.null(nsplit)) {
-            nsplit <- round(nsplit)    
+            nsplit <- round(nsplit)
             if (nsplit < 0) {
                 stop("Invalid nsplit value.  Set nsplit >= 0.")
             }
@@ -802,7 +803,7 @@ get.importance.xvar <- function(importance.xvar, importance, object) {
     }
   return (importance.xvar)
 }
- 
+
 get.mv.error <- function(obj, standardize = FALSE, pretty = TRUE, block = FALSE) {
   ## acquire yvar names - don't want "censoring" for surv and surv-CR
   nms <- NULL
@@ -856,7 +857,7 @@ get.mv.error <- function(obj, standardize = FALSE, pretty = TRUE, block = FALSE)
   ## if the first entry is NULL make the entire list NULL
   if (is.null(err[[1]])) {
     err <- NULL
-  }  
+  }
   ## return as a vector for convenient interpretation?
   ## vector reduces information for classification to "all"
   if (!is.null(err)) {
@@ -941,7 +942,7 @@ get.mv.vimp <- function(obj, standardize = FALSE, pretty = TRUE) {
   ## if the first entry is NULL make the entire list NULL
   if (is.null(vmp[[1]])) {
     vmp <- NULL
-  }  
+  }
   ## return as a matrix for convenient interpretation?
   ## matrix reduces information for classification to "all"
   if (!is.null(vmp)) {
@@ -953,7 +954,7 @@ get.mv.vimp <- function(obj, standardize = FALSE, pretty = TRUE) {
     }
   }
   ### return the goodies
-  vmp 
+  vmp
 }
 get.nmiss <- function(xvar, yvar = NULL) {
   if (!is.null(yvar)) {
@@ -1042,7 +1043,7 @@ get.univariate.target <- function(x, outcome.target = NULL) {
           if (do.break == TRUE) {
             break
           }
-        }     
+        }
       }
       if (!found) {
         stop("Target outcome has been correctly specified but it did not contain outcome statistics.")
@@ -1143,7 +1144,7 @@ global.prob.assign <- function(prob, prob.epsilon, gk.quantile, quantile.regr, s
       }
       ## neither are missing
       else {
-        ##nothing        
+        ##nothing
       }
     }
     ## quantile splitting is in effect but no gk estimation
@@ -1204,7 +1205,7 @@ make.holdout.array <- function(vtry = 0, p, ntree, ntree.allvars = NULL) {
     holdout
   }
   ## otherwise pad the array with 0's so that no variables are held out
-  ## put them at the front for split-optimization  
+  ## put them at the front for split-optimization
   else {
     cbind(matrix(0, p, ntree.allvars), holdout)
   }
@@ -1264,7 +1265,7 @@ make.sample <- function(ntree, samp.size, boot.size = NULL, replace = FALSE) {
     inb
   }))
 }
- 
+
 ## make stratified inbag bootstrap samples for imbalanced two class problem
 ## allows for arbitrary under-sampling ratio of the majority class
 ## sample size for subsampling
@@ -1337,20 +1338,20 @@ parseFormula <- function(f, data, ytry = NULL, coerce.factor = NULL) {
       }
       ## are all the responses factors?
       ## caution: ordered factors are factors!
-      if ((sum(unlist(lapply(Y, is.factor))) + 
+      if ((sum(unlist(lapply(Y, is.factor))) +
           length(coerce.factor$yvar.names)) == length(yvar.names)) {
         family <- "class+"
       }
       ## are all the responses continuous?
       ## caution: ordered factors are factors!
-      else if ((sum(unlist(lapply(Y, is.factor))) + 
+      else if ((sum(unlist(lapply(Y, is.factor))) +
           length(coerce.factor$yvar.names)) == 0) {
         family <- "regr+"
       }
       ## are the responses a combination of factors and continuous?
       ## caution: ordered factors are factors!
       else if (((sum(unlist(lapply(Y, is.factor))) +
-                 length(coerce.factor$yvar.names)) > 0) && 
+                 length(coerce.factor$yvar.names)) > 0) &&
                ((sum(unlist(lapply(Y, is.factor))) +
                  length(coerce.factor$yvar.names)) < length(yvar.names))) {
         family <- "mix+"

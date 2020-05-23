@@ -1,3 +1,4 @@
+#' @useDynLib LTRCforests, .registration = TRUE
 generic.predict.ltrcrfsrc <-
   function(object,
            newdata,

@@ -1,3 +1,4 @@
+#' @useDynLib LTRCforests, .registration = TRUE
 ltrcrfsrc <- function(formula, data, ntree = 1000,
                       mtry = NULL, ytry = NULL,
                       nodesize = NULL, nodedepth = NULL,
