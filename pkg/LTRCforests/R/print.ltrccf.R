@@ -26,7 +26,7 @@
 print.ltrccf <- function(x) {
   ## check that the object is interpretable
   if (any(inherits(x, c("ltrccf", "grow"), TRUE) ) == 0 ) {
-    stop("This function only works for objects (of subclass) of class `(ltrcrsf, grow).")
+    stop("This function only works for objects (of subclass) of class `(ltrccf, grow).")
   }
   grow.mode <- TRUE
 

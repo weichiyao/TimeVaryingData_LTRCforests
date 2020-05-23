@@ -40,13 +40,13 @@ generic.predict.ltrcrfsrc <-
     stop("object is missing!")
   }
   ## incoming object must be a grow forest or a forest object
-  if (sum(inherits(object, c("ltrcrfsrc", "grow"), TRUE)) != 2    &
-      sum(inherits(object, c("ltrcrfsrc", "forest"), TRUE)) != 2)
+  if (any(inherits(object, c("ltrcrfsrc", "grow"), TRUE)) == 0    &
+      any(inherits(object, c("ltrcrfsrc", "forest"), TRUE)) == 0)
     stop("this function only works for objects (of subclass) of class `(ltrcrfsrc, grow)' or '(ltrcrfsrc, forest)'")
   ## grow forests must have true forest information
-  if (sum(inherits(object, c("ltrcrfsrc", "grow"), TRUE)) == 2) {
+  if (all(inherits(object, c("ltrcrfsrc", "grow"), TRUE))) {
     if (is.forest.missing(object)) {
-      stop("Forest information for prediction is missing.  Re-run rfsrc (grow call) with forest=TRUE")
+      stop("Forest information for prediction is missing.  Re-run rfsrc (grow call) with forest = TRUE")
     }
   }
   ## verify the importance option
@@ -118,24 +118,24 @@ generic.predict.ltrcrfsrc <-
   ## REDUCES THE OBJECT TO THE FOREST -- REDUCTION STARTS HERE
   ## hereafter we only need the forest and reassign "object" to the forest
   ## (TBD, TBD, TBD) memory management "big.data" not currently implemented: (TBD, TBD, TBD)
-  if (sum(inherits(object, c("ltrcrfsrc", "grow"), TRUE)) == 2) {
-    if (inherits(object, "bigdata")) {
-      big.data <- TRUE
-    }
-    else {
-      big.data <- FALSE
-    }
-    object <- object$forest
-  }
-  else {
-    ## object is already a forest
-    if (inherits(object, "bigdata")) {
-      big.data <- TRUE
-    }
-    else {
-      big.data <- FALSE
-    }
-  }
+  # if (sum(inherits(object, c("ltrcrfsrc", "grow"), TRUE)) == 2) {
+  #   if (inherits(object, "bigdata")) {
+  #     big.data <- TRUE
+  #   }
+  #   else {
+  #     big.data <- FALSE
+  #   }
+  #   object <- object$forest
+  # }
+  # else {
+  #   ## object is already a forest
+  #   if (inherits(object, "bigdata")) {
+  #     big.data <- TRUE
+  #   }
+  #   else {
+  #     big.data <- FALSE
+  #   }
+  # }
   ## confirm version coherence
   if (is.null(object$version)) {
     cat("\n  This function only works with objects created with the following minimum version of the package:")

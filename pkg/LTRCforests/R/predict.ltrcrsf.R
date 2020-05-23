@@ -194,7 +194,6 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     } else {
       if (!is.data.frame(newdata)) stop("newdata must be a dataframe")
       x.IDs <- match(object$xvar.names, names(newdata))
-      class(object) = class(object)[2:4] # for the prediction function in rfsrc to work
       nIDxnewdata <- predict.ltrcrfsrc(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
 
       if (missing(newdata.id)){
