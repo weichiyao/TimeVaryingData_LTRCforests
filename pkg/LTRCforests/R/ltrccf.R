@@ -79,10 +79,15 @@
 #' random forest like algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.
 #' @param ntree an integer, the number of the trees to grow for the forest.
 #' \code{ntree = 100L} is set by default.
-#' @param perturb a list with arguments \code{replace} and \code{fraction} determining which
-#' type of resampling, with \code{replace = TRUE} referring to the \emph{n}-out-of-\emph{n}
-#' bootstrap and \code{replace = FALSE} referring to sample splitting. \code{fraction} is
-#' the proportion of observations to draw without replacement.
+#' @param samptype choices are \code{swor} (sampling without replacement) and
+#' \code{swr} (sampling with replacement). The default action here is sampling
+#' without replacement.
+#' @param sampfrac a fraction, determining the proportion of subjects to draw
+#' without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
+#' To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
+#' pseudo-subject observations are drawn without replacement (\code{N} denotes the
+#' number of subjects); otherwise, \code{0.632 * n} is the requested size
+#' of the sample.
 #' @param applyfun an optional \code{lapply}-style function with arguments
 #' \code{function(X, FUN, ...)}.
 #' It is used for computing the variable selection criterion. The default is to use the
@@ -127,7 +132,8 @@
 ltrccf <- function(formula, data, id,
                    mtry = NULL, ntree = 100L,
                    bootstrap = c("by.sub","by.root","by.user","none"),
-                   perturb = list(replace = FALSE, fraction = 0.632),
+                   samptype = c("swor","swr"),
+                   sampfrac = 0.632,
                    samp = NULL,
                    trace = TRUE, stepFactor = 2,
                    na.action = na.pass,
@@ -169,6 +175,7 @@ ltrccf <- function(formula, data, id,
 
   ## if not specified, the first one will be used as default
   bootstrap <- match.arg(bootstrap)
+  samptype <- match.arg(samptype)
 
   id <- model.extract(mf, 'id')
   if (is.null(id)){ # If present, do not want to relabel them
@@ -186,6 +193,13 @@ ltrccf <- function(formula, data, id,
     n.sub <- length(id.sub)
   }
 
+  if (samptype == "swor"){
+    perturb = list(replace = FALSE, fraction = sampfrac)
+  } else if (samptype == "swr"){
+    perturb = list(replace = TRUE)
+  } else {
+    stop("samptype must set to be either 'swor' or 'swr'\n")
+  }
   if (bootstrap == "by.sub"){
     size <- n.sub
     if (!perturb$replace) size <- floor(n.sub * perturb$fraction)
@@ -219,7 +233,8 @@ ltrccf <- function(formula, data, id,
     mtry <- tune.ltrccf(formula = formula, data = data, id = id,
                         control = control, ntreeTry = ntree,
                         bootstrap = "by.user",
-                        perturb = perturb,
+                        samptype = samptype,
+                        sampfrac = sampfrac,
                         samp = samp,
                         na.action = na.action,
                         stepFactor = stepFactor,
@@ -250,7 +265,8 @@ ltrccf <- function(formula, data, id,
   ret$formulaLTRC <- formula
   ret$info$call <- Call
   ret$info$bootstrap <- bootstrap
-  ret$info$perturb <- perturb
+  ret$info$samptype <- samptype
+  ret$info$sampfrac <- sampfrac
   ret$data <- mf
   class(ret) <- c("ltrccf", "grow", class(ret))
   ret

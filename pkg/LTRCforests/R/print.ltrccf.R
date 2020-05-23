@@ -15,7 +15,7 @@
 #' print(LTRCCFobj)
 #'
 #' # Built a LTRCCF forest on the time-invariant data, with resampling, with mtry specified:
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, perturb = list(replace = TRUE),
+#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, samptype = "swr",
 #'                    mtry = 3, ntree = 50L)
 #' print(LTRCCFobj)
 #' @seealso \code{\link{ltrccf}}
@@ -25,7 +25,7 @@
 
 print.ltrccf <- function(x) {
   ## check that the object is interpretable
-  if (length(inherits(x, c("ltrccf", "grow"), TRUE) ) != 2 ) {
+  if (any(inherits(x, c("ltrccf", "grow"), TRUE) ) == 0 ) {
     stop("This function only works for objects (of subclass) of class `(ltrcrsf, grow).")
   }
   grow.mode <- TRUE
@@ -36,7 +36,7 @@ print.ltrccf <- function(x) {
 
   ## error rates
   err.rate <- NULL
-  if (x$info$perturb$replace ){
+  if (x$info$samptype == "swr" ){
     samptype = "sampling with replacement"
   } else {
     samptype = "sampling without replacement"
@@ -61,9 +61,9 @@ print.ltrccf <- function(x) {
   cat("                  Total no. of variables: ", length(attr(x$terms,'term.labels')),   "\n", sep="")
   cat("            Bootstrap type to grow trees: ", x$info$bootstrap,                      "\n",sep="")
   if (x$info$bootstrap != "by.user"){
-    cat("           Resampling used to grow trees: ", samptype,                              "\n",sep="")
+    cat("           Resampling used to grow trees: ", samptype,                            "\n",sep="")
     if (samptype == "sampling without replacement"){
-      cat("      Resampling rate used to grow trees: ", x$info$perturb$fraction,               "\n",sep="")
+      cat("      Resampling rate used to grow trees: ", x$info$sampfrac,                   "\n",sep="")
     }
   }
   cat("                                Analysis: ", familyPretty,                 "\n", sep="")

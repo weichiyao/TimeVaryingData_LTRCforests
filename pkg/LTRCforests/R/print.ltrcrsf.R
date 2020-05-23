@@ -22,14 +22,14 @@
 #' @seealso \code{\link{ltrcrsf}}
 
 print.ltrcrsf <- function(x) {
-  ## default printing
-  if (sum(inherits(x, c("ltrcrsf", "forest"), TRUE) == c(1, 2)) == 2) {
-    print.default(x)
-    return()
-  }
+  # ## default printing
+  # if (sum(inherits(x, c("ltrcrsf", "forest"), TRUE) == c(1, 2)) == 2) {
+  #   print.default(x)
+  #   return()
+  # }
 
   ## check that the object is interpretable
-  if (length(inherits(x, c("ltrcrsf", "grow"), TRUE) ) != 2 ) {
+  if (any(inherits(x, c("ltrcrsf", "grow"), TRUE) ) == 0 ) {
     stop("This function only works for objects (of subclass) of class `(ltrcrsf, grow).")
   }
   grow.mode <- TRUE

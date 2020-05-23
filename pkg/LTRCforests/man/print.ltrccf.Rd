@@ -22,7 +22,7 @@ LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree
 print(LTRCCFobj)
 
 # Built a LTRCCF forest on the time-invariant data, with resampling, with mtry specified:
-LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, perturb = list(replace = TRUE),
+LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, samptype = "swr",
                    mtry = 3, ntree = 50L)
 print(LTRCCFobj)
 }

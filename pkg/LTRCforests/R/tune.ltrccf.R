@@ -35,10 +35,15 @@
 #' by this value. The default value is \code{2}.
 #' @param na.action a function which indicates what should happen when the data contain
 #' missing values.
-#' @param perturb a list with arguments \code{replace} and \code{fraction} determining which
-#' type of resampling, with \code{replace = TRUE} referring to the \emph{n}-out-of-\emph{n}
-#' bootstrap and \code{replace = FALSE} referring to sample splitting. \code{fraction} is
-#' the proportion of observations to draw without replacement.
+#' @param samptype choices are \code{swor} (sampling without replacement) and
+#' \code{swr} (sampling with replacement). The default action here is sampling
+#' without replacement.
+#' @param sampfrac a fraction, determining the proportion of subjects to draw
+#' without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
+#' To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
+#' pseudo-subject observations are drawn without replacement (\code{N} denotes the
+#' number of subjects); otherwise, \code{0.632 * n} is the requested size
+#' of the sample.
 #' @param applyfun an optional \code{lapply}-style function with arguments
 #' \code{function(X, FUN, ...)}.
 #' It is used for computing the variable selection criterion. The default is to use the
@@ -88,8 +93,9 @@
 tune.ltrccf <- function(formula, data, id,
                         mtryStart = NULL, stepFactor = 2, ntreeTry = 100L,
                         bootstrap = c("by.sub", "by.root", "none", "by.user"),
+                        samptype = c("swor","swr"),
+                        sampfrac = 0.632,
                         samp = NULL,
-                        perturb = list(replace = FALSE, fraction = 0.632),
                         na.action = na.pass,
                         time.eval = NULL, time.tau = NULL,
                         trace = TRUE, plot = FALSE, doBest = FALSE,
@@ -124,7 +130,10 @@ tune.ltrccf <- function(formula, data, id,
   n <- nrow(mf)
   y <- model.extract(mf, 'response')
   id <- model.extract(mf, 'id')
+
+  ## if not specified, the first one will be used as default
   bootstrap <- match.arg(bootstrap)
+  samptype <- match.arg(samptype)
 
   # right-censored time from all observations
   Rtimes <- y[, 2L]
@@ -169,7 +178,8 @@ tune.ltrccf <- function(formula, data, id,
                             etpnt, etau,
                             entreeTry, econtrol,
                             ebootstrap,
-                            eperturb,
+                            esamptype,
+                            esampfrac,
                             esamp,
                             ena.action, eapplyfun, ecores){
     cfOOB <- ltrccf(formula = eformula, data = edata, id = id,
@@ -177,9 +187,10 @@ tune.ltrccf <- function(formula, data, id,
                     ntree = entreeTry,
                     control = econtrol,
                     bootstrap = ebootstrap,
+                    samptype = esamptype,
+                    sampfrac = esampfrac,
                     samp = esamp,
                     na.action = ena.action,
-                    perturb = eperturb,
                     applyfun = eapplyfun,
                     cores = ecores)
     predOOB <- predict.ltrccf(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
@@ -198,7 +209,8 @@ tune.ltrccf <- function(formula, data, id,
                             entreeTry = ntreeTry,
                             econtrol = control,
                             ebootstrap = bootstrap,
-                            eperturb = perturb,
+                            esamptype = samptype,
+                            esampfrac = sampfrac,
                             esamp = samp,
                             ena.action = na.action,
                             eapplyfun = applyfun,
@@ -232,7 +244,8 @@ tune.ltrccf <- function(formula, data, id,
                                 entreeTry = ntreeTry,
                                 econtrol = control,
                                 ebootstrap = bootstrap,
-                                eperturb = perturb,
+                                esamptype = samptype,
+                                esampfrac = sampfrac,
                                 esamp = samp,
                                 ena.action = na.action,
                                 eapplyfun = applyfun,
@@ -261,7 +274,8 @@ tune.ltrccf <- function(formula, data, id,
                   mtry = res, ntree = ntreeTry,
                   control = control,
                   bootstrap = bootstrap,
-                  perturb = perturb,
+                  samptype = samptype,
+                  sampfrac = sampfrac,
                   samp = samp,
                   na.action = na.action,
                   applyfun = applyfun,

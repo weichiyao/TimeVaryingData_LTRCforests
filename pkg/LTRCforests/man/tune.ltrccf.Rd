@@ -12,8 +12,9 @@ tune.ltrccf(
   stepFactor = 2,
   ntreeTry = 100L,
   bootstrap = c("by.sub", "by.root", "none", "by.user"),
+  samptype = c("swor", "swr"),
+  sampfrac = 0.632,
   samp = NULL,
-  perturb = list(replace = FALSE, fraction = 0.632),
   na.action = na.pass,
   time.eval = NULL,
   time.tau = NULL,
@@ -63,14 +64,20 @@ Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
 
+\item{samptype}{choices are \code{swor} (sampling without replacement) and
+\code{swr} (sampling with replacement). The default action here is sampling
+without replacement.}
+
+\item{sampfrac}{a fraction, determining the proportion of subjects to draw
+without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
+To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
+pseudo-subject observations are drawn without replacement (\code{N} denotes the
+number of subjects); otherwise, \code{0.632 * n} is the requested size
+of the sample.}
+
 \item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
 inbag in the bootstrap for each tree.}
-
-\item{perturb}{a list with arguments \code{replace} and \code{fraction} determining which
-type of resampling, with \code{replace = TRUE} referring to the \emph{n}-out-of-\emph{n}
-bootstrap and \code{replace = FALSE} referring to sample splitting. \code{fraction} is
-the proportion of observations to draw without replacement.}
 
 \item{na.action}{a function which indicates what should happen when the data contain
 missing values.}
