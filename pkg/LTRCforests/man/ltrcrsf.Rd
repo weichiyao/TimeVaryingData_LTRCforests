@@ -147,6 +147,7 @@ LTRCRSFobj
 # on the time-invariant data by not specifying id, with mtry specified:
 LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
 LTRCRSFobj
+
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox’s regression model for counting

@@ -117,6 +117,7 @@
 #' # on the time-invariant data by not specifying id, with mtry specified:
 #' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
 #' LTRCRSFobj
+#'
 #' @export
 ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     nodesize = max(ceiling(sqrt(nrow(data))),15), nodedepth = NULL,
@@ -129,7 +130,6 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     ntime,
                     stepFactor = 2,
                     trace=TRUE){
-
   Call <- match.call()
   Call[[1]] <- as.name('LTRCRSF')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,

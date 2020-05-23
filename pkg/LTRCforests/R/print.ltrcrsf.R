@@ -21,8 +21,6 @@
 #' print(LTRCRSFobj)
 #' @seealso \code{\link{ltrcrsf}}
 
-
-
 print.ltrcrsf <- function(x) {
   ## default printing
   if (sum(inherits(x, c("ltrcrsf", "forest"), TRUE) == c(1, 2)) == 2) {
