@@ -9,14 +9,6 @@
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
 #' which allow for time-varying covariates. The traditional survival forests only
 #' applies for right-censored data with time-invariant invariant covariates.
-#' To use this function, one has to first download the package
-#' \pkg{\link{randomForestSRC}} from
-#' \url{https://github.com/kogalur/randomForestSRC}, then
-#' replace the file
-#' \code{./randomForestSRC/src/splitCustom.c}
-#' with \cr
-#' \code{./LTRCforests/utils/splitCustom.c}, finially recompile the package
-#' \pkg{\link{randomForestSRC}} by using \code{devtools::load_all()}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -107,11 +99,15 @@
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 #' @examples
 #' #### Example with time-varying data pbcsample
-#' # Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+#' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
-#' # by specifying id:
-#' # LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 100L)
-#' # A prebuilt object has been saved in the directory ./data/
+#' # on the time-varying data by specifying id:
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
+#' print(LTRCRSFobj)
+#'
+#' # Built a LTRCRSF forest (based on sampling without replacement)
+#' # on the time-invariant data by not specifying id, with mtry specified:
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, id = ID, ntree = 50L)
 #' print(LTRCRSFobj)
 #' @export
 ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
@@ -215,6 +211,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
 
   sampsize = if (samptype == "swor") function(x){x * sampfrac} else function(x){x}
 
+  bootstrap.org <- bootstrap
   if (bootstrap == "by.sub"){
     bootstrap = "by.user"
     # dim n x ntree
@@ -275,22 +272,22 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
     print(sprintf("mtry is tuned to be %1.0f", mtry))
   }
   ## Use randomSurvivalForest package
-  forest.fit <- rfsrc(formula = Formula,
-                      data = data,
-                      ntree = ntree,
-                      mtry = mtry,
-                      nodesize = nodesize,
-                      nodedepth = nodedepth,
-                      splitrule = "custom1",
-                      nsplit = nsplit,
-                      bootstrap = bootstrap,
-                      samptype = samptype,
-                      sampsize = sampsize,
-                      samp = samp,
-                      forest = FALSE,
-                      membership = TRUE,
-                      na.action = na.action,
-                      ntime = ntime)
+  forest.fit <- ltrcrfsrc(formula = Formula,
+                          data = data,
+                          ntree = ntree,
+                          mtry = mtry,
+                          nodesize = nodesize,
+                          nodedepth = nodedepth,
+                          splitrule = "custom1",
+                          nsplit = nsplit,
+                          bootstrap = bootstrap,
+                          samptype = samptype,
+                          sampsize = sampsize,
+                          samp = samp,
+                          forest = TRUE,
+                          membership = TRUE,
+                          na.action = na.action,
+                          ntime = ntime)
   forest.fit$yvarLTRC.names <- yvar.names
   forest.fit$yvarLTRC = as.data.frame(as.matrix(data[, yvar.names, drop = FALSE]))
   forest.fit$id = id
@@ -299,6 +296,8 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$survival.oob = NULL
   forest.fit$chf = NULL
   forest.fit$chf.oob = NULL
+  forest.fit$forest$bootstrap <- bootstrap.org
+  forest.fit$forest$samptype <- samptype
   forest.fit$call = Call
   forest.fit$splitrule = "Poisson"
   forest.fit$formulaLTRC <- formula
@@ -306,7 +305,4 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   return(forest.fit)
 }
 
-print.ltrcrsf <- function(x, ...){
-  class(x) = class(x)[2:4]
-  randomForestSRC::print.rfsrc(x, ...)
-}
+

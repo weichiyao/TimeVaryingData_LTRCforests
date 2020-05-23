@@ -117,10 +117,10 @@
 #' @examples
 #' #### Example with time-varying data pbcsample
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' ## Fit an LTRC conditional inference forest, with mtry specified
+#' ## Fit an LTRCCF on the time-varying data, with mtry specified
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 #'
-#' ## Fit an LTRC conditional inference forest, with mtry tuned with stepFactor=3.
+#' ## Fit an LTRCCF on the time-varying data, with mtry tuned with stepFactor = 3.
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, ntree = 50L, stepFactor = 3)
 #' @export
 

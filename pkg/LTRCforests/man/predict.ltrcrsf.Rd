@@ -64,8 +64,9 @@ with time-invariant covariate.
 }
 \examples{
 #### Example with time-varying data pbcsample
-## View the prebuilt object
-LTRCRSFobj
+Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+## Fit an LTRCRSF on the time-varying data, with mtry specified
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
 
 ## Construct an estimated survival estimate for the second subject
 tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)

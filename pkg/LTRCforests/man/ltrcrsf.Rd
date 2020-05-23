@@ -127,22 +127,18 @@ This function extends the random survival forest algorithm in
 \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
 which allow for time-varying covariates. The traditional survival forests only
 applies for right-censored data with time-invariant invariant covariates.
-To use this function, one has to first download the package
-\pkg{\link{randomForestSRC}} from
-\url{https://github.com/kogalur/randomForestSRC}, then
-replace the file
-\code{./randomForestSRC/src/splitCustom.c}
-with \cr
-\code{./LTRCforests/utils/splitCustom.c}, finially recompile the package
-\pkg{\link{randomForestSRC}} by using \code{devtools::load_all()}.
 }
 \examples{
 #### Example with time-varying data pbcsample
-# Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
-# by specifying id:
-# LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 100L)
-# A prebuilt object has been saved in the directory ./data/
+# on the time-varying data by specifying id:
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
+print(LTRCRSFobj)
+
+# Built a LTRCRSF forest (based on sampling without replacement)
+# on the time-invariant data by not specifying id, with mtry specified:
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, id = ID, ntree = 50L)
 print(LTRCRSFobj)
 }
 \references{

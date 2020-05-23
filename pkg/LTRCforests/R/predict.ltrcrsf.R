@@ -44,8 +44,9 @@
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit
 #' @examples
 #' #### Example with time-varying data pbcsample
-#' ## View the prebuilt object
-#' LTRCRSFobj
+#' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
+#' ## Fit an LTRCRSF on the time-varying data, with mtry specified
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
 #'
 #' ## Construct an estimated survival estimate for the second subject
 #' tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
@@ -194,7 +195,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       if (!is.data.frame(newdata)) stop("newdata must be a dataframe")
       x.IDs <- match(object$xvar.names, names(newdata))
       class(object) = class(object)[2:4] # for the prediction function in rfsrc to work
-      nIDxnewdata <- randomForestSRC::predict.rfsrc(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
+      nIDxnewdata <- predict.ltrcrfsrc(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
 
       if (missing(newdata.id)){
         newdata$id <- 1:nrow(newdata)

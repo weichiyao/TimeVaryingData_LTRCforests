@@ -9,14 +9,6 @@
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
 #' which allow for time-varying covariates. The traditional survival forests only
 #' applies for right-censored data with time-invariant invariant covariates.
-#' To use this function, one has to first download the package
-#' \pkg{\link{randomForestSRC}} from
-#' \url{https://github.com/kogalur/randomForestSRC}, then
-#' replace the file
-#' \code{./randomForestSRC/src/splitCustom.c}
-#' with \cr
-#' \code{./LTRCforests/utils/splitCustom.c}, finially recompile the package
-#' \pkg{\link{randomForestSRC}} by using \code{devtools::load_all()}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -215,6 +207,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
 
   sampsize = if (samptype == "swor") function(x){x * sampfrac} else function(x){x}
 
+  bootstrap.org <- bootstrap
   if (bootstrap == "by.sub"){
     bootstrap = "by.user"
     # dim n x ntree
@@ -287,7 +280,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                           samptype = samptype,
                           sampsize = sampsize,
                           samp = samp,
-                          forest = FALSE,
+                          forest = TRUE,
                           membership = TRUE,
                           na.action = na.action,
                           ntime = ntime)
@@ -299,6 +292,8 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$survival.oob = NULL
   forest.fit$chf = NULL
   forest.fit$chf.oob = NULL
+  forest.fit$forest$bootstrap <- bootstrap.org
+  forest.fit$forest$samptype <- samptype
   forest.fit$call = Call
   forest.fit$splitrule = "Poisson"
   forest.fit$formulaLTRC <- formula
