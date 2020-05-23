@@ -72,12 +72,8 @@
 #' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
 #' If \code{doBest = TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
-#' @import partykit
-#' @import prodlim
 #' @importFrom survival Surv
 #' @importFrom graphics axis
-#' @import stats
-#' @import utils
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit when searching
 #' for the optimal value of \code{mtry}.
 #' @examples

@@ -112,9 +112,6 @@
 #' \code{\link[partykit]{cforest}}.
 #' @import partykit
 #' @import survival
-#' @import stats
-#' @import utils
-#' @import prodlim
 #' @seealso \code{\link{predict.ltrccf}} for prediction and \code{\link{tune.ltrccf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox's regression model for counting

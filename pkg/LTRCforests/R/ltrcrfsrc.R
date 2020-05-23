@@ -1,4 +1,6 @@
 #' @useDynLib LTRCforests, .registration = TRUE
+#' @importFrom randomForestSRC get.auc get.bayes.rule get.brier.error get.cindex get.confusion get.misclass.error get.mv.error get.mv.error.block get.mv.formula get.mv.predicted get.mv.vimp
+
 ltrcrfsrc <- function(formula, data, ntree = 1000,
                       mtry = NULL, ytry = NULL,
                       nodesize = NULL, nodedepth = NULL,

@@ -25,12 +25,9 @@
 #' @return
 #' If \code{type = "BS"}, this returns \code{BScore}, the Brier scores
 #' and \code{Time}, the time points at which the scores are computed.
-#' @import partykit
 #' @import ipred
 #' @import prodlim
 #' @importFrom survival Surv
-#' @import stats
-#' @import utils
 #' @examples
 #' ### Example with dataset pbcsample
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema

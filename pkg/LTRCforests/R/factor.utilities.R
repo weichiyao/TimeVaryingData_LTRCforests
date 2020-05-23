@@ -1,3 +1,8 @@
+#' @importFrom parallel mclapply
+#' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
+#' @importFrom utils installed.packages txtProgressBar setTxtProgressBar write.table tail
+#' @importFrom randomForestSRC get.auc get.bayes.rule get.brier.error get.cindex get.confusion get.misclass.error get.mv.error get.mv.error.block get.mv.formula get.mv.predicted get.mv.vimp
+
 check.factor <- function(train, test, gfactor) {
   if (!is.null(gfactor)) {
     if (length(gfactor$factor) > 0) {
@@ -101,11 +106,11 @@ map.factor <- function (gvar, gfactor) {
     if (length(gfactor$factor) > 0) {
       gvar[, match(gfactor$factor, colnames(gvar))] <- data.frame(
         mclapply(1:length(gfactor$factor),
-                 function(k) {            
+                 function(k) {
                    ptk <- (colnames(gvar) == gfactor$factor[k])
                    factor.k <- gfactor$levels[[k]][gvar[ , ptk ]]
                    labels.k <- gfactor$levels[[k]][sort(unique(gvar[ , ptk ]))]
-                   gk <- factor(factor.k, labels = labels.k, levels = labels.k, exclude = NULL)  
+                   gk <- factor(factor.k, labels = labels.k, levels = labels.k, exclude = NULL)
                    if (length(setdiff(gfactor$levels[[k]], labels.k)) > 0) {
                      gk <- factor(as.character(gk), levels = gfactor$levels[[k]])
                    }
