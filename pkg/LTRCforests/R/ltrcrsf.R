@@ -130,11 +130,6 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     stepFactor = 2,
                     trace=TRUE){
 
-  # package version dependency
-  if (packageVersion("randomForestSRC") < "2.9.3") {
-    stop("randomForestSRC >= 2.9.3 needed for this function.", call. = FALSE)
-  }
-
   Call <- match.call()
   Call[[1]] <- as.name('LTRCRSF')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
