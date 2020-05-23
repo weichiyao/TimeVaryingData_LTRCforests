@@ -1,0 +1,26 @@
+Package: tryLTRCforests
+Version: 0.5.0
+Date: 2020-05-21
+Title: Ensemble Methods for Survival Data with Time-Varying Covariates
+Authors@R: c(person(given = "Weichi", family = "Yao", role = c("aut", "cre"), 
+                    email = "wy635@stern.nyu.edu"),
+             person(given = "Halina", family = "Frydman", role = "aut", email = "hf2@stern.nyu.edu"),
+             person(given = "Denis", family = "Larocque", role = "aut", email = "denis.larocque@hec.ca"),
+             person(given = "Jeffrey S.", family = "Simonoff", role = "aut", email = "jss2@stern.nyu.edu"))
+Author: Weichi Yao [aut, cre],
+  Halina Frydman [aut],
+  Denis Larocque [aut],
+  Jeffrey S. Simonoff [aut]
+Maintainer: Weichi Yao <wy635@stern.nyu.edu>
+Depends: R (>= 3.4.0), partykit, prodlim
+Imports: stats, utils, survival, ipred, parallel
+Suggests: LTRCtrees, inum, KMSurv
+Description: Implements the conditional inference forest and random survival
+  forest algorithm to modeling left-truncated right-censored
+  data with time-invariant covariates, and (left-truncated) right-censored survival data
+  with time-varying covariates. It also provides functions to tune the parameters and
+  evaluate the model fit. 
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
