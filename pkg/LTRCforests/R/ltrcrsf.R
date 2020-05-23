@@ -7,7 +7,7 @@
 #'
 #' This function extends the random survival forest algorithm in
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
-#' which allow for time-varying covariates. The traditional survival forests only
+#' which allows for time-varying covariates. The traditional survival forests only
 #' applies for right-censored data with time-invariant invariant covariates.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
@@ -92,6 +92,7 @@
 #' @import stats
 #' @import utils
 #' @import prodlim
+#' @importFrom survival Surv
 #' @import devtools
 #' @seealso \code{\link{predict.ltrcrsf}} for prediction and \code{\link{tune.ltrcrsf}}
 #' for \code{mtry} tuning.
@@ -103,12 +104,18 @@
 #' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 #' # on the time-varying data by specifying id:
 #' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
-#' print(LTRCRSFobj)
+#' LTRCRSFobj
+#'
+#' # Built a LTRCRSF forest (based on bootstrapping pseudo-subjects with replacement)
+#' # on the time-varying data by specifying id:
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, bootstrap = "by.root",
+#'                      samptype = "swr", id = ID, ntree = 50L)
+#' LTRCRSFobj
 #'
 #' # Built a LTRCRSF forest (based on sampling without replacement)
 #' # on the time-invariant data by not specifying id, with mtry specified:
-#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, id = ID, ntree = 50L)
-#' print(LTRCRSFobj)
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
+#' LTRCRSFobj
 #' @export
 ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     nodesize = max(ceiling(sqrt(nrow(data))),15), nodedepth = NULL,
@@ -298,6 +305,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$chf.oob = NULL
   forest.fit$forest$bootstrap <- bootstrap.org
   forest.fit$forest$samptype <- samptype
+  forest.fit$forest$sampfrac <- sampfrac
   forest.fit$call = Call
   forest.fit$splitrule = "Poisson"
   forest.fit$formulaLTRC <- formula

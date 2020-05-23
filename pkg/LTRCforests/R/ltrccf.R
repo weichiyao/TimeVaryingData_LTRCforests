@@ -120,8 +120,8 @@
 #' ## Fit an LTRCCF on the time-varying data, with mtry specified
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 #'
-#' ## Fit an LTRCCF on the time-varying data, with mtry tuned with stepFactor = 3.
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, ntree = 50L, stepFactor = 3)
+#' ## Fit an LTRCCF on the time-invariant data, with mtry tuned with stepFactor = 3.
+#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 50L, stepFactor = 3)
 #' @export
 
 ltrccf <- function(formula, data, id,
@@ -249,8 +249,10 @@ ltrccf <- function(formula, data, id,
                            cores = cores)
   ret$formulaLTRC <- formula
   ret$info$call <- Call
+  ret$info$bootstrap <- bootstrap
+  ret$info$perturb <- perturb
   ret$data <- mf
-  class(ret) <- c("ltrccf", class(ret))
+  class(ret) <- c("ltrccf", "grow", class(ret))
   ret
 }
 

@@ -125,7 +125,7 @@ right-censored survival data with time-varying covariates.
 \details{
 This function extends the random survival forest algorithm in
 \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
-which allow for time-varying covariates. The traditional survival forests only
+which allows for time-varying covariates. The traditional survival forests only
 applies for right-censored data with time-invariant invariant covariates.
 }
 \examples{
@@ -134,12 +134,18 @@ Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 # on the time-varying data by specifying id:
 LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
-print(LTRCRSFobj)
+LTRCRSFobj
+
+# Built a LTRCRSF forest (based on bootstrapping pseudo-subjects with replacement)
+# on the time-varying data by specifying id:
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, bootstrap = "by.root",
+                     samptype = "swr", id = ID, ntree = 50L)
+LTRCRSFobj
 
 # Built a LTRCRSF forest (based on sampling without replacement)
 # on the time-invariant data by not specifying id, with mtry specified:
-LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, id = ID, ntree = 50L)
-print(LTRCRSFobj)
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
+LTRCRSFobj
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
