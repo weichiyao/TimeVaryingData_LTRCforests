@@ -103,9 +103,9 @@ tune.ltrccf <- function(formula, data, id,
                                                           minprob = 0.01)) {
 
   # package version dependency
-  if (packageVersion("partykit") < "1.2.7") {
-    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  }
+  # if (packageVersion("partykit") < "1.2.7") {
+  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  # }
 
   Call <- match.call()
   Call[[1]] <- as.name('tuneLTRCCF')  #make nicer printout for the user

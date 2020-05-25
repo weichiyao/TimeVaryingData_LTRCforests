@@ -12,8 +12,8 @@ Author: Weichi Yao [aut, cre],
   Denis Larocque [aut],
   Jeffrey S. Simonoff [aut]
 Maintainer: Weichi Yao <wy635@stern.nyu.edu>
-Depends: R (>= 3.5.0), partykit (>= 1.2.7)
-Imports: stats, utils, survival, ipred, parallel, randomForestSRC, prodlim
+Depends: R (>= 3.5.0)
+Imports: stats, utils, survival, ipred, parallel, randomForestSRC, prodlim, partykit
 Suggests: LTRCtrees, inum, KMSurv
 Description: Implements the conditional inference forest and random survival
   forest algorithm to modeling left-truncated right-censored

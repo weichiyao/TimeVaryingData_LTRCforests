@@ -142,9 +142,9 @@ ltrccf <- function(formula, data, id,
                                                      minprob = 0.01,
                                                      mincriterion = 0, saveinfo = FALSE)){
   # package version dependency
-  if (packageVersion("partykit") < "1.2.7") {
-    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  }
+  # if (packageVersion("partykit") < "1.2.7") {
+  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  # }
 
   requireNamespace("inum")
   Call <- match.call()

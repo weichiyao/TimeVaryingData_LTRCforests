@@ -79,10 +79,10 @@
 #' @export
 predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                           time.eval, time.tau = NULL){
-  # package version dependency
-  if (packageVersion("partykit") < "1.2.7") {
-    stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  }
+  # # package version dependency
+  # if (packageVersion("partykit") < "1.2.7") {
+  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
+  # }
 
   pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob")
 
