@@ -122,21 +122,21 @@ ibsfunc <- function(Ni, data_sbrier, pred){
 
   ######================ reverse Kaplan-Meier: estimate censoring distribution ====== ########
   # deal with ties
-  hatcdist <- prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
+  hatcdist <- prodlim::prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
 
   Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni], ]$stop
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predict(hatcdist, times = Tleft, type = "surv")
+  csurv_adj = prodlim::predict(hatcdist, times = Tleft, type = "surv")
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
   if (csurv_adj == 0) stop("reverse Kaplan-Meier estimate at the left-truncateion point is 0! ")
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
+  csurv_obs <- prodlim::predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
   csurv_obs[csurv_obs == 0] <- Inf
 
   # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
+  csurv_t <- prodlim::predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 
@@ -166,22 +166,22 @@ bsfunc <- function(Ni, data_sbrier, pred, tpnt){
 
   ######================ reverse Kaplan-Meier: estimate censoring distribution ================###########
   # deal with ties
-  hatcdist <- prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
+  hatcdist <- prodlim::prodlim(Surv(start, stop, status) ~ 1, data = data_sbrier, reverse = TRUE)
 
   Ttildei <- data_sbrier[data_sbrier$id == id_uniq[Ni], ]$stop
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predict(hatcdist, times = Tleft, type = "surv")
+  csurv_adj = prodlim::predict(hatcdist, times = Tleft, type = "surv")
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
   if (csurv_adj == 0) stop("reverse Kaplan-Meier estimate at the left-truncateion point is 0! ")
 
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
+  csurv_obs <- prodlim::predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
   csurv_obs[csurv_obs == 0] <- Inf
 
   # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
+  csurv_t <- prodlim::predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 

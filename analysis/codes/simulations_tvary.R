@@ -1,8 +1,4 @@
 ##########################################################################
-## recompile the package randomForestSRC with the updated splitCustom.c
-setwd("./TimeVaryingData_LTRCforests/analysis/utils/randomForestSRC/")
-devtools::load_all()
-
 ## load the LTRCforests package
 setwd("./TimeVaryingData_LTRCforests/pkg/LTRCforests")
 devtools::load_all()
@@ -55,10 +51,13 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   mtryall = data.frame(matrix(0, nrow = 1, ncol = 3))
   names(mtryall) <- c("cf", "rsf", "tsf")
   
+  L2seu = data.frame(matrix(0, nrow = 1, ncol = 3))
+  names(L2seu) <- c("cf", "rsf", "tsf")
+  
   ibsCVerr = data.frame(matrix(0, nrow = Nfold, ncol = 4))
   names(ibsCVerr) = c("cx", "cf", "rsf", "tsf")
   
-  RES = list(caseI = list(L2mtry = L2mtry, OOBmtry = OOBmtry, L2 = L2, 
+  RES = list(caseI = list(L2mtry = L2mtry, OOBmtry = OOBmtry, L2 = L2, L2seu = L2seu,
                           mtryall = mtryall, ibsCVerr = ibsCVerr),
              caseII = list(L2mtry = L2mtry, OOBmtry = OOBmtry, L2 = L2,
                            mtryall = mtryall, ibsCVerr = ibsCVerr))
@@ -155,7 +154,12 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   
   if (RES$caseI$L2$tsfD[1] == 0){
     ## Training
-    modelT <- tsf_wy(formula = Formula_TD, data = fullDATA, mtry = mtryD, ntree = ntree)
+    modelT <- tsf_wy(formula = Formula_TD, data = fullDATA, mtry = mtryD, ntree = ntree,
+                     control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                       mincriterion = 0, saveinfo = FALSE,
+                                                       minsplit = 20,
+                                                       minbucket = 7,
+                                                       minprob = 0.01))
     predT <- predict_tsf_wy(object = modelT)
     
     RES$caseI$L2$tsfD <- l2(data = fullDATA, info = Info, 
@@ -165,6 +169,20 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     gc()
   }
   print("Case I -- tsfD is done ...")
+  
+  if (RES$caseI$L2seu$tsf[1] == 0){
+    ## Training
+    modelT <- tsf_wy(formula = Formula_TD, data = fullDATA, mtry = mtryD, ntree = ntree,
+                     bootstrap = "by.root")
+    predT <- predict_tsf_wy(object = modelT)
+    
+    RES$caseI$L2seu$tsf <- l2(data = fullDATA, info = Info, 
+                              pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    rm(modelT)
+    rm(predT)
+    gc()
+  }
+  print("Case I -- tsf with bootstrapping pseudo-subject is done ...")
   
   leftzero = which(RES$caseII$L2mtry$tsf[1:6] == 0)
   if (length(leftzero) > 0){
@@ -206,7 +224,12 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   
   if (RES$caseII$L2$tsfD[1] == 0){
     ## Training
-    modelT <- tsf_wy(formula = Formula_TD, data = ptlDATA, mtry = mtryD, ntree = ntree)
+    modelT <- tsf_wy(formula = Formula_TD, data = ptlDATA, mtry = mtryD, ntree = ntree,
+                     control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                       mincriterion = 0, saveinfo = FALSE,
+                                                       minsplit = 20,
+                                                       minbucket = 7,
+                                                       minprob = 0.01))
     predT <- predict_tsf_wy(object = modelT)
     
     RES$caseII$L2$tsfD <- l2(data = ptlDATA, fulldata = fullDATA, info = Info, 
@@ -252,6 +275,11 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   if (RES$caseI$L2$cfD[1] == 0){
     ## Training
     modelT = ltrccf(formula = Formula, data = fullDATA, id = ID, 
+                    control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                      mincriterion = 0, saveinfo = FALSE,
+                                                      minsplit = 20,
+                                                      minbucket = 7,
+                                                      minprob = 0.01),
                     mtry = mtryD, ntree = ntree)
     predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseI$L2$cfD <- l2(data = fullDATA, fulldata = fullDATA, 
@@ -280,6 +308,21 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     }
   }
 
+  if (RES$caseI$L2seu$cf[1] == 0){
+    ## Training
+    modelT <- ltrccf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
+                     bootstrap = "by.root",
+                     mtry = mtryD, ntree = ntree)
+    predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    
+    RES$caseI$L2seu$cf <- l2(data = fullDATA, info = Info, 
+                              pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    rm(modelT)
+    rm(predT)
+    gc()
+  }
+  print("Case I -- cf with bootstrapping pseudo-subject is done ...")
+  
   if (RES$caseII$L2$cfP[1] == 0){
     idxmin = which.min(RES$caseII$OOBmtry$cf)
     ## L2 errors of the forests with mtry chosen by OOB
@@ -293,6 +336,11 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   if (RES$caseII$L2$cfD[1] == 0){
     ## Training
     modelT = ltrccf(formula = Formula, data = ptlDATA, id = ID, 
+                    control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                      mincriterion = 0, saveinfo = FALSE,
+                                                      minsplit = 20,
+                                                      minbucket = 7,
+                                                      minprob = 0.01),
                     mtry = mtryD, ntree = ntree)
     predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseII$L2$cfD <- l2(data = ptlDATA, fulldata = fullDATA, 
@@ -334,6 +382,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   if (RES$caseI$L2$rsfD[1] == 0){
     ## Training
     modelT = ltrcrsf(formula = Formula, data = fullDATA, id = ID, 
+                     nodesize = 15,
                      mtry = mtryD, ntree = ntree)
     predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseI$L2$rsfD <- l2(data = fullDATA, fulldata = fullDATA, 
@@ -343,6 +392,22 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     gc()
   }
   print("Case I -- rsfD is done ...")
+  
+  if (RES$caseI$L2seu$rsf[1] == 0){
+    ## Training
+    modelT <- ltrcrsf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
+                     bootstrap = "by.root",
+                     mtry = mtryD, ntree = ntree)
+    predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    
+    RES$caseI$L2seu$rsf <- l2(data = fullDATA, info = Info, 
+                             pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    rm(modelT)
+    rm(predT)
+    gc()
+  }
+  print("Case I -- rsf with bootstrapping pseudo-subject is done ...")
+  
   
   leftzero = which(RES$caseII$L2mtry$rsf[1:6] == 0)
   if (length(leftzero) > 0){
@@ -374,6 +439,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   if (RES$caseII$L2$rsfD[1] == 0){
     ## Training
     modelT = ltrcrsf(formula = Formula, data = ptlDATA, id = ID, 
+                     nodesize = 15,
                      mtry = mtryD, ntree = ntree)
     predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseII$L2$rsfD <- l2(data = ptlDATA, fulldata = fullDATA, 

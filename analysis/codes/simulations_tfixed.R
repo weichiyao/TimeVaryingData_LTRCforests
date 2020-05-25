@@ -1,8 +1,5 @@
 ##########################################################################
-## recompile the package randomForestSRC with the updated splitCustom.c
-setwd("./TimeVaryingData_LTRCforests/analysis/utils/randomForestSRC/")
-devtools::load_all()
-
+library(randomForestSRC)
 library(trtf)
 library(tram)
 library(mlt)
@@ -11,6 +8,7 @@ library(partykit)
 library(survival)
 library(prodlim)
 library(pec)
+
 
 setwd("./TimeVaryingData_LTRCforests/analysis/data/")
 source("./Timefixed_gnrt_PH.R")
