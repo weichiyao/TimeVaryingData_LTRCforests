@@ -1,5 +1,5 @@
 # TimeVaryingData_LTRCforests
-Analysis codes for "Ensemble Methods for Right-Censored Survival Data with Time-Varying Covariates"
+Analysis codes for "Ensemble Methods for Survival Data with Time-Varying Covariates"
 
 1.The **pkg** folder contains the R package [LTRCforests].
 
