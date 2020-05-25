@@ -347,15 +347,12 @@ for (setting in c("PH","nonPH")){
   aa = NULL
   for (nn in 1:4){
     for (mm in 2:4){ 
-         
-      
-      
-      filename_sub <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
-                              setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
-      resall_cf <- matrix(unlist(readRDS(filename_sub)$caseI$L2mtry$cf), nrow=500, byrow=FALSE)[,3]
-      resall_rsf <- matrix(unlist(readRDS(filename_sub)$caseI$L2mtry$rsf), nrow=500, byrow=FALSE)[,3]
-      resall_tsf <- matrix(unlist(readRDS(filename_sub)$caseI$L2mtry$tsf), nrow=500, byrow=FALSE)[,3]
-      resall_seu <- matrix(unlist(readRDS(filename_seu)$caseI$L2seu), nrow=500, byrow = FALSE)
+      filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
+                          setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
+      resall_cf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$cf), nrow=500, byrow=FALSE)[,3]
+      resall_rsf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$rsf), nrow=500, byrow=FALSE)[,3]
+      resall_tsf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$tsf), nrow=500, byrow=FALSE)[,3]
+      resall_seu <- matrix(unlist(readRDS(filename)$caseI$L2seu), nrow=500, byrow = FALSE)
       E = cbind(resall_seu[,1],resall_cf,resall_seu[,2],resall_rsf,resall_seu[,3],resall_tsf)
       
       E = E[rowSums(E==0)==0,]
