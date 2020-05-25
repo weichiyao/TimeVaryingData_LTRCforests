@@ -123,6 +123,7 @@ time-invariant invariant covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRCCF on the time-varying data, with mtry specified
 LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
