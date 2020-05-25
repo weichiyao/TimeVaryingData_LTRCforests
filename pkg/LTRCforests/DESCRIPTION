@@ -20,6 +20,7 @@ Description: Implements the conditional inference forest and random survival
   data with time-invariant covariates, and (left-truncated) right-censored survival data
   with time-varying covariates. It also provides functions to tune the parameters and
   evaluate the model fit.
+NeedsCompilation: yes 
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
