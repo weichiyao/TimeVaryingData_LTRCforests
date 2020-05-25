@@ -3,7 +3,7 @@ Analysis codes for "Ensemble Methods for Right-Censored Survival Data with Time-
 
 1.The **pkg** folder contains the R package [LTRCforests].
 
-2.The **analysis** folder provides analysis code in the paper:
+2.The **analysis** folder provides analysis codes in the paper:
   - The subfolder **data** contains 
     - functions to create simulated dataset with time-varying covariates
     - functions to create simulated dataset with time-invariant covariates
