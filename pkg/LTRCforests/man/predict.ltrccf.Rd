@@ -88,9 +88,9 @@ Pred2 = predict(object = LTRCCFobj, newdata = pbcsample, newdata.id = ID,
                                                  length.out = length(unique(pbcsample$ID))))
 ## Then Pred2$survival.probs is a list:
 class(Pred2$survival.probs)
-## Plot the estimated survival curve for the subject with id = 20
-plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[20]],
-     Pred2$survival.probs[[20]], type = "l", col = "red",
+## Plot the estimated survival curve for the subject with id = 18
+plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[18]],
+     Pred2$survival.probs[[18]], type = "l", col = "red",
      xlab = "Time", ylab = "Survival probabilities")
 
 

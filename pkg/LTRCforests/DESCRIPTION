@@ -15,11 +15,11 @@ Maintainer: Weichi Yao <wy635@stern.nyu.edu>
 Depends: R (>= 3.5.0)
 Imports: stats, utils, survival, ipred, parallel, randomForestSRC, prodlim, partykit
 Suggests: LTRCtrees, inum, KMSurv
-Description: Implements the conditional inference forest and random survival
-  forest algorithm to modeling left-truncated right-censored
-  data with time-invariant covariates, and (left-truncated) right-censored survival data
-  with time-varying covariates. It also provides functions to tune the parameters and
-  evaluate the model fit.
+Description: Implements the conditional inference forest and random survival forest 
+             algorithm to modeling left-truncated right-censored data with time-invariant        
+             covariates, and (left-truncated) right-censored survival data with time-varying 
+             covariates. It also provides functions to tune the parameters and evaluate the 
+             model fit.
 NeedsCompilation: yes 
 License: GPL (>= 2)
 Encoding: UTF-8

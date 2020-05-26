@@ -66,8 +66,8 @@ with time-invariant covariates.
 #### Example with time-varying data pbcsample
 library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-## Fit an LTRCRSF on the time-varying data, with mtry specified
-LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
+## Fit an LTRCRSF on the time-varying data, with id specified
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
 
 ## Construct an estimated survival estimate for the second subject
 tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
@@ -87,9 +87,9 @@ Pred2 = predict(object = LTRCRSFobj, newdata = pbcsample, newdata.id = ID,
 
 ## Then Pred2$survival.probs is a list:
 class(Pred2$survival.probs)
-## Plot the estimated survival curve for the subject with id = 20
-plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[20]],
-     Pred2$survival.probs[[20]], type = "l", col = "red",
+## Plot the estimated survival curve for the subject with id = 18
+plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[18]],
+     Pred2$survival.probs[[18]], type = "l", col = "red",
      xlab = "Time", ylab = "Survival probabilities")
 }
 \seealso{
