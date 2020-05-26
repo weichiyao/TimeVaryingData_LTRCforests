@@ -799,7 +799,7 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
         forest.out$time.interest <- event.info$time.interest
       }
       ## Initialize the default class of the forest.
-      class(forest.out) <- c("rfsrc", "forest", family)
+      class(forest.out) <- c("ltrcrsf", "forest", family)
       if (big.data) {
         class(forest.out) <- c(class(forest.out), "bigdata")
       }

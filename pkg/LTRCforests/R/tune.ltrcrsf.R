@@ -208,7 +208,7 @@ tune.ltrcrsf <- function(formula, data, id,
                       samp = esamp,
                       na.action = ena.action,
                       ntime = entime)
-    predOOB <- predict.ltrcrsf(object = rsfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
+    predOOB <- predict(object = rsfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = id, pred = predOOB, type="IBS")
     rm(rsfOOB)
     rm(predOOB)

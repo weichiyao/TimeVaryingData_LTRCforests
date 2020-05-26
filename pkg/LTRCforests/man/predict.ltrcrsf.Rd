@@ -59,14 +59,15 @@ A list containing:
 \description{
 Constructs a monotone nonincreasing estimated survival curve from a LTRCRSF model
 for any given (left-truncated) right-censored survival data with time-varying covariates.
-It can also conputes survival function estimates for left-truncated right-censored data
-with time-invariant covariate.
+It can also compute survival function estimates for left-truncated right-censored data
+with time-invariant covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRCRSF on the time-varying data, with mtry specified
-LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
+LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 
 ## Construct an estimated survival estimate for the second subject
 tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
@@ -80,9 +81,9 @@ plot(Pred$survival.times, Pred$survival.probs, type = "l", col = "red",
      xlab = "Time", ylab = "Survival probabilities")
 
 ## When time.tau is specified and some entries are different from the others
-Pred2 = predict.ltrcrsf(object = LTRCRSFobj, newdata = pbcsample, newdata.id = ID,
-                        time.eval = tpnt, time.tau = seq(100, 400, length.out =
-                                                           length(unique(pbcsample$ID))))
+Pred2 = predict(object = LTRCRSFobj, newdata = pbcsample, newdata.id = ID,
+                time.eval = tpnt, time.tau = seq(100, 400, length.out =
+                                                 length(unique(pbcsample$ID))))
 
 ## Then Pred2$survival.probs is a list:
 class(Pred2$survival.probs)

@@ -189,7 +189,7 @@ tune.ltrccf <- function(formula, data, id,
                     na.action = ena.action,
                     applyfun = eapplyfun,
                     cores = ecores)
-    predOOB <- predict.ltrccf(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
+    predOOB <- predict(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = id, pred = predOOB, type = "IBS")
     rm(cfOOB)
     rm(predOOB)

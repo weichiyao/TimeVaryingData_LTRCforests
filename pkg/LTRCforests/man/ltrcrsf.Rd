@@ -126,7 +126,7 @@ right-censored survival data with time-varying covariates.
 This function extends the random survival forest algorithm in
 \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
 which allows for time-varying covariates. The traditional survival forests only
-applies for right-censored data with time-invariant invariant covariates.
+applies for right-censored data with time-invariant covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample

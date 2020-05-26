@@ -22,7 +22,7 @@ LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntr
 print(LTRCRSFobj)
 
 # Built a LTRCRSF forest (sampling with replacement) on the time-invariant data,
-with mtry specified:
+# with mtry specified:
 LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, samptype = "swr", mtry = 3,
                      ntree = 50L)
 print(LTRCRSFobj)

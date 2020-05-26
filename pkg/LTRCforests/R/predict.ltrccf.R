@@ -2,8 +2,8 @@
 #'
 #' Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model
 #' for any given (left-truncated) right-censored survival data with time-varying covariates.
-#' It can also conputes survival function estimates for left-truncated right-censored data
-#' with time-invariant covariate.
+#' It can also compute survival function estimates for left-truncated right-censored data
+#' with time-invariant covariates.
 #'
 #' @param object an object as returned by \code{\link{ltrccf}}.
 #' @param newdata.id optional variable name of subject identifiers for \code{newdata}.
@@ -53,8 +53,8 @@
 #' ## Construct an estimated survival estimate for the second subject
 #' tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
 #' newData <- pbcsample[pbcsample$ID == 2,]
-#' Pred <- predict.ltrccf(object = LTRCCFobj, newdata = newData, newdata.id = ID,
-#'                        time.eval = tpnt)
+#' Pred <- predict(object = LTRCCFobj, newdata = newData, newdata.id = ID,
+#'                 time.eval = tpnt)
 #' ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
 #' dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)
 #' ## Plot the estimated survival curve
@@ -63,14 +63,14 @@
 #'
 #'
 #' ## When time.tau is specified and some entries are different from the others
-#' Pred2 = predict.ltrccf(object = LTRCCFobj, newdata = pbcsample, newdata.id = ID,
-#'         time.eval = tpnt, time.tau = seq(100, 400,
-#'                                          length.out = length(unique(pbcsample$ID))))
+#' Pred2 = predict(object = LTRCCFobj, newdata = pbcsample, newdata.id = ID,
+#'                 time.eval = tpnt, time.tau = seq(100, 400,
+#'                                                  length.out = length(unique(pbcsample$ID))))
 #' ## Then Pred2$survival.probs is a list:
 #' class(Pred2$survival.probs)
-#' ## Plot the estimated survival curve for the subject with id = 20
-#' plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[20]],
-#'      Pred2$survival.probs[[20]], type = "l", col = "red",
+#' ## Plot the estimated survival curve for the subject with id = 18
+#' plot(Pred2$survival.times[Pred2$survival.times <= Pred2$survival.tau[18]],
+#'      Pred2$survival.probs[[18]], type = "l", col = "red",
 #'      xlab = "Time", ylab = "Survival probabilities")
 #'
 #'

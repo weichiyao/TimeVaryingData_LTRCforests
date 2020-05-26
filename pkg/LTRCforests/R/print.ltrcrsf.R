@@ -15,7 +15,7 @@
 #' print(LTRCRSFobj)
 #'
 #' # Built a LTRCRSF forest (sampling with replacement) on the time-invariant data,
-#' with mtry specified:
+#' # with mtry specified:
 #' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, samptype = "swr", mtry = 3,
 #'                      ntree = 50L)
 #' print(LTRCRSFobj)
@@ -29,8 +29,8 @@ print.ltrcrsf <- function(x) {
   # }
 
   ## check that the object is interpretable
-  if (any(inherits(x, c("ltrcrsf", "grow"), TRUE) ) == 0 ) {
-    stop("This function only works for objects (of subclass) of class `(ltrcrsf, grow).")
+  if (sum(inherits(x, c("ltrcrsf", "grow"), TRUE) == c(1, 2)) != 2) {
+    stop("This function only works for objects of class `(ltrcrsf, grow)'.")
   }
   grow.mode <- TRUE
 
@@ -45,9 +45,9 @@ print.ltrcrsf <- function(x) {
     x$nsplit <- 0
   }
 
-  if (x$forest$samptype == "swor"){
+  if (x$forest$samptypeLTRC == "swor"){
     samptype <- "sampling without replacement"
-  } else if (x$forest$samptype == "swr"){
+  } else if (x$forest$samptypeLTRC == "swr"){
     samptype <- "sampling with replacement"
   }
   #################################################################################
@@ -71,20 +71,20 @@ print.ltrcrsf <- function(x) {
   cat("           Average no. of terminal nodes: ", mean(x$leaf.count),     "\n", sep="")
   cat("    No. of variables tried at each split: ", x$mtry,                 "\n", sep="")
   cat("                  Total no. of variables: ", length(x$xvar.names),   "\n", sep="")
-  cat("            Bootstrap type to grow trees: ", x$forest$bootstrap,             "\n",sep="")
+  cat("            Bootstrap type to grow trees: ", x$forest$bootstrapLTRC,             "\n",sep="")
   if (x$forest$bootstrap != "by.user"){
     cat("           Resampling used to grow trees: ", samptype,            "          \n",sep="")
     if (samptype == "sampling without replacement"){
-      cat("      Resampling rate used to grow trees: ", x$forest$sampfrac,            "\n",sep="")
+      cat("      Resampling rate used to grow trees: ", x$forest$sampfracLTRC,            "\n",sep="")
     }
   }
   cat("                                Analysis: ", familyPretty,                 "\n", sep="")
   cat("                                  Family: ", familyOrg,                    "\n", sep="")
   if (x$nsplit > 0 & x$splitrule != "random") {
-    cat("                          Splitting rule: ", paste(x$splitrule,"*random*"), "\n", sep="")
+    cat("                          Splitting rule: ", paste(x$splitruleLTRC,"*random*"), "\n", sep="")
     cat("           Number of random split points: ", x$nsplit,  "\n", sep="")
   } else {
-    cat("                          Splitting rule: ", x$splitrule,                   "\n", sep="")
+    cat("                          Splitting rule: ", x$splitruleLTRC,                   "\n", sep="")
   }
 
   #################################################################################

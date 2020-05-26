@@ -45,7 +45,6 @@ predict.ltrcrfsrc <-
                                               do.trace = do.trace,
                                               membership = membership,
                                               statistics = statistics,
-
                                               ...)
   return(result.predict)
 }

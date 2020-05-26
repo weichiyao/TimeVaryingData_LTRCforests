@@ -119,7 +119,7 @@ This function extends the conditional inference survival forest algorithm in
 \code{\link[partykit]{cforest}} to fit left-truncated and right-censored data,
 which allow for time-varying covariates. The traditional survival forests in
 \code{\link[partykit]{cforest}} only applies for right-censored data with
-time-invariant invariant covariates.
+time-invariant covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample

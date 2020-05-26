@@ -8,7 +8,7 @@
 #' This function extends the random survival forest algorithm in
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
 #' which allows for time-varying covariates. The traditional survival forests only
-#' applies for right-censored data with time-invariant invariant covariates.
+#' applies for right-censored data with time-invariant covariates.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -299,13 +299,13 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$survival.oob = NULL
   forest.fit$chf = NULL
   forest.fit$chf.oob = NULL
-  forest.fit$forest$bootstrap <- bootstrap.org
-  forest.fit$forest$samptype <- samptype
-  forest.fit$forest$sampfrac <- sampfrac
-  forest.fit$call = Call
-  forest.fit$splitrule = "Poisson"
+  forest.fit$forest$bootstrapLTRC <- bootstrap.org
+  forest.fit$forest$samptypeLTRC <- samptype
+  forest.fit$forest$sampfracLTRC <- sampfrac
+  forest.fit$callLTRC = Call
+  forest.fit$splitruleLTRC = "Poisson"
   forest.fit$formulaLTRC <- formula
-  class(forest.fit) <- c("ltrcrsf", class(forest.fit))
+  class(forest.fit)[1] <- "ltrcrsf"
   return(forest.fit)
 }
 
