@@ -74,7 +74,7 @@
 #' @export
 
 predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
-                           time.eval, time.tau = NULL){
+                            time.eval, time.tau = NULL){
   ntree <- object$ntree
   formula <- object$formulaLTRC
   formula[[3]] <- 1
@@ -121,12 +121,15 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
           id_node_witi_j <- node_all[newi$I[jall[nj]], id_tree_wi_j[ti]]
           ## id of samples that fall into the same node
-          id_samenode_witi_j <- which(node_all[,id_tree_wi_j[ti]] == id_node_witi_j)
+          id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
           ## Pick out those appearing in the bootstrapped samples
-          id_inbag_j <- which(wt[, id_tree_wi_j[ti]] == 1)
+          id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
           id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
           ## Build the survival tree
-          KM <- survival::survfit(formula = formula, data = traindata[id_buildtree_j, ])
+          traindata$KMwt <- 0
+          traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] # / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
+          KM <- survival::survfit(formula = formula, data = traindata,
+                                  weights = KMwt, subset = KMwt > 0)
           ## Get survival probabilities
           Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
 
@@ -152,10 +155,13 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             ## id of samples that fall into the same node
             id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
             ## Pick out those appearing in the bootstrapped samples
-            id_inbag_j <- which(wt[,id_tree_wi_j[ti]] == 1)
+            id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
             id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
             ## Build the survival tree
-            KM <- survival::survfit(formula = formula, data = traindata[id_buildtree_j, ])
+            traindata$KMwt <- 0
+            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] # / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
+            KM <- survival::survfit(formula = formula, data = traindata,
+                                    weights = KMwt, subset = KMwt > 0)
             Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
             if (Shat_ti[1] == 0){# jL = Shat_ti[1]
@@ -205,7 +211,8 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
     }
     rm(object)
-    obj.IDs <- match(c("id", yvar.names), names(newdata))
+    obj.IDs <- match(c("id", yvar.names), names(newdata), nomatch = 0)
+    if (any(obj.IDs == 0)) stop("newdata has to be with variables as in formula (time1, time2, event)")
     newdata = newdata[, obj.IDs]
 
     # label the newdata
@@ -219,6 +226,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     } else {
       if (n_uniq != length(time.tau)) stop("time.tau should be a vector of length equaling to number of SUBJECT observation! In the time-varying case, check whether newdata.id has been correctly specified!")
     }
+
     pred <- sapply(1:n_uniq, function(i){
       newi <- newdata[newdata$id == id_uniq[i], , drop = FALSE]
       n_newi <- nrow(newi)
@@ -241,9 +249,14 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
           IDnew <- which(nIDxdata[,b] == nIDxnewdata[newi$I[jall[nj]], b])
           # ID of observations in the b-th bootstrap samples
-          rw <- which(wt[, b] == 1)
+          rw <- which(wt[, b] > 0)
           IDnew <- IDnew[IDnew %in% rw]
-          KM <- survival::survfit(formula = formula, data = traindata[IDnew, ])
+          ## For each tree, we need to reset KMwt to be zero,
+          ## otherwise subset = KMwt > 0 is not correct
+          traindata$KMwt <- 0
+          traindata$KMwt[IDnew] = wt[IDnew, b] #/ sum(wt[IDnew, b])
+          KM <- survival::survfit(formula = formula, data = traindata,
+                                  weights = KMwt, subset = KMwt > 0)
           Shat_b <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
           survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_b / Shat_b[1]
         }
@@ -268,9 +281,15 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
             IDnew <- which(nIDxdata[, b] == nIDxnewdata[newi$I[jall[j]], b])
             # ID of observations in the b-th bootstrap samples
-            rw <- which(wt[, b] == 1)
+            rw <- which(wt[, b] > 0)
             IDnew <- IDnew[IDnew %in% rw]
-            KM <- survival::survfit(formula = formula, data = traindata[IDnew, ])
+
+            ## For each tree, we need to reset KMwt to be zero,
+            ## otherwise subset = KMwt > 0 is not correct
+            traindata$KMwt <- 0
+            traindata$KMwt[IDnew] = wt[IDnew, b] # / sum(wt[IDnew, b])
+            KM <- survival::survfit(formula = formula, data = traindata,
+                                    weights = KMwt, subset = KMwt > 0)
             Shat_bj <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
             qL[j] <- Shat_bj[1]
@@ -313,9 +332,11 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     })
 
     rm(traindata)
+
     obj <- Surv(newdata[, yvar.names[1]],
                 newdata[, yvar.names[2]],
                 newdata[, yvar.names[3]])
+
   }
 
 

@@ -174,6 +174,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   Status <- y[,3L]
   Times <- y[,2L]
 
+  if (sum(Status) == 0) stop("All observations are right-censored with event = 0!")
   ##unique death times
   unique.times <- sort(unique(Times[Status == 1]))
 
@@ -201,7 +202,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   Formula = formula(paste(c( paste("Surv(Newtime,",yvar.names[3],")",sep = ""), formula[[3]]), collapse = "~"))
 
   ## bootstrap case
-  if (length(id)==length(unique(id))){ # time-invariant LTRC data
+  if (length(id) == length(unique(id))){ # time-invariant LTRC data
     # it includes the case 1) when id = NULL, which is that id is not specified
     #                      2) when id is specified, but indeed LTRC time-invariant
     id <- 1:n # relabel, bad idea?
@@ -212,11 +213,11 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
     n.sub = length(id.sub)
   }
 
-  sampsize = if (samptype == "swor") function(x){x * sampfrac} else function(x){x}
+  sampsize <- if (samptype == "swor") function(x){x * sampfrac} else function(x){x}
 
   bootstrap.org <- bootstrap
   if (bootstrap == "by.sub"){
-    bootstrap = "by.user"
+    bootstrap <- "by.user"
     # dim n x ntree
     samp <- matrix(0, nrow = n, ncol = ntree)
     if (samptype == "swr"){
@@ -239,20 +240,37 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
         nP <- floor(n*sampfrac)
         idS <- sample(id.sub, size = n.sub, replace = FALSE)
         k = 0
-        while (sum(samp[,b]) < nP) {
+        while (sum(samp[, b]) < nP) {
           k = k+1
           inidx <- which(id == idS[k])
           samp[inidx, b] = samp[inidx, b] + 1
         }
-        if (sum(samp[,b]) > nP){
-          seqn = which(samp[,b]!=0)
-          add = length(seqn) - (sum(samp[,b])-nP) + 1
+        if (sum(samp[, b]) > nP){
+          seqn = which(samp[, b] != 0)
+          add = length(seqn) - (sum(samp[, b]) - nP) + 1
           idx <- sample(add, size = 1)
-          samp[seqn[idx:(idx+sum(samp[,b])-nP-1)],b] = 0
+          samp[seqn[idx:(idx + sum(samp[, b]) - nP - 1)], b] = 0
         }
       }
+    } else {
+      stop("Wrong samptype is given!")
     }
   }
+  # } else if (bootstrap == "by.root"){
+  #   if (samptype == "swr"){
+  #     perturb = list(replace = TRUE, size = n)
+  #     samp <- replicate(ntree,
+  #                       sample(id, size = perturb$size,
+  #                              replace = perturb$replace),
+  #                       simplify = FALSE) # a list of length ntree
+  #     samp <- sapply(samp, function(x) as.integer(tabulate(x, nbins = n))) # n x ntree
+  #     bootstrap <- "by.user"
+  #   } else if (samptype == "swor"){
+  #     perturb = list(replace = FALSE, size = floor(n * sampfrac))
+  #   } else {
+  #     stop("Wrong samptype is given!")
+  #   }
+  # }
 
   if (is.null(mtry)){
     data$id = id # this is a must, otherwise id cannot be passed to the next level
