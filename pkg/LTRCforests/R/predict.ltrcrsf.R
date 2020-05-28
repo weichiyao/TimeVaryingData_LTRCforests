@@ -127,9 +127,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
           ## Build the survival tree
           traindata$KMwt <- 0
-          traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] # / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
+          traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
           KM <- survival::survfit(formula = formula, data = traindata,
-                                  weights = KMwt, subset = KMwt > 0)
+                                  weights = KMwt, subset = KMwt > 0, conf.type = "plain")
           ## Get survival probabilities
           Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
 
@@ -159,9 +159,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
             ## Build the survival tree
             traindata$KMwt <- 0
-            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] # / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
+            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
             KM <- survival::survfit(formula = formula, data = traindata,
-                                    weights = KMwt, subset = KMwt > 0)
+                                    weights = KMwt, subset = KMwt > 0, conf.type = "plain")
             Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
             if (Shat_ti[1] == 0){# jL = Shat_ti[1]
@@ -254,9 +254,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## For each tree, we need to reset KMwt to be zero,
           ## otherwise subset = KMwt > 0 is not correct
           traindata$KMwt <- 0
-          traindata$KMwt[IDnew] = wt[IDnew, b] #/ sum(wt[IDnew, b])
+          traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
           KM <- survival::survfit(formula = formula, data = traindata,
-                                  weights = KMwt, subset = KMwt > 0)
+                                  weights = KMwt, subset = KMwt > 0, conf.type = "plain")
           Shat_b <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
           survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_b / Shat_b[1]
         }
@@ -287,9 +287,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             ## For each tree, we need to reset KMwt to be zero,
             ## otherwise subset = KMwt > 0 is not correct
             traindata$KMwt <- 0
-            traindata$KMwt[IDnew] = wt[IDnew, b] # / sum(wt[IDnew, b])
+            traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
             KM <- survival::survfit(formula = formula, data = traindata,
-                                    weights = KMwt, subset = KMwt > 0)
+                                    weights = KMwt, subset = KMwt > 0, conf.type = "plain")
             Shat_bj <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
             qL[j] <- Shat_bj[1]

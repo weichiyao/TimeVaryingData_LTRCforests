@@ -79,12 +79,9 @@
 #' @export
 predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                           time.eval, time.tau = NULL){
-  # # package version dependency
-  # if (packageVersion("partykit") < "1.2.7") {
-  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  # }
 
-  pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob")
+  pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob",
+                                    FUN = .pred_Surv_nolog)
 
   yvar.names <- as.character(object$formulaLTRC[[2]])[2:4]
   Rname <- yvar.names[2]
@@ -112,7 +109,7 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                                      In the time-varying case, check whether newdata.id has been correctly specified!")
   }
 
-  Shat <- sapply(1:N, function(Ni) shatfunc(Ni, data = newdata, pred = pred, tpnt = time.eval, tau = time.tau))
+  Shat <- sapply(1:N, function(Ni) .shatfunc(Ni, data = newdata, pred = pred, tpnt = time.eval, tau = time.tau))
   obj <- Surv(newdata[, yvar.names[1]],
               newdata[, yvar.names[2]],
               newdata[, yvar.names[3]])
@@ -127,7 +124,7 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   return(RES)
 }
 
-shatfunc <- function(Ni, data, pred, tpnt, tau){
+.shatfunc <- function(Ni, data, pred, tpnt, tau){
   ## This function is to compute the estimated survival probability of the Ni-th subject
   id.seu <- data[, "id"] # id
   id.sub <- unique(id.seu)
@@ -210,3 +207,9 @@ shatfunc <- function(Ni, data, pred, tpnt, tau){
   rm(id.seu)
   rm(id.sub)
 }
+
+.pred_Surv_nolog <- function(y, w) {
+  if (length(y) == 0) return(NA)
+  survfit(y ~ 1, weights = w, subset = w > 0, conf.type = "plain")
+}
+
