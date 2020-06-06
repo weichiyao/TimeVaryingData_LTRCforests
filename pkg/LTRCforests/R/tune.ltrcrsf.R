@@ -259,7 +259,7 @@ tune.ltrcrsf <- function(formula, data, id,
 
   if (errorOld < 0) stop("Initial setting gave 0 error and no room for improvement.")
   if (trace) {
-    cat("mtry =", mtryStart, " OOB Brier score = ",
+    cat("mtry = ", mtryStart, " OOB Brier score = ",
         errorOld, "\n")
   }
 
@@ -293,7 +293,7 @@ tune.ltrcrsf <- function(formula, data, id,
                                 entime = ntime)
 
       if (trace) {
-        cat("mtry =", mtryCur, "\tOOB error = ", errorCur, "\n")
+        cat("mtry = ", mtryCur, "\tOOB error = ", errorCur, "\n")
       }
       oobError[[as.character(mtryCur)]] <- errorCur
       errorOld <- errorCur
@@ -307,7 +307,7 @@ tune.ltrcrsf <- function(formula, data, id,
   if (plot) {
     res = res_all
     plot(res_all, xlab = expression(m[try]), ylab = "OOB Error", type = "o", log = "x", xaxt = "n")
-    axis(1, at = res_all[,"mtry"])
+    axis(1, at = res_all[, "mtry"])
   }
 
   if (doBest) {

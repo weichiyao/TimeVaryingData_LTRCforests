@@ -78,7 +78,7 @@ print.ltrcrsf <- function(x) {
       cat("      Resampling rate used to grow trees: ", x$forest$sampfracLTRC,            "\n",sep="")
     }
   }
-  cat("                                Analysis: ", familyPretty,                 "\n", sep="")
+  cat("                                Analysis: ", "LTRCRSF",                  "\n", sep="")
   cat("                                  Family: ", familyOrg,                    "\n", sep="")
   if (x$nsplit > 0 & x$splitrule != "random") {
     cat("                          Splitting rule: ", paste(x$splitruleLTRC,"*random*"), "\n", sep="")

@@ -115,7 +115,7 @@ tune.ltrccf <- function(formula, data, id,
   # Call[[1]] <- as.name('tuneltrccf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
-  indx <- match(c('formula','id'), names(Call), nomatch = 0)
+  indx <- match(c('formula', 'id'), names(Call), nomatch = 0)
   if (indx[1] == 0) stop("a formula argument is required")
 
   # temp <- Call[c(1, indx)]
@@ -248,7 +248,7 @@ tune.ltrccf <- function(formula, data, id,
                             ecores = cores)
   if (errorOld < 0) stop("Initial setting gave 0 error and no room for improvement.")
   if (trace) {
-    cat("mtry =", mtryStart, " OOB Brier score =",
+    cat("mtry = ", mtryStart, " OOB Brier score = ",
         errorOld, "\n")
   }
 
@@ -283,7 +283,7 @@ tune.ltrccf <- function(formula, data, id,
                                 ecores = cores)
 
       if (trace) {
-        cat("mtry =", mtryCur, "\tOOB error =", errorCur, "\n")
+        cat("mtry = ", mtryCur, "\tOOB error = ", errorCur, "\n")
       }
       oobError[[as.character(mtryCur)]] <- errorCur
       errorOld <- errorCur
@@ -297,7 +297,7 @@ tune.ltrccf <- function(formula, data, id,
   if (plot) {
     res <- res_all
     plot(res_all, xlab = expression(m[try]), ylab = "OOB Error", type = "o", log = "x", xaxt = "n")
-    axis(1, at=res_all[,"mtry"])
+    axis(1, at=res_all[, "mtry"])
   }
 
   if (doBest)
