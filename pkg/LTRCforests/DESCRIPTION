@@ -1,6 +1,6 @@
 Package: LTRCforests
 Version: 0.5.0
-Date: 2020-05-23
+Date: 2020-06-06
 Title: Ensemble Methods for Survival Data with Time-Varying Covariates
 Authors@R: c(person(given = "Weichi", family = "Yao", role = c("aut", "cre"), 
                     email = "wy635@stern.nyu.edu"),

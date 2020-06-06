@@ -35,7 +35,7 @@ curve is returned for each row of \code{newdata}.}
 will be computed.}
 
 \item{time.tau}{an optional vector, with the \emph{i}-th entry giving the upper time limit for the
-computed survival probabilities for the \emph{i}-th data of interest (i.e., only compute
+computed survival probabilities for the \emph{i}-th data of interest (i.e., only computes
 survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the length of
 \code{data} used to train the \code{object};

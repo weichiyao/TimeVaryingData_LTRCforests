@@ -70,7 +70,7 @@
 #' @param time.eval a vector of time points, at which the estimated survival probabilities
 #' are evaluated.
 #' @param time.tau an optional vector, with the \emph{i}-th entry giving the upper time limit for the
-#' computed survival probabilities for the \emph{i}-th data (i.e., only compute
+#' computed survival probabilities for the \emph{i}-th data (i.e., only computes
 #' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 #' data of interest).
 #' @keywords mtry, out-of-bag errors, brier score

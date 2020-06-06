@@ -54,7 +54,7 @@ by this value. The default value is \code{2}.}
 are evaluated.}
 
 \item{time.tau}{an optional vector, with the \emph{i}-th entry giving the upper time limit for the
-computed survival probabilities for the \emph{i}-th data (i.e., only compute
+computed survival probabilities for the \emph{i}-th data (i.e., only computes
 survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 data of interest).}
 
