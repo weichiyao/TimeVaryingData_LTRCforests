@@ -209,6 +209,6 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
 .pred_Surv_nolog <- function(y, w) {
   if (length(y) == 0) return(NA)
-  survfit(y ~ 1, weights = w, subset = w > 0, conf.type = "plain")
+  survfit(y ~ 1, weights = w, subset = w > 0, conf.type = "plain", se.fit = FALSE)
 }
 

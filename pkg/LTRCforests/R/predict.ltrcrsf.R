@@ -129,7 +129,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## Build the survival tree
           traindata$KMwt <- 0
           traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
-          KM <- survival::survfit(formula = formula, data = traindata,
+          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                   weights = KMwt, subset = KMwt > 0, conf.type = "plain")
           ## Get survival probabilities
           Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
@@ -161,7 +161,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             ## Build the survival tree
             traindata$KMwt <- 0
             traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
-            KM <- survival::survfit(formula = formula, data = traindata,
+            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                     weights = KMwt, subset = KMwt > 0, conf.type = "plain")
             Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
@@ -256,7 +256,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           ## otherwise subset = KMwt > 0 is not correct
           traindata$KMwt <- 0
           traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
-          KM <- survival::survfit(formula = formula, data = traindata,
+          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                   weights = KMwt, subset = KMwt > 0, conf.type = "plain")
           Shat_b <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
           survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_b / Shat_b[1]
@@ -289,7 +289,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             ## otherwise subset = KMwt > 0 is not correct
             traindata$KMwt <- 0
             traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
-            KM <- survival::survfit(formula = formula, data = traindata,
+            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                     weights = KMwt, subset = KMwt > 0, conf.type = "plain")
             Shat_bj <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
 
