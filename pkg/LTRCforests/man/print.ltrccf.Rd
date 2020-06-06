@@ -11,7 +11,7 @@
 }
 \description{
 Print summary output after a LTRCCF model is built.
-This is the default print method for objects in the class of \code{\link{ltrcrsf}}.
+This is the default print method for objects in the class of \code{\link{ltrccf}}.
 }
 \examples{
 

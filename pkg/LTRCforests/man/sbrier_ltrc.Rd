@@ -17,14 +17,14 @@ observations in the time-varying case).}
 or a list of survival probabilies named \code{survival.probs}; 2) a sequence
 of time points \code{survival.times}; 3) a vector of upper time limits
 \code{survival.tau}.
-Please see the values returned by \code{\link{pred.ltrccf}} and
+See the values returned by \code{\link{pred.ltrccf}} and
 \code{\link{pred.ltrcrsf}}.}
 
 \item{type}{a character string denoting the type of scores returned. If \code{type = "IBS"},
 the integrated Brier score up to the last time point in \code{pred$surv.times} that is
-not larger than the minimmum value of \code{pred$surv.tau} is returned.
+not larger than the minimum value of \code{pred$surv.tau} is returned.
 If \code{type = "BS"}, the Brier score at every time point in \code{pred$surv.times} up to
-the minimum value of \code{pred$surv.tau} is returned.}
+the minimum value of \code{pred$surv.tau} is returned. \code{type = "IBS"} is set by default.}
 }
 \value{
 If \code{type = "IBS"}, this returns the integrated Brier score.
@@ -39,6 +39,7 @@ as well as left-truncated right-censored data with time-invariant covariates.
 }
 \examples{
 ### Example with dataset pbcsample
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRC conditional inference forest on time-varying data
 LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)

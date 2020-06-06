@@ -2,7 +2,28 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
 #' @importFrom utils installed.packages txtProgressBar setTxtProgressBar write.table tail
-#' @importFrom randomForestSRC get.bayes.rule
+
+getltrc.bayes.rule <- function(prob, pi.hat = NULL) {
+  class.labels <- colnames(prob)
+  if (is.null(pi.hat)) {
+    factor(class.labels[apply(prob, 1, function(x) {
+      if (!all(is.na(x))) {
+        resample(which(x == max(x, na.rm = TRUE)), 1)
+      }
+      else {
+        NA
+      }
+    })], levels = class.labels)
+  }
+  ## added to handle the rfq classifier
+  else {
+    minority <- which.min(pi.hat)
+    majority <- setdiff(1:2, minority)
+    rfq.rule <- rep(majority, nrow(prob))
+    rfq.rule[prob[, minority] >= min(pi.hat, na.rm = TRUE)] <- minority
+    factor(class.labels[rfq.rule], levels = class.labels)
+  }
+}
 
 adrop3d.last <- function(x, d, keepColNames = FALSE) {
   ## this function is for arrays only

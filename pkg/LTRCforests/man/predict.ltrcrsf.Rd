@@ -20,11 +20,12 @@
 (with the names of the variables the same as those in \code{data} from \code{object}).}
 
 \item{newdata.id}{optional variable name of subject identifiers for \code{newdata}.
-If this is present, it will be search for in the \code{newdata} data frame.
+If this is present, it will be searched for in the \code{newdata} data frame.
 Each group of rows in \code{newdata} with the same subject \code{id} represents
 the covariate path through time of a single subject, and the result will
-contain one curve per subject. If it is not specified, then predictions are
-returned for each row of \code{newdata}.}
+contain one curve per subject. If it is not specified, then an estimated survival
+curve is returned for each row
+of \code{newdata}.}
 
 \item{OOB}{a logical specifying whether out-of-bag predictions are desired
 
@@ -42,11 +43,12 @@ data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal 
 If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
 of \code{newdata}, or equal to the length of \code{data} if \code{newdata} is not given.
 The default \code{NULL} is simply to set all entries of \code{time.tau} equal to the maximum
-value of \code{time.eval}, therefore all estimated survival are computed at the
+value of \code{time.eval}, so that all estimated survival probabilities are computed at the
 same \code{time.eval}.}
 }
 \value{
 A list containing:
+   \item{survival.id}{subject identifiers.}
    \item{survival.obj}{an object of class \code{\link[survival]{Surv}}.}
    \item{survival.probs}{the estimated survival probabilities for each data of interest.
    It is a list if the length of the estimated values differs from one to another;

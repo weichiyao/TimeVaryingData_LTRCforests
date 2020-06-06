@@ -13,8 +13,7 @@ Author: Weichi Yao [aut, cre],
   Jeffrey S. Simonoff [aut]
 Maintainer: Weichi Yao <wy635@stern.nyu.edu>
 Depends: R (>= 3.5.0)
-Imports: stats, utils, survival, ipred, parallel, randomForestSRC, prodlim, partykit
-Suggests: LTRCtrees, inum, KMSurv
+Imports: stats, utils, survival, ipred, parallel, prodlim, partykit
 Description: Implements the conditional inference forest and random survival forest 
              algorithm to modeling left-truncated right-censored data with time-invariant        
              covariates, and (left-truncated) right-censored survival data with time-varying 

@@ -1,7 +1,7 @@
 #' Print Summary Output of a ltrccf object
 #'
 #' Print summary output after a LTRCCF model is built.
-#' This is the default print method for objects in the class of \code{\link{ltrcrsf}}.
+#' This is the default print method for objects in the class of \code{\link{ltrccf}}.
 #'
 #' @param x an object of class \code{(ltrccf, grow)}.
 #'
@@ -50,8 +50,8 @@ print.ltrccf <- function(x) {
 
   cat(" Number of (pseudo-subject) observations: ", nrow(x$fitted),                 "\n", sep="")
 
-  cat("                      Number of subjects: ", length(unique(x$data$`(id)`)),  "\n", sep="")
-  cat("                        Number of deaths: ", sum(as.matrix(x$fitted)[,4]),   "\n", sep="")
+  cat("                      Number of subjects: ", length(unique(x$data$id)),  "\n", sep="")
+  cat("                        Number of deaths: ", sum(as.matrix(x$fitted)[, 4]),   "\n", sep="")
   cat("                         Number of trees: ", length(x$weights),                     "\n",sep="")
   cat("                                minsplit: ", x$info$control$minsplit,               "\n", sep="")
   cat("                               minbucket: ", x$info$control$minbucket,              "\n", sep="")

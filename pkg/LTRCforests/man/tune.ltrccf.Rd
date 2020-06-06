@@ -10,17 +10,17 @@ tune.ltrccf(
   id,
   mtryStart = NULL,
   stepFactor = 2,
+  time.eval = NULL,
+  time.tau = NULL,
   ntreeTry = 100L,
   bootstrap = c("by.sub", "by.root", "none", "by.user"),
   samptype = c("swor", "swr"),
   sampfrac = 0.632,
   samp = NULL,
-  na.action = na.pass,
-  time.eval = NULL,
-  time.tau = NULL,
+  na.action = "na.omit",
   trace = TRUE,
-  plot = FALSE,
   doBest = FALSE,
+  plot = FALSE,
   applyfun = NULL,
   cores = NULL,
   control = partykit::ctree_control(teststat = "quad", testtype = "Univ", mincriterion
@@ -50,6 +50,14 @@ covariates.}
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
 by this value. The default value is \code{2}.}
 
+\item{time.eval}{a vector of time points, at which the estimated survival probabilities
+are evaluated.}
+
+\item{time.tau}{an optional vector, with the \emph{i}-th entry giving the upper time limit for the
+computed survival probabilities for the \emph{i}-th data (i.e., only compute
+survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
+data of interest).}
+
 \item{ntreeTry}{number of trees used at the tuning step.}
 
 \item{bootstrap}{bootstrap protocol.
@@ -60,8 +68,9 @@ Both can be with or without replacement (by default sampling is without
 replacement; see the option \code{perturb} below);
 (2) If \code{id} is not specified, it bootstraps the \code{data} by
 sampling with or without replacement.
-Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-\code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+\code{data} is not bootstrapped at all, and is used in
+every individual tree. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
 
 \item{samptype}{choices are \code{swor} (sampling without replacement) and
@@ -77,24 +86,21 @@ of the sample.}
 
 \item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
-inbag in the bootstrap for each tree.}
+in each bootstrap sample.}
 
-\item{na.action}{a function which indicates what should happen when the data contain
-missing values.}
-
-\item{time.eval}{a vector of time points, at which the estimated survival probabilities
-are evaluated.}
-
-\item{time.tau}{an optional vector, with the \emph{i}-th entry giving the upper time limit for the
-computed survival probabilities for the \emph{i}-th data (i.e., only compute
-survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
-data of interest).}
+\item{na.action}{action taken if the data contains \code{NA}’s. The default
+\code{"na.omit"} removes the entire record if any of its entries is
+\code{NA} (for x-variables this applies only to those specifically listed
+in \code{formula}). See function \code{\link[partykit]{cforest}} for
+other available options.}
 
 \item{trace}{whether to print the progress of the search. \code{trace = TRUE} is set by default.}
 
-\item{plot}{whether to plot the out-of-bag error as a function of \code{mtry}.}
+\item{doBest}{whether to run a \code{\link{ltrccf}} object using the optimal \code{mtry} found.
+\code{doBest = FALSE} is set by default.}
 
-\item{doBest}{whether to run a \code{\link{ltrccf}} object using the optimal \code{mtry} found.}
+\item{plot}{whether to plot the out-of-bag error as a function of \code{mtry}.
+\code{plot = FALSE} is set by default.}
 
 \item{applyfun}{an optional \code{lapply}-style function with arguments
 \code{function(X, FUN, ...)}.
@@ -116,7 +122,7 @@ If \code{doBest = TRUE}, this returns the \code{\link{ltrccf}} object produced w
 }
 \description{
 Starting with the default value of \code{mtry}, search for the optimal value
-(with respect to Out-of-Bag error estimate) of \code{mtry} for \code{\link{ltrccf}}.
+(with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrccf}}.
 }
 \examples{
 ### Example with data pbcsample

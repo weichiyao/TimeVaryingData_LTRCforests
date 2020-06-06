@@ -58,8 +58,8 @@ print.ltrcrsf <- function(x) {
 
   cat(" Number of (pseudo-subject) observations: ", x$n,                        "\n", sep="")
 
-  cat("                      Number of subjects: ", length(unique(x$id)),           "\n",  sep="")
-  cat("                        Number of deaths: ", sum(x$yvarLTRC[,3]),   "\n", sep="")
+  cat("                      Number of subjects: ", length(unique(x$yvarLTRC$id)),           "\n",  sep="")
+  cat("                        Number of deaths: ", sum(x$yvarLTRC[4]),   "\n", sep="")
 
   if (!is.null(x$imputed.indv)) {
     cat("                      Was data imputed: ", "yes",               "\n", sep="")

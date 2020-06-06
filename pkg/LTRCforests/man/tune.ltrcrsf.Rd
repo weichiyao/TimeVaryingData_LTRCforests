@@ -9,22 +9,22 @@ tune.ltrcrsf(
   data,
   id,
   mtryStart = NULL,
+  stepFactor = 2,
   time.eval = NULL,
   time.tau = NULL,
-  nodesizeTry = max(ceiling(sqrt(nrow(data))), 15),
-  nodedepth = NULL,
   ntreeTry = 100L,
-  nsplit = 10,
   bootstrap = c("by.sub", "by.root", "by.node", "by.user", "none"),
   samptype = c("swor", "swr"),
   sampfrac = 0.632,
   samp = NULL,
-  na.action = c("na.omit", "na.impute"),
-  stepFactor = 2,
-  ntime,
+  na.action = "na.omit",
   trace = TRUE,
   doBest = FALSE,
-  plot = FALSE
+  plot = FALSE,
+  ntime,
+  nsplit = 10L,
+  nodesizeTry = max(ceiling(sqrt(nrow(data))), 15),
+  nodedepth = NULL
 )
 }
 \arguments{
@@ -46,6 +46,10 @@ covariates.}
 
 \item{mtryStart}{starting value of \code{mtry}; default is \code{sqrt(nvar)}.}
 
+\item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
+by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
+The default value is \code{2}.}
+
 \item{time.eval}{a vector of time points, at which the estimated survival probabilities
 are evaluated.}
 
@@ -54,19 +58,7 @@ computed survival probabilities for the \emph{i}-th data (i.e., only compute
 survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 data of interest).}
 
-\item{nodesizeTry}{forest average terminal node size used at the tuning step.
-It has been adjusted from the \code{\link[randomForestSRC]{rfsrc}} default
-\code{15} for survival families.}
-
-\item{nodedepth}{maximum depth to which a tree should be grown. The default behaviour
-is that this parameter is ignored.}
-
 \item{ntreeTry}{number of trees used at the tuning step.}
-
-\item{nsplit}{an non-negative integer value for number of random splits to consider
-for each candidate splitting variable. This significantly increases speed.
-When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-splits considered. \code{nsplit = 10} by default.}
 
 \item{bootstrap}{bootstrap protocol.
 (1) If \code{id} is present,
@@ -76,7 +68,7 @@ Both can be with or without replacement (by default sampling is without
 replacement; see the option \code{samptype} below).
 (2) If \code{id} is not specified, the default is \code{"by.root"} which
 bootstraps the \code{data} by sampling with or without replacement;
-if \code{"by.node"} is choosen, the data is bootstrapped with replacement
+if \code{"by.node"} is choosen, \code{data} is bootstrapped with replacement
 at each node while growing the tree.
 Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
 \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
@@ -95,18 +87,21 @@ of the sample.}
 
 \item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
-inbag in the bootstrap for each tree.}
+in each bootstrap sample.}
 
-\item{na.action}{action taken if the data contains \code{NA}’s. Possible values
-are \code{na.omit} or \code{na.impute}. The default \code{na.omit} removes
-the entire record if even one of its entries is \code{NA} (for x-variables this
-applies only to those specifically listed in '\code{formula}').
-Selecting \code{na.impute} imputes the data. Further demails can be found in
-\code{\link[randomForestSRC]{rfsrc}}.}
+\item{na.action}{action taken if the data contains \code{NA}’s. The default
+\code{"na.omit"} removes the entire record if any of its entries is
+\code{NA} (for x-variables this applies only to those specifically listed
+in \code{formula}). See function \code{\link[randomForestSRC]{rfsrc}} for
+other available options.}
 
-\item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
-by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
-The default value is \code{2}.}
+\item{trace}{whether to print the progress of the search. \code{trace = TRUE} is set by default.}
+
+\item{doBest}{whether to run a \code{\link{ltrcrsf}} object using the optimal \code{mtry} found.
+\code{doBest = FALSE} is set by default.}
+
+\item{plot}{whether to plot the out-of-bag error as a function of \code{mtry}.
+\code{plot = FALSE} is set by default.}
 
 \item{ntime}{an integer value used for survival to constrain ensemble calculations
 to a grid of \code{ntime} time points. Alternatively if a vector of values
@@ -115,11 +110,17 @@ to be used to constrain the calculations (note that the constrained time points
 used will be the observed event times closest to the user supplied time points).
 If no value is specified, the default action is to use all observed event times.}
 
-\item{trace}{whether to print the progress of the search. \code{trace = TRUE} is set by default.}
+\item{nsplit}{an non-negative integer value for number of random splits to consider
+for each candidate splitting variable. This significantly increases speed.
+When zero or \code{NULL}, the algorithm uses much slower deterministic splitting
+where all possible splits are considered. \code{nsplit = 10L} by default.}
 
-\item{doBest}{whether to run a \code{\link{ltrcrsf}} object using the optimal \code{mtry} found.}
+\item{nodesizeTry}{forest average terminal node size used at the tuning step.
+It has been adjusted from the \code{\link[randomForestSRC]{rfsrc}} default
+\code{15} for survival families.}
 
-\item{plot}{whether to plot the out-of-bag error as a function of \code{mtry}.}
+\item{nodedepth}{maximum depth to which a tree should be grown. The default behaviour
+is that this parameter is ignored.}
 }
 \value{
 If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
@@ -128,10 +129,11 @@ If \code{doBest = TRUE}, this returns the \code{\link{ltrcrsf}} object produced 
 }
 \description{
 Starting with the default value of \code{mtry}, search for the optimal value
-(with respect to Out-of-Bag error estimate) of \code{mtry} for \code{\link{ltrcrsf}}.
+(with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrcrsf}}.
 }
 \examples{
 ### Example with data pbcsample
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
 mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,

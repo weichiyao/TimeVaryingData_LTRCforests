@@ -5,7 +5,7 @@
 #' with primary biliary cirrhosis (PBC), constructed from
 #' \code{\link{pbcseq}} in the R package \pkg{\link{survival}}. The data
 #' structure has been reformatted with left-truncated right-censored
-#' pseudo-subject observations based on Andersen-Gill reformulation method.
+#' pseudo-subject observations based on the Andersen-Gill reformulation method.
 #'
 #' @returns a data frame with 136 rows and 9 variables:
 #'   \item{ID}{Patient id}
@@ -21,7 +21,6 @@
 #'   \item{chol}{serum cholesterol (mg/dl)}
 #'   \item{edema}{\code{0}--no edema, \code{0.5}--untreated or successfully treated,
 #'   \code{1}--edema despite diuretic therapy}
-#' @usage data("pbcsample")
 #' @source P. A. Murtaugh, E. R. Dickson, G. M. V. Dam,
 #' M. Malinchoc, P. M. Grambsch, A. L. Langworthy, and C. H. Gips. (1989).
 #' Primary biliary cirrhosis: Prediction of shortterm survival based on

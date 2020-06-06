@@ -1,7 +1,7 @@
 #' Tune \code{mtry} to the optimal value with respect to out-of-bag error for a LTRCCF model
 #'
 #' Starting with the default value of \code{mtry}, search for the optimal value
-#' (with respect to Out-of-Bag error estimate) of \code{mtry} for \code{\link{ltrccf}}.
+#' (with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrccf}}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -24,17 +24,21 @@
 #' replacement; see the option \code{perturb} below);
 #' (2) If \code{id} is not specified, it bootstraps the \code{data} by
 #' sampling with or without replacement.
-#' Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-#' \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+#' Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+#' \code{data} is not bootstrapped at all, and is used in
+#' every individual tree. If \code{"by.user"} is choosen,
 #' the bootstrap specified by \code{samp} is used.
 #' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
-#' inbag in the bootstrap for each tree.
+#' in each bootstrap sample.
 #' @param mtryStart starting value of \code{mtry}; default is \code{sqrt(nvar)}.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
 #' by this value. The default value is \code{2}.
-#' @param na.action a function which indicates what should happen when the data contain
-#' missing values.
+#' @param na.action action taken if the data contains \code{NA}’s. The default
+#' \code{"na.omit"} removes the entire record if any of its entries is
+#' \code{NA} (for x-variables this applies only to those specifically listed
+#' in \code{formula}). See function \code{\link[partykit]{cforest}} for
+#' other available options.
 #' @param samptype choices are \code{swor} (sampling without replacement) and
 #' \code{swr} (sampling with replacement). The default action here is sampling
 #' without replacement.
@@ -60,7 +64,9 @@
 #' @param ntreeTry number of trees used at the tuning step.
 #' @param trace whether to print the progress of the search. \code{trace = TRUE} is set by default.
 #' @param plot whether to plot the out-of-bag error as a function of \code{mtry}.
+#' \code{plot = FALSE} is set by default.
 #' @param doBest whether to run a \code{\link{ltrccf}} object using the optimal \code{mtry} found.
+#' \code{doBest = FALSE} is set by default.
 #' @param time.eval a vector of time points, at which the estimated survival probabilities
 #' are evaluated.
 #' @param time.tau an optional vector, with the \emph{i}-th entry giving the upper time limit for the
@@ -87,14 +93,17 @@
 #' @export
 
 tune.ltrccf <- function(formula, data, id,
-                        mtryStart = NULL, stepFactor = 2, ntreeTry = 100L,
+                        mtryStart = NULL, stepFactor = 2,
+                        time.eval = NULL, time.tau = NULL,
+                        ntreeTry = 100L,
                         bootstrap = c("by.sub", "by.root", "none", "by.user"),
                         samptype = c("swor","swr"),
                         sampfrac = 0.632,
                         samp = NULL,
-                        na.action = na.pass,
-                        time.eval = NULL, time.tau = NULL,
-                        trace = TRUE, plot = FALSE, doBest = FALSE,
+                        na.action = "na.omit",
+                        trace = TRUE,
+                        doBest = FALSE,
+                        plot = FALSE,
                         applyfun = NULL, cores = NULL,
                         control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
                                                           mincriterion = 0, saveinfo = FALSE,
@@ -102,59 +111,85 @@ tune.ltrccf <- function(formula, data, id,
                                                           minbucket = max(ceiling(sqrt(nrow(data))), 7),
                                                           minprob = 0.01)) {
 
-  # package version dependency
-  # if (packageVersion("partykit") < "1.2.7") {
-  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  # }
-
   Call <- match.call()
-  Call[[1]] <- as.name('tuneLTRCCF')  #make nicer printout for the user
+  # Call[[1]] <- as.name('tuneltrccf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
-  indx <- match(c('formula', 'data', 'id'), names(Call), nomatch = 0)
+  indx <- match(c('formula','id'), names(Call), nomatch = 0)
   if (indx[1] == 0) stop("a formula argument is required")
 
-  temp <- Call[c(1, indx)]
-  temp[[1L]] <- quote(stats::model.frame)
-  mf <- eval.parent(temp)
+  # temp <- Call[c(1, indx)]
+  # temp[[1L]] <- quote(stats::model.frame)
+  # mf <- eval.parent(temp)
 
-  Terms <- terms(formula)
-  ord <- attr(Terms, 'order')
-  if (length(ord) & any(ord != 1))
-    stop("Interaction terms are not valid for this function")
+  # This will be checked in ltrccf!
+  # y <- model.extract(mf, 'response')
+  # if (!is.Surv(y)) stop("Response must be a survival object")
+  # if (!attr(y, "type") == "counting") stop("The Surv object must be of type 'counting'.")
+  # rm(y)
 
-  n <- nrow(mf)
-  y <- model.extract(mf, 'response')
-  id <- model.extract(mf, 'id')
+  # pull y-variable names
+  yvar.names <- all.vars(formula(paste(as.character(formula)[2], "~ .")), max.names = 1e7)
+  yvar.names <- yvar.names[-length(yvar.names)]
+
+  if (length(yvar.names) == 4){
+    yvar.names = yvar.names[2:4]
+  }
+  n <- nrow(data)
 
   ## if not specified, the first one will be used as default
   bootstrap <- match.arg(bootstrap)
   samptype <- match.arg(samptype)
 
   # right-censored time from all observations
-  Rtimes <- y[, 2L]
+  Rtimes <- data[, yvar.names[2]]
 
   # extract the x-variable names
-  xvar.names <- attr(Terms, 'term.labels')
+  xvar.names <- attr(terms(formula), 'term.labels')
   nvar <- length(xvar.names)
 
   if (is.null(mtryStart)){
     mtryStart <- ceiling(sqrt(nvar))
   }
 
-  if (length(id) == length(unique(id))){ # time-invariant LTRC data
+  ## The following code to define id does not work since it could not handle missing values
+  # id <- model.extract(mf, 'id')
+
+  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccf
+  if (indx[2] == 0){
+    ## If id is not present, then we add one more variable
+    # mf$`(id)` <- 1:nrow(mf) ## No relabel, due to missing value problem do not need this for tuning output
+    data$id <- 1:n # this is a must, otherwise id cannot be passed to the next level
+  } else {
+    ## If id is present, then we rename the column to be id
+    names(data)[names(data) == deparse(substitute(id))] <- "id" # this is a must, otherwise id cannot be passed to the next level
+  }
+
+  data <- data[, c("id", yvar.names, xvar.names)]
+
+  if (na.action == "na.omit") {
+    takeid = which(complete.cases(data) == 1)
+  } else if (na.action == "na.pass") {
+    takeid = 1:n
+  } else {
+    stop("na.action can only be either 'na.omit' or 'na.pass'.")
+  }
+
+  id.sub <- unique(data$id[takeid])
+  n.seu <- length(takeid)
+  ## number of subjects
+  n.sub <- length(id.sub)
+
+  Rtimes <- Rtimes[takeid]
+  ## This is to determine time.tau and time.eval, so is different from ltrccf.R
+  if (n.seu == n.sub){ # time-invariant LTRC data
     # it includes the case 1) when id = NULL, which is that id.seu is not specified
     #                      2) when id is specified, but indeed LTRC time-invariant
-    id <- 1:n
     if (is.null(time.eval)){
       # estimated survival probabilities will be calculated at (a subset of) time.eval
       time.eval <- c(0, sort(unique(Rtimes)))
     }
   } else { # time-varying subject data
-    id.sub <- unique(id)
-    ## number of subjects
-    n.sub <- length(id.sub)
-
     if (is.null(time.eval)){
       # estimated survival probabilities will be calculated at (a subset of) time.eval
       time.eval <- c(0, sort(unique(Rtimes)), seq(max(Rtimes), 1.5 * max(Rtimes), length.out = 50)[-1])
@@ -162,12 +197,11 @@ tune.ltrccf <- function(formula, data, id,
     if (is.null(time.tau)){
       # For i-th data, estimated survival probabilities only calculated up time.tau[i]
       time.tau <- sapply(1:n.sub, function(ii){
-        1.5 * max(Rtimes[id == id.sub[ii]])
+        1.5 * max(Rtimes[data$id[takeid] == id.sub[ii]])
       })
     }
   }
-  # id is a vector, as requred by sbrier_ltrc function
-  data$id <- id # this is a must, otherwise id cannot be passed to the next level
+
   # integrated Brier score of out-of-bag samples for a mtry value at test
   errorOOB_mtry <- function(eformula, edata, id,
                             emtryTest,
@@ -190,7 +224,8 @@ tune.ltrccf <- function(formula, data, id,
                     applyfun = eapplyfun,
                     cores = ecores)
     predOOB <- predict(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
-    errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = id, pred = predOOB, type = "IBS")
+    errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = predOOB$survival.id,
+                            pred = predOOB, type = "IBS")
     rm(cfOOB)
     rm(predOOB)
     gc()

@@ -14,9 +14,9 @@ ltrccf(
   samptype = c("swor", "swr"),
   sampfrac = 0.632,
   samp = NULL,
-  trace = TRUE,
+  na.action = "na.omit",
   stepFactor = 2,
-  na.action = na.pass,
+  trace = TRUE,
   applyfun = NULL,
   cores = NULL,
   control = partykit::ctree_control(teststat = "quad", testtype = "Univ", minsplit =
@@ -45,7 +45,7 @@ contains left-truncated and right-censored survival data with time-invariant
 covariates.}
 
 \item{mtry}{number of input variables randomly sampled as candidates at each node for
-random forest like algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.}
+random forest algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.}
 
 \item{ntree}{an integer, the number of the trees to grow for the forest.
 \code{ntree = 100L} is set by default.}
@@ -58,8 +58,9 @@ Both can be with or without replacement (by default sampling is without
 replacement; see the option \code{perturb} below);
 (2) If \code{id} is not specified, it
 bootstraps the \code{data} by sampling with or without replacement.
-Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-\code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+\code{data} is not bootstrapped at all, and is used in
+every individual tree. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
 
 \item{samptype}{choices are \code{swor} (sampling without replacement) and
@@ -75,18 +76,21 @@ of the sample.}
 
 \item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
-inbag in the bootstrap for each tree.}
+in each bootstrap sample.}
 
-\item{trace}{whether to print the progress of the search of the optimal value of
-\code{mtry}, when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
-\code{trace = TRUE} is set by default.}
+\item{na.action}{action taken if the data contains \code{NA}’s. The default
+\code{"na.omit"} removes the entire record if any of its entries is
+\code{NA} (for x-variables this applies only to those specifically listed
+in \code{formula}). See function \code{\link[partykit]{cforest}} for
+other available options.}
 
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
 by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
 The default value is \code{2}.}
 
-\item{na.action}{a function which indicates what should happen when the data contain
-missing values.}
+\item{trace}{whether to print the progress of the search of the optimal value of
+\code{mtry}, when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
+\code{trace = TRUE} is set by default.}
 
 \item{applyfun}{an optional \code{lapply}-style function with arguments
 \code{function(X, FUN, ...)}.
@@ -117,9 +121,7 @@ time-varying covariates.
 \details{
 This function extends the conditional inference survival forest algorithm in
 \code{\link[partykit]{cforest}} to fit left-truncated and right-censored data,
-which allow for time-varying covariates. The traditional survival forests in
-\code{\link[partykit]{cforest}} only applies for right-censored data with
-time-invariant covariates.
+which allow for time-varying covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample

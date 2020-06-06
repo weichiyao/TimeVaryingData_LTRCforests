@@ -1,5 +1,4 @@
 #' @useDynLib LTRCforests, .registration = TRUE
-#' @importFrom randomForestSRC get.bayes.rule
 ltrcrfsrc <- function(formula, data, ntree = 1000,
                       mtry = NULL, ytry = NULL,
                       nodesize = NULL, nodedepth = NULL,
@@ -1349,7 +1348,7 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
                                       array(nativeOutput$allEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                                             c(n, levels.count[i]), dimnames=ens.names) else NULL)
                     classOutput[[i]] <- list(predicted = predicted)
-                    response <- (if (!is.null(predicted)) randomForestSRC::get.bayes.rule(predicted, pi.hat) else NULL)
+                    response <- (if (!is.null(predicted)) getltrc.bayes.rule(predicted, pi.hat) else NULL)
                     classOutput[[i]] <- c(classOutput[[i]], class = list(response))
                     remove(predicted)
                     remove(response)
@@ -1357,7 +1356,7 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
                                           array(nativeOutput$oobEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                                                 c(n, levels.count[i]), dimnames=ens.names) else NULL)
                     classOutput[[i]] <- c(classOutput[[i]], predicted.oob = list(predicted.oob))
-                    response.oob <- (if (!is.null(predicted.oob)) randomForestSRC::get.bayes.rule(predicted.oob, pi.hat) else NULL)
+                    response.oob <- (if (!is.null(predicted.oob)) getltrc.bayes.rule(predicted.oob, pi.hat) else NULL)
                     classOutput[[i]] <- c(classOutput[[i]], class.oob = list(response.oob))
                     remove(predicted.oob)
                     remove(response.oob)

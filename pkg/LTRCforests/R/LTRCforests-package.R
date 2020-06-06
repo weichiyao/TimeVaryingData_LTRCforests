@@ -34,7 +34,7 @@
 #' The main functions \code{\link{ltrccf}} and \code{\link{ltrcrsf}} fit a corresponding
 #' LTRC forest for LTRC data, with parameter
 #' \code{mtry} tuned by \code{\link{tune.ltrccf}} or \code{\link{tune.ltrcrsf}}. This tuning
-#' procedure relies on the evaluation of the "out-of-bag" errors, which is performed by the
+#' procedure relies on the evaluation of the out-of-bag errors, which is performed by the
 #' function \code{\link{sbrier_ltrc}}.
 #' \code{\link{predict.ltrccf}} and \code{\link{predict.ltrcrsf}}
 #' construct survival function estimates for \code{ltrccf} objects and \code{ltrcrsf} objects,
@@ -50,9 +50,9 @@
 #'
 #' Overall, the methods in this package can handle all combinations of left truncation,
 #' right censoring, time-invariant covariates, and time-varying covariates.
-#' But if one are in the traditional case with right censored data
-#' and time-invariant covariates, then it is recommended to use
-#' the package \pkg{\link{cforest}} and \pkg{\link{randomForestSRC}} directly to
+#' If one is in the traditional case with right censored data
+#' and time-invariant covariates, however, then it is recommended to use
+#' the package \pkg{\link{partykit}} and \pkg{\link{randomForestSRC}} directly to
 #' construct conditional inference forests and random survival forests, respectively.
 #'
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting

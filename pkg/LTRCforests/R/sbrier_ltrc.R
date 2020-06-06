@@ -12,13 +12,13 @@
 #' or a list of survival probabilies named \code{survival.probs}; 2) a sequence
 #' of time points \code{survival.times}; 3) a vector of upper time limits
 #' \code{survival.tau}.
-#' Please see the values returned by \code{\link{pred.ltrccf}} and
+#' See the values returned by \code{\link{pred.ltrccf}} and
 #' \code{\link{pred.ltrcrsf}}.
 #' @param type a character string denoting the type of scores returned. If \code{type = "IBS"},
 #' the integrated Brier score up to the last time point in \code{pred$surv.times} that is
-#' not larger than the minimmum value of \code{pred$surv.tau} is returned.
+#' not larger than the minimum value of \code{pred$surv.tau} is returned.
 #' If \code{type = "BS"}, the Brier score at every time point in \code{pred$surv.times} up to
-#' the minimum value of \code{pred$surv.tau} is returned.
+#' the minimum value of \code{pred$surv.tau} is returned. \code{type = "IBS"} is set by default.
 #' @keywords Brier score, integrated Brier score
 #' @return
 #' If \code{type = "IBS"}, this returns the integrated Brier score.
@@ -30,6 +30,7 @@
 #' @importFrom survival Surv
 #' @examples
 #' ### Example with dataset pbcsample
+#' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## Fit an LTRC conditional inference forest on time-varying data
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
@@ -78,7 +79,7 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
 
   if (n == n.sub){# ltrc data with time-invariant covariates
     data_sbrier = obj
-    data_sbrier$id = 1:n
+    data_sbrier$id = 1:n # relabel -- may not matter
   } else {# ltrc data with time-varying covariates
     data_sbrier <- data.frame(matrix(0, nrow = n.sub, ncol = 3))
     names(data_sbrier) <- c("start", "stop", "status")
@@ -91,13 +92,13 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
   }
 
   if (type[1] == "IBS"){
-    ret <- sapply(1:n.sub, function(Ni) ibsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred))
+    ret <- sapply(1:n.sub, function(Ni) .ibsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred))
     ret <- mean(ret)
     names(ret) = "Integrated Brier score"
   } else if (type[1] == "BS"){
     # Brier score will be evaluated up to the last time point where survival probabilities of all data are computed.
     tpnt <- pred$survival.times[pred$survival.times <= min(pred$survival.tau)]
-    bsres <- sapply(1:n.sub, function(Ni) bsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
+    bsres <- sapply(1:n.sub, function(Ni) .bsfunc(Ni = Ni, data_sbrier = data_sbrier, pred = pred, tpnt = tpnt))
     bsres <- rowMeans(bsres)
     ret <- data.frame(matrix(0, ncol = 2, nrow = length(tpnt)))
     colnames(ret) <- c("Time", "BScore")
@@ -109,7 +110,7 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
   return(ret)
 }
 
-ibsfunc <- function(Ni, data_sbrier, pred){
+.ibsfunc <- function(Ni, data_sbrier, pred){
   id_uniq <- unique(data_sbrier$id)
   tpnt = pred$survival.times[pred$survival.times <= pred$survival.tau[Ni]]
   tlen = length(tpnt)
@@ -154,7 +155,7 @@ ibsfunc <- function(Ni, data_sbrier, pred){
   ibs
 }
 
-bsfunc <- function(Ni, data_sbrier, pred, tpnt){
+.bsfunc <- function(Ni, data_sbrier, pred, tpnt){
   id_uniq <- unique(data_sbrier$id)
   tlen = length(tpnt)
   ## Get the estimated survival probabilities

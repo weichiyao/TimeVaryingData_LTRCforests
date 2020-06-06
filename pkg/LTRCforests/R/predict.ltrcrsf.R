@@ -7,11 +7,12 @@
 #'
 #' @param object an object as returned by \code{\link{ltrcrsf}}.
 #' @param newdata.id optional variable name of subject identifiers for \code{newdata}.
-#' If this is present, it will be search for in the \code{newdata} data frame.
+#' If this is present, it will be searched for in the \code{newdata} data frame.
 #' Each group of rows in \code{newdata} with the same subject \code{id} represents
 #' the covariate path through time of a single subject, and the result will
-#' contain one curve per subject. If it is not specified, then predictions are
-#' returned for each row of \code{newdata}.
+#' contain one curve per subject. If it is not specified, then an estimated survival
+#' curve is returned for each row
+#' of \code{newdata}.
 #' @param newdata an optional data frame containing the test data
 #' (with the names of the variables the same as those in \code{data} from \code{object}).
 #' @param OOB a logical specifying whether out-of-bag predictions are desired
@@ -28,9 +29,10 @@
 #' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
 #' of \code{newdata}, or equal to the length of \code{data} if \code{newdata} is not given.
 #' The default \code{NULL} is simply to set all entries of \code{time.tau} equal to the maximum
-#' value of \code{time.eval}, therefore all estimated survival are computed at the
+#' value of \code{time.eval}, so that all estimated survival probabilities are computed at the
 #' same \code{time.eval}.
 #' @return A list containing:
+#'    \item{survival.id}{subject identifiers.}
 #'    \item{survival.obj}{an object of class \code{\link[survival]{Surv}}.}
 #'    \item{survival.probs}{the estimated survival probabilities for each data of interest.
 #'    It is a list if the length of the estimated values differs from one to another;
@@ -81,10 +83,9 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
   wt <- object$inbag # of size Ndata x ntree
 
-  yvar.names <- object$yvarLTRC.names
+  yvar.names <- object$yvarLTRC.names[2:4]
   Rname <- yvar.names[2]
   traindata <- object$yvarLTRC
-  traindata$id <- object$id
   if (OOB){
     # relabel the traindata
     traindata$I <- 1:nrow(traindata) # make sure partial/baseline has done this
@@ -191,6 +192,7 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     obj <- Surv(traindata[, yvar.names[1]],
                 traindata[, yvar.names[2]],
                 traindata[, yvar.names[3]])
+    id <- traindata$id
     rm(traindata)
   } else {
     nIDxdata <- object$membership # of size Ndata*ntree
@@ -202,14 +204,13 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       if (!is.data.frame(newdata)) stop("newdata must be a dataframe")
       x.IDs <- match(object$xvar.names, names(newdata))
       nIDxnewdata <- predict.ltrcrfsrc(object, newdata = newdata[, x.IDs], membership = TRUE)$membership # of size Newdata*ntree
-
       if (missing(newdata.id)){
         newdata$id <- 1:nrow(newdata)
       } else {
         names(newdata)[names(newdata) == deparse(substitute(newdata.id))] <- "id"
       }
-
     }
+    if (any(is.na.data.frame(newdata[, x.IDs]))) stop("newdata contains missing values in the covariates!")
     rm(object)
     obj.IDs <- match(c("id", yvar.names), names(newdata), nomatch = 0)
     if (any(obj.IDs == 0)) stop("newdata has to be with variables as in formula (time1, time2, event)")
@@ -336,11 +337,13 @@ predict.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     obj <- Surv(newdata[, yvar.names[1]],
                 newdata[, yvar.names[2]],
                 newdata[, yvar.names[3]])
+    id <- newdata$id
 
   }
 
 
-  RES = list(survival.probs = pred,
+  RES = list(survival.id = id,
+             survival.probs = pred,
              survival.times = time.eval,
              survival.tau = time.tau,
              survival.obj = obj)

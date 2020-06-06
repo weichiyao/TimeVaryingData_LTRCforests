@@ -11,16 +11,16 @@ ltrcrsf(
   ntree = 100L,
   mtry = NULL,
   nodesize = max(ceiling(sqrt(nrow(data))), 15),
-  nodedepth = NULL,
-  nsplit = 10,
   bootstrap = c("by.sub", "by.root", "by.node", "by.user", "none"),
   samptype = c("swor", "swr"),
   sampfrac = 0.632,
   samp = NULL,
-  na.action = c("na.omit", "na.impute"),
-  ntime,
+  na.action = "na.omit",
   stepFactor = 2,
-  trace = TRUE
+  trace = TRUE,
+  nodedepth = NULL,
+  nsplit = 10L,
+  ntime
 )
 }
 \arguments{
@@ -53,14 +53,6 @@ random forest like algorithms. The default \code{mtry} is tuned by
 \item{nodesize}{an integer, forest average terminal node size. It has been
 adjusted from the \code{\link[randomForestSRC]{rfsrc}} default \code{15} for survival families.}
 
-\item{nodedepth}{maximum depth to which a tree should be grown. The default behaviour
-is that this parameter is ignored.}
-
-\item{nsplit}{an non-negative integer value for number of random splits to consider
-for each candidate splitting variable. This significantly increases speed.
-When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-splits considered. \code{nsplit = 10} by default.}
-
 \item{bootstrap}{bootstrap protocol.
 (1) If \code{id} is present,
 the choices are: \code{"by.sub"} (by default) which bootstraps subjects,
@@ -69,10 +61,11 @@ Both can be with or without replacement (by default sampling is without
 replacement; see the option \code{samptype} below).
 (2) If \code{id} is not specified, the default is \code{"by.root"} which
 bootstraps the \code{data} by sampling with or without replacement;
-if \code{"by.node"} is choosen, the data is bootstrapped with replacement
+if \code{"by.node"} is choosen, \code{data} is bootstrapped with replacement
 at each node while growing the tree.
-Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-\code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+\code{data} is not bootstrapped at all, and is used in
+every individual tree. If \code{"by.user"} is choosen,
 the bootstrap specified by \code{samp} is used.}
 
 \item{samptype}{choices are \code{swor} (sampling without replacement) and
@@ -88,21 +81,13 @@ of the sample.}
 
 \item{samp}{Bootstrap specification when \code{bootstype = "by.user"}.
 Array of dim \code{n x ntree} specifying how many times each record appears
-inbag in the bootstrap for each tree.}
+in each bootstrap sample.}
 
-\item{na.action}{action taken if the data contains \code{NA}’s. Possible values
-are \code{na.omit} or \code{na.impute}. The default \code{na.omit} removes
-the entire record if even one of its entries is \code{NA} (for x-variables this
-applies only to those specifically listed in '\code{formula}').
-Selecting \code{na.impute} imputes the data. Further demails can be found in
-\code{\link[randomForestSRC]{rfsrc}}.}
-
-\item{ntime}{an integer value used for survival to constrain ensemble calculations
-to a grid of \code{ntime} time points. Alternatively if a vector of values
-of length greater than one is supplied, it is assumed these are the time points
-to be used to constrain the calculations (note that the constrained time points
-used will be the observed event times closest to the user supplied time points).
-If no value is specified, the default action is to use all observed event times.}
+\item{na.action}{action taken if the data contains \code{NA}’s. The default
+\code{"na.omit"} removes the entire record if any of its entries is
+\code{NA} (for x-variables this applies only to those specifically listed
+in \code{formula}). See function \code{\link[randomForestSRC]{rfsrc}} for
+other available options.}
 
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
 by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
@@ -111,6 +96,22 @@ The default value is \code{2}.}
 \item{trace}{whether to print the progress of the search of the optimal value
 of \code{mtry} if \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
 \code{trace = TRUE} is set by default.}
+
+\item{nodedepth}{maximum depth to which a tree should be grown. The default behaviour
+is that this parameter is ignored.}
+
+\item{nsplit}{an non-negative integer value for number of random splits to consider
+for each candidate splitting variable. This significantly increases speed.
+When zero or \code{NULL}, the algorithm uses much slower deterministic splitting where
+all possible splits are considered. \code{nsplit = 10L} by default.}
+
+\item{ntime}{an integer value used for survival to constrain ensemble calculations
+to a grid of \code{ntime} time points. Alternatively if a vector of values
+of length greater than one is supplied, it is assumed these are the time points
+to be used to constrain the calculations (note that the constrained time points
+used will be the observed event times closest to the user supplied time points).
+If no value is specified, the default action is to use all observed event times.
+Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.}
 }
 \value{
 An object belongs to the class \code{ltrcrsf},
@@ -125,8 +126,7 @@ right-censored survival data with time-varying covariates.
 \details{
 This function extends the random survival forest algorithm in
 \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
-which allows for time-varying covariates. The traditional survival forests only
-applies for right-censored data with time-invariant covariates.
+which allows for time-varying covariates.
 }
 \examples{
 #### Example with time-varying data pbcsample

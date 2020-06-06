@@ -39,9 +39,7 @@
 #'
 #' This function extends the conditional inference survival forest algorithm in
 #' \code{\link[partykit]{cforest}} to fit left-truncated and right-censored data,
-#' which allow for time-varying covariates. The traditional survival forests in
-#' \code{\link[partykit]{cforest}} only applies for right-censored data with
-#' time-invariant covariates.
+#' which allow for time-varying covariates.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -67,16 +65,20 @@
 #' replacement; see the option \code{perturb} below);
 #' (2) If \code{id} is not specified, it
 #' bootstraps the \code{data} by sampling with or without replacement.
-#' Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-#' \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+#' Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+#' \code{data} is not bootstrapped at all, and is used in
+#' every individual tree. If \code{"by.user"} is choosen,
 #' the bootstrap specified by \code{samp} is used.
 #' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
-#' inbag in the bootstrap for each tree.
-#' @param na.action a function which indicates what should happen when the data contain
-#' missing values.
+#' in each bootstrap sample.
+#' @param na.action action taken if the data contains \code{NA}’s. The default
+#' \code{"na.omit"} removes the entire record if any of its entries is
+#' \code{NA} (for x-variables this applies only to those specifically listed
+#' in \code{formula}). See function \code{\link[partykit]{cforest}} for
+#' other available options.
 #' @param mtry number of input variables randomly sampled as candidates at each node for
-#' random forest like algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.
+#' random forest algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.
 #' @param ntree an integer, the number of the trees to grow for the forest.
 #' \code{ntree = 100L} is set by default.
 #' @param samptype choices are \code{swor} (sampling without replacement) and
@@ -133,60 +135,80 @@ ltrccf <- function(formula, data, id,
                    samptype = c("swor","swr"),
                    sampfrac = 0.632,
                    samp = NULL,
-                   trace = TRUE, stepFactor = 2,
-                   na.action = na.pass,
+                   na.action = "na.omit",
+                   stepFactor = 2,
+                   trace = TRUE,
                    applyfun = NULL, cores = NULL,
                    control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
                                                      minsplit = max(ceiling(sqrt(nrow(data))), 20),
                                                      minbucket = max(ceiling(sqrt(nrow(data))), 7),
                                                      minprob = 0.01,
                                                      mincriterion = 0, saveinfo = FALSE)){
-  # package version dependency
-  # if (packageVersion("partykit") < "1.2.7") {
-  #   stop("partykit >= 1.2.7 needed for this function.", call. = FALSE)
-  # }
 
   requireNamespace("inum")
+
   Call <- match.call()
-  Call[[1]] <- as.name('LTRCCF')  #make nicer printout for the user
+  Call[[1]] <- as.name('ltrccf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'data', 'id'),
-                names(Call), nomatch=0)
+                names(Call), nomatch = 0L)
   if (indx[1] == 0) stop("a formula argument is required")
   Call$formula <- eval(formula)
-  # print(id)
+
   temp <- Call[c(1, indx)]
   temp[[1L]] <- quote(stats::model.frame)
+
   mf <- eval.parent(temp)
-
-  Terms <- terms(formula)
-  ord <- attr(Terms, 'order')
-  if (length(ord) & any(ord !=1))
-    stop("Interaction terms are not valid for this function")
-
-  n <- nrow(mf)
   y <- model.extract(mf, 'response')
-
   if (!is.Surv(y)) stop("Response must be a survival object")
   if (!attr(y, "type") == "counting") stop("The Surv object must be of type 'counting'.")
+  rm(y)
+
+  # pull y-variable names
+  yvar.names <- all.vars(formula(paste(as.character(formula)[2], "~ .")), max.names = 1e7)
+  yvar.names <- yvar.names[-length(yvar.names)]
+
+  if (length(yvar.names) == 4){
+    yvar.names = yvar.names[2:4]
+  }
+
+  Status <- data[, yvar.names[3]]
+  # Times <- data[, yvar.names[2]]
+  if (sum(Status) == 0) stop("All observations are right-censored with event = 0!")
+
+  n <- nrow(data)
 
   ## if not specified, the first one will be used as default
   bootstrap <- match.arg(bootstrap)
   samptype <- match.arg(samptype)
 
-  id <- model.extract(mf, 'id')
-  if (is.null(id)){ # If present, do not want to relabel them
-    id <- 1:n
-    mf$`(id)` <- id
+  ## The following code to define id does not work since it could not handle missing values
+  # id <- model.extract(mf, 'id')
+
+  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccf
+  if (indx[3] == 0){
+    ## If id is not present, then we add one more variable
+    # mf$id <- 1:nrow(mf) ## Relabel
+    data$id <- 1:n
+  } else {
+    ## If id is present, then we rename the column to be id
+    # names(mf)[names(mf) == "(id)"] <- "id"
+    names(data)[names(data) == deparse(substitute(id))] <- "id"
   }
+
+  # extract the x-variable names
+  xvar.names <- attr(terms(formula), 'term.labels')
+  rm(temp)
+  data <- data[, c("id", yvar.names, xvar.names)]
+
   ## bootstrap case
-  if (length(id) == length(unique(id))){ # time-invariant LTRC data
+  if (length(data$id) == length(unique(data$id))){ # time-invariant LTRC data
     # it includes the case 1) when id = NULL, which is that id is not specified
     #                      2) when id is specified, but indeed LTRC time-invariant
     if (bootstrap == "by.sub") bootstrap <- "by.root"
   } else { # time-varying subject data
-    id.sub <- unique(id)
+    id.sub <- unique(data$id)
     ## number of subjects
     n.sub <- length(id.sub)
   }
@@ -198,6 +220,7 @@ ltrccf <- function(formula, data, id,
   } else {
     stop("samptype must set to be either 'swor' or 'swr'\n")
   }
+
   if (bootstrap == "by.sub"){
     size <- n.sub
     if (!perturb$replace) size <- floor(n.sub * perturb$fraction)
@@ -205,29 +228,28 @@ ltrccf <- function(formula, data, id,
                       sample(id.sub, size = size,
                              replace = perturb$replace),
                       simplify = FALSE) # a list of length ntree
-    samp <- lapply(samp, function(y) unlist(sapply(y, function(x) which(id %in% x), simplify = FALSE)))
-    samp <- sapply(samp, function(x) as.integer(tabulate(x, nbins = length(id)))) # n x ntree
+    samp <- lapply(samp, function(y) unlist(sapply(y, function(x) which(data$id %in% x), simplify = FALSE)))
+    samp <- sapply(samp, function(x) as.integer(tabulate(x, nbins = n))) # n x ntree
   } else if (bootstrap == "none"){
     samp <- matrix(1, nrow = n, ncol = ntree)
   } else if (bootstrap == "by.user") {
     if (is.null(samp)) {
-      stop("samp must not be NULL when bootstrapping by user")
+      stop("samp must not be NULL when bootstrapping by user\n")
     }
     if (is.matrix(samp)){
-      if (!is.matrix(samp)) stop("samp must be a matrx")
-      if (any(!is.finite(samp))) stop("samp must be finite")
-      if (any(samp < 0)) stop("samp must be non-negative")
-      if (all(dim(samp) != c(n, ntree))) stop("dimension of samp must be n x ntree")
+      if (!is.matrix(samp)) stop("samp must be a matrx\n")
+      if (any(!is.finite(samp))) stop("samp must be finite\n")
+      if (any(samp < 0)) stop("samp must be non-negative\n")
+      if (all(dim(samp) != c(n, ntree))) stop("dimension of samp must be n x ntree\n")
       samp <- as.matrix(samp)  # transform into matrix
     }
   } else if (bootstrap == "by.root"){
     samp <- rep(1, n)
   } else {
-    stop("Wrong bootstrap is given! ")
+    stop("Wrong bootstrap is given!\n ")
   }
 
   if (is.null(mtry)){
-    data$id = id # this is a must, otherwise id cannot be passed to the next level
     mtry <- tune.ltrccf(formula = formula, data = data, id = id,
                         control = control, ntreeTry = ntree,
                         bootstrap = "by.user",
@@ -265,7 +287,11 @@ ltrccf <- function(formula, data, id,
   ret$info$bootstrap <- bootstrap
   ret$info$samptype <- samptype
   ret$info$sampfrac <- sampfrac
-  ret$data <- mf
+  if (na.action == "na.omit"){
+    ret$data$id <- data$id[complete.cases(data) == 1]
+  } else {
+    ret$data$id <- data$id
+  }
   class(ret) <- c("ltrccf", "grow", class(ret))
   ret
 }

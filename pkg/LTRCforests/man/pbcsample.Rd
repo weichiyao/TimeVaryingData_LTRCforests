@@ -10,9 +10,6 @@ M. Malinchoc, P. M. Grambsch, A. L. Langworthy, and C. H. Gips. (1989).
 Primary biliary cirrhosis: Prediction of shortterm survival based on
 repeated patient visits. \emph{Hepatology}, \strong{20}, 126-134.
 }
-\usage{
-data("pbcsample")
-}
 \value{
 a data frame with 136 rows and 9 variables:
   \item{ID}{Patient id}
@@ -35,7 +32,7 @@ of measurements of risk factors at multiple time points from 10 patients
 with primary biliary cirrhosis (PBC), constructed from
 \code{\link{pbcseq}} in the R package \pkg{\link{survival}}. The data
 structure has been reformatted with left-truncated right-censored
-pseudo-subject observations based on Andersen-Gill reformulation method.
+pseudo-subject observations based on the Andersen-Gill reformulation method.
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox's regression model for counting

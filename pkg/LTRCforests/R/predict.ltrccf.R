@@ -7,11 +7,11 @@
 #'
 #' @param object an object as returned by \code{\link{ltrccf}}.
 #' @param newdata.id optional variable name of subject identifiers for \code{newdata}.
-#' If this is present, it will be search for in the \code{newdata} data frame.
+#' If this is present, it will be searched for in the \code{newdata} data frame.
 #' Each group of rows in \code{newdata} with the same subject \code{id} represents
 #' the covariate path through time of a single subject, and the result will
-#' contain one curve per subject. If it is not specified, then predictions are
-#' returned for each row of \code{newdata}.
+#' contain one curve per subject. If it is not specified, then an estimated survival
+#' curve is returned for each row of \code{newdata}.
 #' @param newdata an optional data frame containing the test data
 #' (with the names of the variables the same as those in \code{data} from \code{object}).
 #' @param OOB a logical specifying whether out-of-bag predictions are desired
@@ -28,9 +28,10 @@
 #' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
 #' of \code{newdata}, or equal to the length of \code{data} if \code{newdata} is not given.
 #' The default \code{NULL} is simply to set all entries of \code{time.tau} equal to the maximum
-#' value of \code{time.eval}, therefore all estimated survival are computed at the
+#' value of \code{time.eval}, so that all estimated survival probabilities are computed at the
 #' same \code{time.eval}.
 #' @return A list containing:
+#'    \item{survival.id}{subject identifiers.}
 #'    \item{survival.obj}{an object of class \code{\link[survival]{Surv}}.}
 #'    \item{survival.probs}{the estimated survival probabilities for each data of interest.
 #'    It is a list if the length of the estimated values differs from one to another;
@@ -44,6 +45,7 @@
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit
 #' @examples
 #' #### Example with data pbcsample
+#' library(survival)
 #' Formula <- Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## Fit an LTRC conditional inference forest on time-varying data
 #' LTRCCFobj <- ltrccf(formula = Formula, data = pbcsample, id = ID,
@@ -52,7 +54,7 @@
 #'
 #' ## Construct an estimated survival estimate for the second subject
 #' tpnt <- seq(0, max(pbcsample$Stop), length.out = 500)
-#' newData <- pbcsample[pbcsample$ID == 2,]
+#' newData <- pbcsample[pbcsample$ID == 2, ]
 #' Pred <- predict(object = LTRCCFobj, newdata = newData, newdata.id = ID,
 #'                 time.eval = tpnt)
 #' ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
@@ -74,26 +76,25 @@
 #'      xlab = "Time", ylab = "Survival probabilities")
 #'
 #'
-#' ## Out-of-bag prediction
-#' PredOOB <- predict.ltrccf(object = LTRCCFobj, OOB = TRUE, time.eval = tpnt)
 #' @export
 predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                           time.eval, time.tau = NULL){
 
   pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob",
                                     FUN = .pred_Surv_nolog)
-
+  xvar.names <- attr(object$terms,"term.labels")
   yvar.names <- as.character(object$formulaLTRC[[2]])[2:4]
   Rname <- yvar.names[2]
   idname <- "id"
 
+  # missing values can be present in the prediction
   if (is.null(newdata) || OOB){
     # first column: Surv(tleft,tright,event), second column: (id)
     newdata <- as.data.frame(as.matrix(object$data[, c(1, ncol(object$data)), drop = FALSE]))
     names(newdata) = c(yvar.names, idname)
   } else {
     if (missing(newdata.id)){
-      newdata$`id` <- 1:nrow(newdata)
+      newdata$id <- 1:nrow(newdata)
     } else {
       names(newdata)[names(newdata) == deparse(substitute(newdata.id))] <- idname
     }
@@ -101,7 +102,7 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   }
 
   rm(object)
-  N <- length(unique(newdata[, 'id'])) # number of subjects
+  N <- length(unique(newdata[, "id"])) # number of subjects
   if (is.null(time.tau)){
     time.tau <- rep(max(time.eval), N)
   } else {
@@ -113,11 +114,12 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   obj <- Surv(newdata[, yvar.names[1]],
               newdata[, yvar.names[2]],
               newdata[, yvar.names[3]])
-  rm(newdata)
   RES <- list(survival.probs = Shat,
               survival.times = time.eval,
               survival.tau = time.tau,
-              survival.obj = obj)
+              survival.obj = obj,
+              survival.id = newdata$id)
+  rm(newdata)
   rm(Shat)
   rm(time.eval)
   rm(time.tau)
@@ -178,9 +180,6 @@ predict.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       ShatR_temp[1, j + 1] = jR / qL[j]
       Shat_temp[1, r.ID == jall[j]] <- Shat_j / qL[j]
     }
-
-    # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
-    qL <- Shat_temp[1, r.IDmax]
 
     ql0 <- which(qL == 0)
     if(length(ql0) > 0){

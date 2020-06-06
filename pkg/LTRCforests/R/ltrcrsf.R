@@ -7,8 +7,7 @@
 #'
 #' This function extends the random survival forest algorithm in
 #' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
-#' which allows for time-varying covariates. The traditional survival forests only
-#' applies for right-censored data with time-invariant covariates.
+#' which allows for time-varying covariates.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -41,17 +40,18 @@
 #' replacement; see the option \code{samptype} below).
 #' (2) If \code{id} is not specified, the default is \code{"by.root"} which
 #' bootstraps the \code{data} by sampling with or without replacement;
-#' if \code{"by.node"} is choosen, the data is bootstrapped with replacement
+#' if \code{"by.node"} is choosen, \code{data} is bootstrapped with replacement
 #' at each node while growing the tree.
-#' Regardless of the presence of \code{id}, if \code{"none"} is chosen, the
-#' \code{data} is not bootstrapped at all. If \code{"by.user"} is choosen,
+#' Regardless of the presence of \code{id}, if \code{"none"} is chosen,
+#' \code{data} is not bootstrapped at all, and is used in
+#' every individual tree. If \code{"by.user"} is choosen,
 #' the bootstrap specified by \code{samp} is used.
 #' @param samptype choices are \code{swor} (sampling without replacement) and
 #' \code{swr} (sampling with replacement). The default action here is sampling
 #' without replacement.
 #' @param samp Bootstrap specification when \code{bootstype = "by.user"}.
 #' Array of dim \code{n x ntree} specifying how many times each record appears
-#' inbag in the bootstrap for each tree.
+#' in each bootstrap sample.
 #' @param trace whether to print the progress of the search of the optimal value
 #' of \code{mtry} if \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
 #' \code{trace = TRUE} is set by default.
@@ -64,26 +64,26 @@
 #' is that this parameter is ignored.
 #' @param nsplit an non-negative integer value for number of random splits to consider
 #' for each candidate splitting variable. This significantly increases speed.
-#' When zero or \code{NULL}, uses much slower deterministic splitting where all possible
-#' splits considered. \code{nsplit = 10} by default.
+#' When zero or \code{NULL}, the algorithm uses much slower deterministic splitting where
+#' all possible splits are considered. \code{nsplit = 10L} by default.
 #' @param sampfrac a fraction, determining the proportion of subjects to draw
 #' without replacement when \code{samptype = "swor"}. The default value is \code{0.632}.
 #' To be more specific, if \code{id} is present, \code{0.632 * N} of subjects with their
 #' pseudo-subject observations are drawn without replacement (\code{N} denotes the
 #' number of subjects); otherwise, \code{0.632 * n} is the requested size
 #' of the sample.
-#' @param na.action action taken if the data contains \code{NA}’s. Possible values
-#' are \code{na.omit} or \code{na.impute}. The default \code{na.omit} removes
-#' the entire record if even one of its entries is \code{NA} (for x-variables this
-#' applies only to those specifically listed in '\code{formula}').
-#' Selecting \code{na.impute} imputes the data. Further demails can be found in
-#' \code{\link[randomForestSRC]{rfsrc}}.
+#' @param na.action action taken if the data contains \code{NA}’s. The default
+#' \code{"na.omit"} removes the entire record if any of its entries is
+#' \code{NA} (for x-variables this applies only to those specifically listed
+#' in \code{formula}). See function \code{\link[randomForestSRC]{rfsrc}} for
+#' other available options.
 #' @param ntime an integer value used for survival to constrain ensemble calculations
 #' to a grid of \code{ntime} time points. Alternatively if a vector of values
 #' of length greater than one is supplied, it is assumed these are the time points
 #' to be used to constrain the calculations (note that the constrained time points
 #' used will be the observed event times closest to the user supplied time points).
 #' If no value is specified, the default action is to use all observed event times.
+#' Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.
 #' @keywords Ensemble method, random survival forest, Poisson splitting rule,
 #' left-truncated right-censored data, time-varying covariate data
 #' @return An object belongs to the class \code{ltrcrsf},
@@ -120,18 +120,19 @@
 #'
 #' @export
 ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
-                    nodesize = max(ceiling(sqrt(nrow(data))),15), nodedepth = NULL,
-                    nsplit = 10,
+                    nodesize = max(ceiling(sqrt(nrow(data))),15),
                     bootstrap = c("by.sub","by.root","by.node","by.user","none"),
                     samptype = c("swor", "swr"),
                     sampfrac = 0.632,
-                    samp=NULL,
-                    na.action = c("na.omit", "na.impute"),
-                    ntime,
+                    samp = NULL,
+                    na.action = "na.omit",
                     stepFactor = 2,
-                    trace = TRUE){
+                    trace = TRUE,
+                    nodedepth = NULL,
+                    nsplit = 10L,
+                    ntime){
   Call <- match.call()
-  Call[[1]] <- as.name('LTRCRSF')  #make nicer printout for the user
+  Call[[1]] <- as.name('ltrcrsf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'data', 'id'),
@@ -142,37 +143,47 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   temp <- Call[c(1, indx)]
   temp[[1L]] <- quote(stats::model.frame)
   mf <- eval.parent(temp)
-
-  Terms <- terms(formula)
-  ord <- attr(Terms, 'order')
-  if (length(ord) & any(ord !=1))
-    stop("Interaction terms are not valid for this function")
-
-  n <- nrow(mf)
   y <- model.extract(mf, 'response')
 
   if (!is.Surv(y)) stop("Response must be a survival object")
   if (!attr(y, "type") == "counting") stop("The Surv object must be of type 'counting'.")
-
-  id <- model.extract(mf, 'id')
+  rm(y)
+  rm(mf)
 
   ## if not specified, the first one will be used as default
   bootstrap <- match.arg(bootstrap)
   samptype <- match.arg(samptype)
-  na.action <- match.arg(na.action)
+  # na.action <- match.arg(na.action)
 
-  ## Transformation for LTRC data
+  n <- nrow(data)
   # pull y-variable names
   yvar.names <- all.vars(formula(paste(as.character(formula)[2], "~ .")), max.names = 1e7)
   yvar.names <- yvar.names[-length(yvar.names)]
-  if (length(yvar.names) > 3) stop("Please check the formula!")
+  if (length(yvar.names) == 4){
+    yvar.names = yvar.names[2:4]
+  }
   # try an example:
   # Formula = Surv(pbcsample$Start, pbcsample$Stop, pbcsample$Event, type="counting") ~ pbcsample$age + pbcsample$alk.phos + pbcsample$ast + pbcsample$chol + pbcsample$edema
   # and see the difference from:
   # yvar.names <- as.character(Formula[[2]])[2:4]
 
-  Status <- y[,3L]
-  Times <- y[,2L]
+  # extract the x-variable names
+  xvar.names <- attr(terms(formula), 'term.labels')
+  rm(temp)
+
+  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccf
+  if (indx[3] == 0){
+    ## If id is not present, then we add one more variable
+    data$id <- 1:n
+  } else {
+    ## If id is present, then we rename the column to be id
+    names(data)[names(data) == deparse(substitute(id))] <- "id"
+  }
+  data <- data[, c("id", yvar.names, xvar.names), drop = FALSE]
+
+  ## Transformation for LTRC data
+  Status <- data[, yvar.names[3]]
+  Times <- data[, yvar.names[2]]
 
   if (sum(Status) == 0) stop("All observations are right-censored with event = 0!")
   ##unique death times
@@ -182,6 +193,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
     ntime = unique.times
   }
 
+  y <- survival::Surv(data[, yvar.names[1]], data[, yvar.names[2]], data[, yvar.names[3]])
   temp <- survival::coxph(y ~ 1)
   cumhaz.table <- survival::basehaz(temp)
 
@@ -195,22 +207,30 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   cumhaz.times <- c(0, cumhaz.table2$time[-length(cumhaz.table2$time)], max(Times))
   cumhaz <- c(0, cumhaz.table2$hazard)
 
-  Start.cumhaz <- stats::approx(cumhaz.times, cumhaz, y[,1L])$y
-  End.cumhaz <- stats::approx(cumhaz.times, cumhaz, y[,2L])$y
+  Start.cumhaz <- stats::approx(cumhaz.times, cumhaz, y[, 1L])$y
+  End.cumhaz <- stats::approx(cumhaz.times, cumhaz, y[, 2L])$y
 
   data$Newtime <- End.cumhaz - Start.cumhaz
-  Formula = formula(paste(c( paste("Surv(Newtime,",yvar.names[3],")",sep = ""), formula[[3]]), collapse = "~"))
+  Formula = formula(paste(c(paste("Surv(Newtime,", yvar.names[3],")",sep = ""), formula[[3]]), collapse = "~"))
+  rm(y)
 
+  if (na.action == "na.omit") {
+    takeid = which(complete.cases(data) == 1)
+  } else if (na.action == "na.impute") {
+    takeid = 1:n
+  } else {
+    stop("na.action can only be either 'na.omit' or 'na.pass'.")
+  }
+
+  id.sub <- unique(data$id[takeid])
+  n.seu <- length(takeid)
+  ## number of subjects
+  n.sub <- length(id.sub)
   ## bootstrap case
-  if (length(id) == length(unique(id))){ # time-invariant LTRC data
+  if (n.seu == n.sub){ # time-invariant LTRC data
     # it includes the case 1) when id = NULL, which is that id is not specified
     #                      2) when id is specified, but indeed LTRC time-invariant
-    id <- 1:n # relabel, bad idea?
     if (bootstrap == "by.sub") bootstrap = "by.root"
-  } else { # time-varying subject data
-    id.sub = unique(id)
-    ## number of subjects
-    n.sub = length(id.sub)
   }
 
   sampsize <- if (samptype == "swor") function(x){x * sampfrac} else function(x){x}
@@ -219,61 +239,45 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   if (bootstrap == "by.sub"){
     bootstrap <- "by.user"
     # dim n x ntree
-    samp <- matrix(0, nrow = n, ncol = ntree)
+    samp <- matrix(0, nrow = n.seu, ncol = ntree)
     if (samptype == "swr"){
       for (b in 1:ntree){
-        k = 0
-        while (sum(samp[,b]) < n) {
+        while (sum(samp[, b]) < n.seu) {
           idx <- sample(id.sub, size = 1)
-          inidx <- which(id == idx)
+          inidx <- which(data$id[takeid] == idx)
           samp[inidx, b] = samp[inidx, b] + 1
         }
-        if (sum(samp[,b]) > n){
-          seqn = which(samp[,b]!=0)
-          add = length(seqn) - (sum(samp[,b])-n) + 1
+        if (sum(samp[, b]) > n.seu){
+          seqn <- which(samp[, b] != 0)
+          add <- length(seqn) - (sum(samp[, b]) - n.seu) + 1
           idx <- sample(add, size = 1)
-          samp[seqn[idx:(idx+sum(samp[,b])-n-1)],b] = samp[seqn[idx:(idx+sum(samp[,b])-n-1)],b]-1
+          samp[seqn[idx:(idx + sum(samp[, b]) - n.seu - 1)],b] <- samp[seqn[idx:(idx + sum(samp[, b]) - n.seu - 1)], b] - 1
         }
       }
     } else if (samptype == "swor"){
       for (b in 1:ntree){
-        nP <- floor(n*sampfrac)
+        nP <- floor(n.seu * sampfrac)
         idS <- sample(id.sub, size = n.sub, replace = FALSE)
-        k = 0
+        k <- 0
         while (sum(samp[, b]) < nP) {
-          k = k+1
-          inidx <- which(id == idS[k])
-          samp[inidx, b] = samp[inidx, b] + 1
+          k <- k + 1
+          inidx <- which(data$id[takeid] == idS[k])
+          samp[inidx, b] <- samp[inidx, b] + 1
         }
         if (sum(samp[, b]) > nP){
-          seqn = which(samp[, b] != 0)
-          add = length(seqn) - (sum(samp[, b]) - nP) + 1
+          seqn <- which(samp[, b] != 0)
+          add <- length(seqn) - (sum(samp[, b]) - nP) + 1
           idx <- sample(add, size = 1)
-          samp[seqn[idx:(idx + sum(samp[, b]) - nP - 1)], b] = 0
+          samp[seqn[idx:(idx + sum(samp[, b]) - nP - 1)], b] <- 0
         }
       }
     } else {
       stop("Wrong samptype is given!")
     }
   }
-  # } else if (bootstrap == "by.root"){
-  #   if (samptype == "swr"){
-  #     perturb = list(replace = TRUE, size = n)
-  #     samp <- replicate(ntree,
-  #                       sample(id, size = perturb$size,
-  #                              replace = perturb$replace),
-  #                       simplify = FALSE) # a list of length ntree
-  #     samp <- sapply(samp, function(x) as.integer(tabulate(x, nbins = n))) # n x ntree
-  #     bootstrap <- "by.user"
-  #   } else if (samptype == "swor"){
-  #     perturb = list(replace = FALSE, size = floor(n * sampfrac))
-  #   } else {
-  #     stop("Wrong samptype is given!")
-  #   }
-  # }
 
   if (is.null(mtry)){
-    data$id = id # this is a must, otherwise id cannot be passed to the next level
+    # data$id = id # this is a must, otherwise id cannot be passed to the next level
     mtry <- tune.ltrcrsf(formula = formula,
                          data = data,
                          id = id,
@@ -309,9 +313,8 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                           membership = TRUE,
                           na.action = na.action,
                           ntime = ntime)
-  forest.fit$yvarLTRC.names <- yvar.names
-  forest.fit$yvarLTRC = as.data.frame(as.matrix(data[, yvar.names, drop = FALSE]))
-  forest.fit$id = id
+  forest.fit$yvarLTRC.names <- c("id", yvar.names)
+  forest.fit$yvarLTRC = data[takeid, c("id", yvar.names), drop = FALSE]
   forest.fit$err.rate = NULL
   forest.fit$survival = NULL
   forest.fit$survival.oob = NULL

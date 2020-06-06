@@ -1,7 +1,6 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
 #' @importFrom utils installed.packages txtProgressBar setTxtProgressBar write.table tail
-#' @importFrom randomForestSRC get.auc get.bayes.rule get.brier.error get.cindex get.confusion get.misclass.error get.mv.error get.mv.error.block get.mv.formula get.mv.predicted get.mv.vimp
 
 ltrcrfsrc.fast <- function(formula, data,
                        ntree = 500,
