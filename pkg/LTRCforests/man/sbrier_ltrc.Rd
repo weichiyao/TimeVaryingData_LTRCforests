@@ -17,8 +17,7 @@ observations in the time-varying case).}
 or a list of survival probabilies named \code{survival.probs}; 2) a sequence
 of time points \code{survival.times}; 3) a vector of upper time limits
 \code{survival.tau}.
-See the values returned by \code{\link{pred.ltrccf}} and
-\code{\link{pred.ltrcrsf}}.}
+See the values returned by \code{\link{predictProb}}.}
 
 \item{type}{a character string denoting the type of scores returned. If \code{type = "IBS"},
 the integrated Brier score up to the last time point in \code{pred$surv.times} that is
@@ -45,11 +44,11 @@ Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 
 # Time points
-tpnt = seq(0, 6000, by = 200)
-# Set different upper time limits for each of the 20 subjects
-tau = seq(4001, 6200, length.out = 20)
+tpnt = seq(0, 6000, by = 100)
+# Set different upper time limits for each of the subjects
+tau = seq(4001, 6200, length.out = length(unique(pbcsample$ID)))
 ## Obstain estimation at time points tpnt
-Predobj = predict(object = LTRCCFobj, time.eval = tpnt, time.tau = tau)
+Predobj = predictProb(object = LTRCCFobj, time.eval = tpnt, time.tau = tau)
 
 ## Compute the integrated Brier score:
 pbcobj = Surv(pbcsample$Start, pbcsample$Stop, pbcsample$Event)
@@ -64,7 +63,3 @@ plot(BS$Time, BS$BScore, pch = 20, xlab = "Time", ylab = "Brier score", col = 2)
 ## to be 4000 based on the value of time.eval and time.tau
 ## (max(tpnt[tpnt <= min(tau)]) == 4000).
 }
-\keyword{Brier}
-\keyword{integrated}
-\keyword{score}
-\keyword{score,}

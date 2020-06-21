@@ -31,7 +31,7 @@
 #' Fit a LTRC conditional inference forest
 #'
 #' An implementation of the random forest and bagging ensemble algorithms utilizing
-#' LTRC conditional inference trees \code{\link{LTRCIT}} as base learners for
+#' LTRC conditional inference trees \code{\link[LTRCtrees]{LTRCIT}} as base learners for
 #' left-truncated right-censored survival data with time-invariant covariates.
 #' It also allows for (left-truncated) right-censored survival data with
 #' time-varying covariates.
@@ -108,13 +108,11 @@
 #' \code{control} parameters \code{minsplit}, \code{minbucket} have been adjusted from the
 #' \code{\link[partykit]{cforest}} defaults. Other default values correspond to those of the
 #' default values used by \code{\link[partykit]{ctree_control}}.
-#' @keywords Ensemble method, conditional inference forest, left-truncated right-censored data,
-#' time-varying covariate data
 #' @return An object belongs to the class \code{ltrccf}, as a subclass of
 #' \code{\link[partykit]{cforest}}.
 #' @import partykit
 #' @import survival
-#' @seealso \code{\link{predict.ltrccf}} for prediction and \code{\link{tune.ltrccf}}
+#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrccf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox's regression model for counting
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
@@ -122,9 +120,6 @@
 #' #### Example with time-varying data pbcsample
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' ## Fit an LTRCCF on the time-varying data, with mtry specified
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
-#'
 #' ## Fit an LTRCCF on the time-invariant data, with mtry tuned with stepFactor = 3.
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 50L, stepFactor = 3)
 #' @export
@@ -145,7 +140,7 @@ ltrccf <- function(formula, data, id,
                                                      minprob = 0.01,
                                                      mincriterion = 0, saveinfo = FALSE)){
 
-  requireNamespace("inum")
+  #requireNamespace("inum")
 
   Call <- match.call()
   Call[[1]] <- as.name('ltrccf')  #make nicer printout for the user
@@ -292,7 +287,7 @@ ltrccf <- function(formula, data, id,
   } else {
     ret$data$id <- data$id
   }
-  class(ret) <- c("ltrccf", "grow", class(ret))
+  class(ret) <- "ltrccf"
   ret
 }
 

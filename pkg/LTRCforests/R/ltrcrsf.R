@@ -1,12 +1,12 @@
 #' Fit a LTRC random survival forest with Poisson splitting rule
 #'
 #' An implementation of the random forest algorithms utilizing LTRC \code{rpart}
-#' trees \code{\link{LTRCART}} as base learners for left-truncated right-censored
+#' trees \code{\link[LTRCtrees]{LTRCART}} as base learners for left-truncated right-censored
 #' survival data with time-invariant covariates. It also allows for (left-truncated)
 #' right-censored survival data with time-varying covariates.
 #'
 #' This function extends the random survival forest algorithm in
-#' \pkg{\link{randomForestSRC}} to fit left-truncated and right-censored data,
+#' \code{\link[randomForestSRC]{rfsrc}} to fit left-truncated and right-censored data,
 #' which allows for time-varying covariates.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
@@ -84,8 +84,6 @@
 #' used will be the observed event times closest to the user supplied time points).
 #' If no value is specified, the default action is to use all observed event times.
 #' Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.
-#' @keywords Ensemble method, random survival forest, Poisson splitting rule,
-#' left-truncated right-censored data, time-varying covariate data
 #' @return An object belongs to the class \code{ltrcrsf},
 #' as a subclass of \code{\link[randomForestSRC]{rfsrc}}.
 #' @import survival
@@ -93,7 +91,7 @@
 #' @import utils
 #' @import prodlim
 #' @importFrom survival Surv
-#' @seealso \code{\link{predict.ltrcrsf}} for prediction and \code{\link{tune.ltrcrsf}}
+#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrsf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
@@ -103,18 +101,8 @@
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
 #' # on the time-varying data by specifying id:
-#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, ntree = 50L)
-#' LTRCRSFobj
-#'
-#' # Built a LTRCRSF forest (based on bootstrapping pseudo-subjects with replacement)
-#' # on the time-varying data by specifying id:
-#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, bootstrap = "by.root",
-#'                      samptype = "swr", id = ID, ntree = 50L)
-#' LTRCRSFobj
-#'
-#' # Built a LTRCRSF forest (based on sampling without replacement)
-#' # on the time-invariant data by not specifying id, with mtry specified:
-#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, mtry = 3, ntree = 50L)
+#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+#'                      ntree = 30L)
 #' LTRCRSFobj
 #'
 #'
@@ -309,7 +297,6 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                           samptype = samptype,
                           sampsize = sampsize,
                           samp = samp,
-                          forest = TRUE,
                           membership = TRUE,
                           na.action = na.action,
                           ntime = ntime)
@@ -326,7 +313,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$callLTRC = Call
   forest.fit$splitruleLTRC = "Poisson"
   forest.fit$formulaLTRC <- formula
-  class(forest.fit)[1] <- "ltrcrsf"
+  class(forest.fit) <- "ltrcrsf"
   return(forest.fit)
 }
 

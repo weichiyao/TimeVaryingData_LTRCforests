@@ -83,7 +83,6 @@
 #' computed survival probabilities for the \emph{i}-th data (i.e., only computes
 #' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 #' data of interest).
-#' @keywords mtry, out-of-bag errors, brier score
 #' @return
 #' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
@@ -100,7 +99,7 @@
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
 #' mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-#'                      ntreeTry = 50L, plot = TRUE)
+#'                      ntreeTry = 20L, plot = TRUE)
 #' @export
 
 tune.ltrcrsf <- function(formula, data, id,
@@ -235,7 +234,7 @@ tune.ltrcrsf <- function(formula, data, id,
                       samp = esamp,
                       na.action = ena.action,
                       ntime = entime)
-    predOOB <- predict(object = rsfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
+    predOOB <- predictProb(object = rsfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = predOOB$survival.id,
                             pred = predOOB, type = "IBS")
     rm(rsfOOB)
@@ -243,7 +242,7 @@ tune.ltrcrsf <- function(formula, data, id,
     return(errorOOB)
   }
   # errorOld
-  errorOld <- errorOOB_mtry(eformula = Formula, edata = data, id = id,
+  errorOld <- errorOOB_mtry(eformula = formula, edata = data, id = id,
                             emtryTest = mtryStart,
                             etpnt = time.eval, etau = time.tau,
                             entreeTry = ntreeTry,
@@ -278,7 +277,7 @@ tune.ltrcrsf <- function(formula, data, id,
         min(nvar, floor(mtryCur * stepFactor))
       }
       if (mtryCur == mtryOld) break
-      errorCur <- errorOOB_mtry(eformula = Formula, edata = data, id = id,
+      errorCur <- errorOOB_mtry(eformula = formula, edata = data, id = id,
                                 emtryTest = mtryCur,
                                 etpnt = time.eval, etau = time.tau,
                                 entreeTry = ntreeTry,

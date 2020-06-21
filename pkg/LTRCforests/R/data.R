@@ -7,7 +7,7 @@
 #' structure has been reformatted with left-truncated right-censored
 #' pseudo-subject observations based on the Andersen-Gill reformulation method.
 #'
-#' @returns a data frame with 136 rows and 9 variables:
+#' @returns a data frame with 57 rows and 9 variables:
 #'   \item{ID}{Patient id}
 #'   \item{Start}{the left truncation time point for the corresponding
 #'   pseudo-subject observation}
@@ -28,6 +28,5 @@
 #' @references Andersen, P. and Gill, R. (1982). Cox's regression model for counting
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 #' @docType data
-#' @keywords real data, time-varying covariates
 #' @name pbcsample
 NULL

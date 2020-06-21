@@ -11,7 +11,7 @@ Primary biliary cirrhosis: Prediction of shortterm survival based on
 repeated patient visits. \emph{Hepatology}, \strong{20}, 126-134.
 }
 \value{
-a data frame with 136 rows and 9 variables:
+a data frame with 57 rows and 9 variables:
   \item{ID}{Patient id}
   \item{Start}{the left truncation time point for the corresponding
   pseudo-subject observation}
@@ -38,7 +38,3 @@ pseudo-subject observations based on the Andersen-Gill reformulation method.
 Andersen, P. and Gill, R. (1982). Cox's regression model for counting
 processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 }
-\keyword{covariates}
-\keyword{data,}
-\keyword{real}
-\keyword{time-varying}

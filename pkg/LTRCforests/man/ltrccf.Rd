@@ -113,7 +113,7 @@ An object belongs to the class \code{ltrccf}, as a subclass of
 }
 \description{
 An implementation of the random forest and bagging ensemble algorithms utilizing
-LTRC conditional inference trees \code{\link{LTRCIT}} as base learners for
+LTRC conditional inference trees \code{\link[LTRCtrees]{LTRCIT}} as base learners for
 left-truncated right-censored survival data with time-invariant covariates.
 It also allows for (left-truncated) right-censored survival data with
 time-varying covariates.
@@ -127,9 +127,6 @@ which allow for time-varying covariates.
 #### Example with time-varying data pbcsample
 library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-## Fit an LTRCCF on the time-varying data, with mtry specified
-LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
-
 ## Fit an LTRCCF on the time-invariant data, with mtry tuned with stepFactor = 3.
 LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 50L, stepFactor = 3)
 }
@@ -138,17 +135,6 @@ Andersen, P. and Gill, R. (1982). Cox's regression model for counting
 processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
 }
 \seealso{
-\code{\link{predict.ltrccf}} for prediction and \code{\link{tune.ltrccf}}
+\code{\link{predictProb}} for prediction and \code{\link{tune.ltrccf}}
 for \code{mtry} tuning.
 }
-\keyword{Ensemble}
-\keyword{conditional}
-\keyword{covariate}
-\keyword{data}
-\keyword{data,}
-\keyword{forest,}
-\keyword{inference}
-\keyword{left-truncated}
-\keyword{method,}
-\keyword{right-censored}
-\keyword{time-varying}

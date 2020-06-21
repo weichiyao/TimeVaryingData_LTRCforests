@@ -1,6 +1,5 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
-#' @importFrom utils installed.packages txtProgressBar setTxtProgressBar write.table tail
 
 generic.impute.ltrcrfsrc <- function(data,
                                  ntree = 250,

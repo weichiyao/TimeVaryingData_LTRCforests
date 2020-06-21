@@ -137,13 +137,8 @@ library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
 mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-                     ntreeTry = 50L, plot = TRUE)
+                     ntreeTry = 20L, plot = TRUE)
 }
 \seealso{
 \code{\link{sbrier_ltrc}} for evaluation of model fit for the optimal value of \code{mtry}.
 }
-\keyword{brier}
-\keyword{errors,}
-\keyword{mtry,}
-\keyword{out-of-bag}
-\keyword{score}

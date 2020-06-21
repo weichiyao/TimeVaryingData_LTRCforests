@@ -126,6 +126,7 @@ Starting with the default value of \code{mtry}, search for the optimal value
 }
 \examples{
 ### Example with data pbcsample
+library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
 mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
@@ -137,8 +138,3 @@ mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3
 \code{\link{sbrier_ltrc}} for evaluation of model fit when searching
 for the optimal value of \code{mtry}.
 }
-\keyword{brier}
-\keyword{errors,}
-\keyword{mtry,}
-\keyword{out-of-bag}
-\keyword{score}

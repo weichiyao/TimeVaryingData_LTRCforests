@@ -73,7 +73,6 @@
 #' computed survival probabilities for the \emph{i}-th data (i.e., only computes
 #' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
 #' data of interest).
-#' @keywords mtry, out-of-bag errors, brier score
 #' @return
 #' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
@@ -84,6 +83,7 @@
 #' for the optimal value of \code{mtry}.
 #' @examples
 #' ### Example with data pbcsample
+#' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
 #' mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
@@ -223,7 +223,7 @@ tune.ltrccf <- function(formula, data, id,
                     na.action = ena.action,
                     applyfun = eapplyfun,
                     cores = ecores)
-    predOOB <- predict(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
+    predOOB <- predictProb(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = predOOB$survival.id,
                             pred = predOOB, type = "IBS")
     rm(cfOOB)

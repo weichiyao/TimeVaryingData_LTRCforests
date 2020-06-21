@@ -1,6 +1,5 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
-#' @importFrom utils installed.packages txtProgressBar setTxtProgressBar write.table tail
 coerce.multivariate <- function(x, outcome.target) {
   ## Warning:  This functon assumes that get.univariate.target has been called first, to
   ## verify the coherency of the target.  This means that the target exists in the forest object, and that
@@ -118,6 +117,7 @@ get.ensemble <- function (ensemble) {
   }
   return (ensemble)
 }
+
 get.forest <- function (forest) {
   ## Convert forest option into native code parameter.
   if (!is.null(forest)) {
@@ -396,14 +396,14 @@ get.rfq.bits <- function (rfq, family) {
     }
     return (result)
 }
-  get.rf.cores <- function () {
-    if (is.null(getOption("rf.cores"))) {
-      if(!is.na(as.numeric(Sys.getenv("RF_CORES")))) {
-        options(rf.cores = as.integer(Sys.getenv("RF_CORES")))
-      }
-    }
-    return (getOption("rf.cores", -1L))
-  }
+get.rf.cores <- function () {
+  # if (is.null(getOption("rf.cores"))) {
+  #   if(!is.na(as.numeric(Sys.getenv("RF_CORES")))) {
+  #     options(rf.cores = as.integer(Sys.getenv("RF_CORES")))
+  #   }
+  # }
+  return (-1L)
+}
 ## convert samptype option into native code parameter.
 get.samptype <- function (samptype) {
   if (samptype == "swr") {

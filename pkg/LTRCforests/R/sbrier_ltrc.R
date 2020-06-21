@@ -12,14 +12,12 @@
 #' or a list of survival probabilies named \code{survival.probs}; 2) a sequence
 #' of time points \code{survival.times}; 3) a vector of upper time limits
 #' \code{survival.tau}.
-#' See the values returned by \code{\link{pred.ltrccf}} and
-#' \code{\link{pred.ltrcrsf}}.
+#' See the values returned by \code{\link{predictProb}}.
 #' @param type a character string denoting the type of scores returned. If \code{type = "IBS"},
 #' the integrated Brier score up to the last time point in \code{pred$surv.times} that is
 #' not larger than the minimum value of \code{pred$surv.tau} is returned.
 #' If \code{type = "BS"}, the Brier score at every time point in \code{pred$surv.times} up to
 #' the minimum value of \code{pred$surv.tau} is returned. \code{type = "IBS"} is set by default.
-#' @keywords Brier score, integrated Brier score
 #' @return
 #' If \code{type = "IBS"}, this returns the integrated Brier score.
 #' @return
@@ -36,11 +34,11 @@
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 #'
 #' # Time points
-#' tpnt = seq(0, 6000, by = 200)
-#' # Set different upper time limits for each of the 20 subjects
-#' tau = seq(4001, 6200, length.out = 20)
+#' tpnt = seq(0, 6000, by = 100)
+#' # Set different upper time limits for each of the subjects
+#' tau = seq(4001, 6200, length.out = length(unique(pbcsample$ID)))
 #' ## Obstain estimation at time points tpnt
-#' Predobj = predict(object = LTRCCFobj, time.eval = tpnt, time.tau = tau)
+#' Predobj = predictProb(object = LTRCCFobj, time.eval = tpnt, time.tau = tau)
 #'
 #' ## Compute the integrated Brier score:
 #' pbcobj = Surv(pbcsample$Start, pbcsample$Stop, pbcsample$Event)
@@ -129,15 +127,15 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predict(hatcdist, times = Tleft, type = "surv")
+  csurv_adj = predictProb(hatcdist, time.eval = Tleft)
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
-  if (csurv_adj == 0) stop("reverse Kaplan-Meier estimate at the left-truncateion point is 0! ")
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
+  csurv_obs <- predictProb(hatcdist, time.eval = Ttildei) / csurv_adj
+  csurv_obs[csurv_adj == 0] <- Inf
   csurv_obs[csurv_obs == 0] <- Inf
 
   # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
+  csurv_t <- predictProb(hatcdist, time.eval = tpnt[tpnt < Ttildei]) / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 
@@ -173,16 +171,16 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predict(hatcdist, times = Tleft, type = "surv")
+  csurv_adj = predictProb(hatcdist, time.eval = Tleft)
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
-  if (csurv_adj == 0) stop("reverse Kaplan-Meier estimate at the left-truncateion point is 0! ")
 
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
+  csurv_obs <- predictProb(hatcdist, time.eval = Ttildei) / csurv_adj
+  csurv_obs[csurv_adj == 0] <- Inf
   csurv_obs[csurv_obs == 0] <- Inf
 
   # conditional survival for Observed value > t, G(t)
-  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
+  csurv_t <- predictProb(hatcdist, time.eval = tpnt[tpnt < Ttildei]) / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 
