@@ -53,9 +53,7 @@
 #' It is used for computing the variable selection criterion. The default is to use the
 #' basic \code{lapply} function unless the \code{cores} argument is specified (see below).
 #' See \code{\link[partykit]{ctree_control}}.
-#' @param cores numeric. If set to an integer the \code{applyfun} is set to
-#' \code{\link[parallel]{mclapply}} with the desired number of cores.
-#' See \code{\link[partykit]{ctree_control}}.
+#' @param cores numeric. See \code{\link[partykit]{ctree_control}}.
 #' @param trace whether to print the progress of the search of the optimal value of \code{mtry}
 #' when \code{mtry} is not specified (see \code{\link{tuneLTRCCF}}). \code{trace = TRUE}
 #' is set by default.

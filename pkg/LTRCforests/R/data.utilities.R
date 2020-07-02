@@ -137,17 +137,17 @@ avector <- function(x, name = FALSE) {
           x
         }
 }
-available <- function (package, lib.loc = NULL, quietly = TRUE)
-{
-  package <- as.character(substitute(package))
-  installed <- package %in% installed.packages()
-  if (installed) {
-    require(package, quietly = TRUE, character.only = TRUE)
-  }
-    else {
-      return(invisible(FALSE))
-    }
-}
+# available <- function (package, lib.loc = NULL, quietly = TRUE)
+# {
+#   package <- as.character(substitute(package))
+#   installed <- package %in% installed.packages()
+#   if (installed) {
+#     require(package, quietly = TRUE, character.only = TRUE)
+#   }
+#     else {
+#       return(invisible(FALSE))
+#     }
+# }
 cv.folds <- function (n, folds = 10) {
   split(resample(1:n), rep(1:folds, length = n))
 }

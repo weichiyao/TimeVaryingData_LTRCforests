@@ -98,9 +98,7 @@ It is used for computing the variable selection criterion. The default is to use
 basic \code{lapply} function unless the \code{cores} argument is specified (see below).
 See \code{\link[partykit]{ctree_control}}.}
 
-\item{cores}{numeric. If set to an integer the \code{applyfun} is set to
-\code{\link[parallel]{mclapply}} with the desired number of cores.
-See \code{\link[partykit]{ctree_control}}.}
+\item{cores}{numeric. See \code{\link[partykit]{ctree_control}}.}
 
 \item{control}{a list of control parameters, see \code{\link[partykit]{ctree_control}}.
 \code{control} parameters \code{minsplit}, \code{minbucket} have been adjusted from the
