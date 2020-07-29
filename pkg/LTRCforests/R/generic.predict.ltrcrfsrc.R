@@ -1154,7 +1154,7 @@ generic.predict.ltrcrfsrc <-
               array(nativeOutput$allEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                     c(n.observed, levels.count[target.idx]), dimnames=ens.names) else NULL)
             classOutput[[target.idx]] <- list(predicted = predicted)
-            response <- (if (!is.null(predicted)) get.bayes.rule(predicted, pi.hat) else NULL)
+            response <- (if (!is.null(predicted)) getltrc.bayes.rule(predicted, pi.hat) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], class = list(response))
             remove(predicted)
             remove(response)
@@ -1162,7 +1162,7 @@ generic.predict.ltrcrfsrc <-
               array(nativeOutput$oobEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                     c(n.observed, levels.count[target.idx]), dimnames=ens.names) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], predicted.oob = list(predicted.oob))
-            response.oob <- (if (!is.null(predicted.oob)) get.bayes.rule(predicted.oob, pi.hat) else NULL)
+            response.oob <- (if (!is.null(predicted.oob)) getltrc.bayes.rule(predicted.oob, pi.hat) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], class.oob = list(response.oob))
             remove(predicted.oob)
             remove(response.oob)

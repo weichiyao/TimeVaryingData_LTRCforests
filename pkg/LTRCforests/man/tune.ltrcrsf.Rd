@@ -135,8 +135,8 @@ Starting with the default value of \code{mtry}, search for the optimal value
 ### Example with data pbcsample
 library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 50.
-mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 20.
+mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, stepFactor = 3,
                      ntreeTry = 20L, plot = TRUE)
 }
 \seealso{
