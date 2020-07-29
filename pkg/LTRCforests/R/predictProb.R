@@ -275,7 +275,7 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         ## find out which trees does not contain the I[jall[j]]-th wi-th data
         id_tree_wi_j <- which(wt[newi$I[jall[1]], ] == 0)
         
-        Shat_ti <- matrix(0, ncol = sum((r.ID == jall[1])), nrow = length(id_tree_wi_j))
+        Shat_ti <- matrix(0, ncol = length(tpntLod[r.ID == jall[1]]), nrow = length(id_tree_wi_j))
         for (ti in 1:length(id_tree_wi_j)){
           ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
           id_node_witi_j <- node_all[newi$I[jall[1]], id_tree_wi_j[ti]]
@@ -297,7 +297,10 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         
         ## Change at July 29th
         rowid.nz <- which(Shat_ti[, 1] != 0)
-        if (rowid.nz > 0) Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
+        Shat_ti[rowid.nz, ] <- Shat_ti[rowid.nz, ] / Shat_ti[rowid.nz, 1]
+        # if (length(rowid.nz) > 0) {
+        #   Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
+        # }
         survival[1, r.ID == jall[1]] <- apply(Shat_ti, 2, mean)
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
@@ -418,7 +421,7 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         # deal with left truncation
         survival[1, r.ID == 0] <- 1
         
-        nlenb <- sum((r.ID == jall[1]))
+        nlenb <- length(tpntLod[r.ID == jall[1]])
         Shat_b <- matrix(0, nrow = ntree, ncol = nlenb)
         for (b in 1:ntree){
           # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
@@ -438,7 +441,10 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           # survival[1, r.ID == jall[1]] <- survival[1, r.ID == jall[1]] + Shat_b / Shat_b[1]
         }
         rowid.nz <- which(Shat_b[, 1] != 0)
-        if (rowid.nz > 0) Shat_b[rowid.nz, ] <- sweep(Shat_b[rowid.nz, ], 1, Shat_b[rowid.nz, 1], "/")
+        Shat_b[rowid.nz, ] <- Shat_b[rowid.nz, ] / Shat_b[rowid.nz, 1]
+        # if (length(rowid.nz) > 0){
+        #   Shat_b[rowid.nz, ] <- sweep(Shat_b[rowid.nz, ], 1, Shat_b[rowid.nz, 1], "/")
+        # }
         survival[1, r.ID == jall[1]] <- apply(Shat_b, 2, mean)
         # Shat_b = apply(Shat_b, 2, mean)
         # survival[1, r.ID == jall[1]] <- Shat_b / Shat_b[1]
