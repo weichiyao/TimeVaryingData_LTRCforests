@@ -137,8 +137,7 @@ avector <- function(x, name = FALSE) {
           x
         }
 }
-# available <- function (package, lib.loc = NULL, quietly = TRUE)
-# {
+# available <- function (package, lib.loc = NULL, quietly = TRUE) {
 #   package <- as.character(substitute(package))
 #   installed <- package %in% installed.packages()
 #   if (installed) {
@@ -271,9 +270,6 @@ get.auc.workhorse <- function(roc.data) {
   }
   AUC
 }
-
-
-
 
 get.coerced.survival.fmly <- function(fmly, event.type, splitrule = NULL) {
   if (grepl("surv", fmly)) {
@@ -536,8 +532,7 @@ fmly <- formula.detail$family
         else {
             nsplit = 1
         }
-    }
-    else {
+    } else {
         if(!is.null(nsplit)) {
             nsplit <- round(nsplit)
             if (nsplit < 0) {
@@ -556,8 +551,7 @@ fmly <- formula.detail$family
       cust.idx <- as.integer(sub("custom", "", splitrule))
       if (is.na(cust.idx)) cust.idx <- 1
       splitpass <- TRUE
-    }
-      else if (splitrule == "random") {
+    } else if (splitrule == "random") {
         splitrule.idx <- which(splitrule.names == "random")
         ## Override the nsplit value in the case of pure random
         ## splitting.  It is set to the defalut value of one (1). In the native code,

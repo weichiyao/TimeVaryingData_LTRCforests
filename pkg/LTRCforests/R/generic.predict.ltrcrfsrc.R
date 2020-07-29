@@ -17,10 +17,10 @@ generic.predict.ltrcrfsrc <-
            var.used = c(FALSE, "all.trees", "by.tree"),
            split.depth = c(FALSE, "all.trees", "by.tree"),
            seed = NULL,
-           do.trace = FALSE,
+           do.trace = TRUE,
            membership = FALSE,
            statistics = FALSE,
-
+           
            ...)
   {
     univariate.nomenclature <- TRUE
@@ -68,9 +68,9 @@ generic.predict.ltrcrfsrc <-
     na.action <- match.arg(na.action, c("na.omit", "na.impute"))
     outcome <- match.arg(outcome, c("train", "test"))
     proximity <- match.arg(as.character(proximity), c(FALSE, TRUE, "inbag", "oob", "all"))
-    forest.wt <- match.arg(as.character(forest.wt), c(FALSE, TRUE, "inbag", "oob", "all"))
+    forest.wt <- match.arg(as.character(forest.wt), c(FALSE, TRUE, "inbag", "oob", "all"))  
     distance <- match.arg(as.character(distance), c(FALSE, TRUE, "inbag", "oob", "all"))
-
+    
     var.used <- match.arg(as.character(var.used), c("FALSE", "all.trees", "by.tree"))
     if (var.used == "FALSE") var.used <- FALSE
     split.depth <- match.arg(as.character(split.depth),  c("FALSE", "all.trees", "by.tree"))
@@ -78,47 +78,42 @@ generic.predict.ltrcrfsrc <-
     ## initialize the seed
     seed <- get.seed(seed)
     ## set restore.mode and the ensemble option
-    ## - if newdata is missing we assume restore.mode
+    ## - if newdata is missing we assume restore.mode 
     ## - outcome = "test" is treated as restore.mode = FALSE for R-processing
     ##   but is then switched to restore.mode = TRUE for the native .Call
     if (missing(newdata)) {
       restore.mode <- TRUE
-      outcome <- "train"
+      outcome <- "train"    
       if (is.null(ensemble)) {
         ## default action assigns the grow forest ensemble option
         if (!is.null(object$ensemble)) {
           ensemble <- object$ensemble
-        }
-        else {
+        } else {
           ## backwards compatibility with prior versions
           ensemble <- "all"
         }
+      } else {
+        ensemble <-  match.arg(ensemble, c("oob", "inbag", "all"))   
       }
-      else {
-        ensemble <-  match.arg(ensemble, c("oob", "inbag", "all"))
-      }
-    }
-    else {##there is test data present
+    } else {##there is test data present
       restore.mode <- FALSE
-      ## special treatment for outcome=="test" (which is really restore mode)
+      ## special treatment for outcome == "test" (which is really restore mode)
       if (outcome == "test") {
         if (is.null(ensemble)) {
           ## default action is to provide all ensembles
           ensemble <- "all"
+        } else {
+          ensemble <-  match.arg(ensemble, c("oob", "inbag", "all"))   
         }
-        else {
-          ensemble <-  match.arg(ensemble, c("oob", "inbag", "all"))
-        }
-      }
-      ## standard prediction scenario on new test data - there is no OOB
-      else {
+      } else {
+        ## standard prediction scenario on new test data - there is no OOB
         ensemble <- "inbag"
       }
     }
     ## REDUCES THE OBJECT TO THE FOREST -- REDUCTION STARTS HERE
     ## hereafter we only need the forest and reassign "object" to the forest
     ## (TBD, TBD, TBD) memory management "big.data" not currently implemented: (TBD, TBD, TBD)
-    # if (sum(inherits(object, c("ltrcrsf", "grow"), TRUE) == c(1, 2)) == 2) {
+    # if (sum(inherits(object, c("rfsrc", "grow"), TRUE) == c(1, 2)) == 2) {
       if (inherits(object, "bigdata")) {
         big.data <- TRUE
       }
@@ -126,8 +121,7 @@ generic.predict.ltrcrfsrc <-
         big.data <- FALSE
       }
       object <- object$forest
-    # }
-    # else {
+    # } else {
     #   ## object is already a forest
     #   if (inherits(object, "bigdata")) {
     #     big.data <- TRUE
@@ -145,8 +139,7 @@ generic.predict.ltrcrfsrc <-
     #   cat("unknown")
     #   cat("\n")
     #   stop()
-    # }
-    # else {
+    # } else {
     #   object.version <- as.integer(unlist(strsplit(object$version, "[.]")))
     #   installed.version <- as.integer(unlist(strsplit("2.9.3", "[.]")))
     #   minimum.version <- as.integer(unlist(strsplit("2.3.0", "[.]")))
@@ -168,36 +161,36 @@ generic.predict.ltrcrfsrc <-
     #     stop()
     #   }
     # }
-    # ## classification specific details related to rfq and perf.type
+    ## classification specific details related to rfq and perf.type
     pi.hat <- NULL
-    if (family == "class") {
-      ## rfq specific details
-      if (!is.null(rfq)) {##predict has specified rfq
-        if (!rfq) {##predict does not want rfq
-          ## nothing
-        }
-        else {##predict has requested rfq
-          pi.hat <- table(object$yvar) / length(object$yvar)
-        }
-      }
-      if (is.null(rfq)) {##predict  ambivalent about rfq
-        if (!object$rfq) {##grow did not use rfq
-          ## nothing -> rfq = FALSE
-        }
-        else {##grow used rfq - use grow spec
-          pi.hat <- table(object$yvar) / length(object$yvar)
-          rfq <- TRUE
-        }
-      }
-      ## performance details
-      if (is.null(perf.type) && !is.null(object$perf.type)) {
-        perf.type <- object$perf.type
-      }
-    }
+    # if (family == "class") {
+    #   ## rfq specific details
+    #   if (!is.null(rfq)) {##predict has specified rfq
+    #     if (!rfq) {##predict does not want rfq
+    #       ## nothing
+    #     }
+    #     else {##predict has requested rfq
+    #       pi.hat <- table(object$yvar) / length(object$yvar)
+    #     }
+    #   }
+    #   if (is.null(rfq)) {##predict  ambivalent about rfq
+    #     if (!object$rfq) {##grow did not use rfq
+    #       ## nothing -> rfq = FALSE
+    #     }
+    #     else {##grow used rfq - use grow spec
+    #       pi.hat <- table(object$yvar) / length(object$yvar)
+    #       rfq <- TRUE
+    #     }
+    #   }
+    #   ## performance details
+    #   if (is.null(perf.type) && !is.null(object$perf.type)) {
+    #     perf.type <- object$perf.type
+    #   }
+    # }
     ## recover the split rule
     splitrule <- object$splitrule
     ## gk processing
-    if (!is.null(gk.quantile) || object$gk.quantile) {
+    if (!is.null(gk.quantile) || object$gk.quantile) { 
       if (is.null(gk.quantile)) {##predict ambivalent about gk - use grow spec
         gk.quantile <- object$gk.quantile
       }
@@ -311,8 +304,7 @@ generic.predict.ltrcrfsrc <-
       ## Extract test yvar names (if any) and xvar names.
       if (yvar.present) {
         fnames <- c(yvar.names, xvar.names)
-      }
-      else {
+      } else {
         fnames <- xvar.names
       }
       ## Data conversion to numeric mode
@@ -341,8 +333,7 @@ generic.predict.ltrcrfsrc <-
             length(setdiff(na.omit(event.info.newdata$cens), na.omit(event.info$cens))) > 1) {
           stop("survival events in test data do not match training data")
         }
-      }
-      else {
+      } else {
         ## Disallow outcome=TEST without y-outcomes
         if (outcome == "test") {
           stop("outcome=TEST, but the test data has no y values, which is not permitted")
@@ -396,8 +387,7 @@ generic.predict.ltrcrfsrc <-
       sampsize <- round(object$sampsize(nrow(xvar)))
       case.wt <- object$case.wt
       samp <- object$samp
-    }
-    else {
+    } else {
       ## outcome=test
       ## From the native code perspective we are in pseudo-restore mode
       ## From the R side, it is convenient to now pretend we are
@@ -456,13 +446,12 @@ generic.predict.ltrcrfsrc <-
     ## We over-ride block-size in the case that get.tree is user specified
     block.size <- min(get.block.size(block.size, ntree), sum(get.tree))
     ## Turn off partial option.
-    # partial.bits <- get.partial(0)
+    partial.bits <- 0 # get.partial(0)
     ## na.action in the native code is only revelant to the training data.
     ## Unless outcome == "test", we send in the protocol used for the training data.
     if (outcome == "test") {
       ## respect the user defined protocol
-    }
-    else {
+    } else {
       ## Use the training data protocol
       na.action = object$na.action
     }
@@ -470,8 +459,7 @@ generic.predict.ltrcrfsrc <-
     ## Process the subsetted index
     if (missing(subset) | is.null(subset)) {
       subset <- NULL
-    }
-    else {
+    } else {
       ## Convert the user specified subset into a usable form
       if (is.logical(subset)) {
         subset <- which(subset)
@@ -559,7 +547,7 @@ generic.predict.ltrcrfsrc <-
                                     as.integer(object$seed),
                                     as.integer(hdim),
                                     ## Object containing base learner settings, this is never NULL.
-                                    object$base.learner,
+                                    object$base.learner, 
                                     as.integer((object$nativeArray)$treeID),
                                     as.integer((object$nativeArray)$nodeID),
                                     ## This is hc_zero.  It is never NULL.
@@ -574,7 +562,7 @@ generic.predict.ltrcrfsrc <-
                                              as.integer((object$nativeArray)$augmXtwo))
                                       } else { NULL }
                                     } else { NULL },
-                                    ## This slot is hc_one.  This slot can be NULL.
+                                    ## This slot is hc_one.  This slot can be NULL.                                  
                                     if (hdim > 0) {
                                       list(as.integer((object$nativeArray)$hcDim),
                                            as.double((object$nativeArray)$contPTR))
@@ -635,7 +623,7 @@ generic.predict.ltrcrfsrc <-
                                     list(if (is.null(m.target.idx)) as.integer(0) else as.integer(length(m.target.idx)),
                                          if (is.null(m.target.idx)) NULL else as.integer(m.target.idx)),
                                     as.integer(ptn.count),
-
+                                    
                                     list(if (is.null(importance.xvar.idx)) as.integer(0) else as.integer(length(importance.xvar.idx)),
                                          if (is.null(importance.xvar.idx)) NULL else as.integer(importance.xvar.idx)),
                                     ## Partial variables disabled.
@@ -1166,7 +1154,7 @@ generic.predict.ltrcrfsrc <-
               array(nativeOutput$allEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                     c(n.observed, levels.count[target.idx]), dimnames=ens.names) else NULL)
             classOutput[[target.idx]] <- list(predicted = predicted)
-            response <- (if (!is.null(predicted)) getltrc.bayes.rule(predicted, pi.hat) else NULL)
+            response <- (if (!is.null(predicted)) get.bayes.rule(predicted, pi.hat) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], class = list(response))
             remove(predicted)
             remove(response)
@@ -1174,7 +1162,7 @@ generic.predict.ltrcrfsrc <-
               array(nativeOutput$oobEnsbCLS[(iter.ensb.start + 1):iter.ensb.end],
                     c(n.observed, levels.count[target.idx]), dimnames=ens.names) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], predicted.oob = list(predicted.oob))
-            response.oob <- (if (!is.null(predicted.oob)) getltrc.bayes.rule(predicted.oob, pi.hat) else NULL)
+            response.oob <- (if (!is.null(predicted.oob)) get.bayes.rule(predicted.oob, pi.hat) else NULL)
             classOutput[[target.idx]] <- c(classOutput[[target.idx]], class.oob = list(response.oob))
             remove(predicted.oob)
             remove(response.oob)
@@ -1351,3 +1339,4 @@ generic.predict.ltrcrfsrc <-
     class(rfsrcOutput) <- c("ltrcrsf", "predict",   family)
     return(rfsrcOutput)
   }
+

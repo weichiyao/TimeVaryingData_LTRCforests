@@ -24,10 +24,10 @@
 #' @param time.tau an optional vector, with the \emph{i}-th entry giving the upper time limit for the
 #' computed survival probabilities for the \emph{i}-th data of interest (i.e., only computes
 #' survival probabilies at \code{time.eval[time.eval <= time.tau[i]]} for the \emph{i}-th
-#' data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the length of
+#' data of interest). If \code{OOB = TRUE}, the length of \code{time.tau} is equal to the size of
 #' \code{data} used to train the \code{object};
-#' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the length
-#' of \code{newdata}, or equal to the length of \code{data} if \code{newdata} is not given.
+#' If \code{OOB = FALSE}, the length of \code{time.tau} is equal to the size
+#' of \code{newdata}, or equal to the size of \code{data} if \code{newdata} is not given.
 #' The default \code{NULL} is simply to set all entries of \code{time.tau} equal to the maximum
 #' value of \code{time.eval}, so that all estimated survival probabilities are computed at the
 #' same \code{time.eval}.
@@ -71,7 +71,7 @@
 #' @export
 #' 
 predictProb <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
-                    time.eval, time.tau = NULL){
+                        time.eval, time.tau = NULL){
   UseMethod("predictProb", object)
 }
 #' @export
@@ -82,7 +82,6 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                                     FUN = .pred_Surv_nolog)
   xvar.names <- attr(object$terms,"term.labels")
   yvar.names <- as.character(object$formulaLTRC[[2]])[2:4]
-  Rname <- yvar.names[2]
   idname <- "id"
   
   # missing values can be present in the prediction
@@ -100,7 +99,10 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   }
   
   rm(object)
+  
+  
   N <- length(unique(newdata[, "id"])) # number of subjects
+  
   if (is.null(time.tau)){
     time.tau <- rep(max(time.eval), N)
   } else {
@@ -136,41 +138,40 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   TestTIntN <- nrow(TestData)
   
   tpnt <- tpnt[tpnt <= tau[Ni]]
-  tlen <- length(tpnt)
+  
+  ################ Changes at July 29th
+  tpntL <- c(TestT, tpnt)
+  torder <- order(tpntL)
+  tpntLod <- tpntL[torder]
+  tlen <- length(tpntLod)
   
   ## Compute the estimated survival probability of the Ni-th subject
   Shat_temp <- matrix(0, nrow = 1, ncol = tlen)
   
-  r.ID <- findInterval(tpnt, TestT)
-  # r.ID[tpnt >= TestData[, 2][TestTIntN]] <- TestTIntN
-  r.ID[r.ID >= TestTIntN] <- TestTIntN
+  r.ID <- findInterval(tpntLod, TestT)
+  r.ID[r.ID > TestTIntN] <- TestTIntN
   
   jall <- unique(r.ID[r.ID > 0])
   nj <- length(jall)
   
   ## Deal with left-truncation
-  Shat_temp[1, r.ID == 0] = 1
+  Shat_temp[1, r.ID == 0] <- 1
   if(nj == 1){
     ## Get the index of the Pred to compute Shat
     II <- which(id.seu == id.sub[Ni])[jall[nj]]
-    Shat_i = ipred::getsurv(pred[[II]], tpnt[r.ID == jall[nj]])
+    Shat_i = ipred::getsurv(pred[[II]], tpntLod[r.ID == jall[nj]])
     Shat_temp[1, r.ID == jall[nj]] <- Shat_i / Shat_i[1]
   } else if (nj > 1) {
     # c(1, S_{1}(R_{1}), ..., S_{nj}(R_{nj}))
     ShatR_temp <- matrix(0, nrow = 1, ncol = nj + 1)
     ShatR_temp[1, 1] <- 1
-    ## Get the position of L_1, ..., L_n.
-    ## Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-    r.IDmax <- c(min(which(r.ID == jall[1])), sapply(jall[-nj], function(j){
-      max(which(r.ID == j)) + 1
-    }))
     
     # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
     qL = rep(0, nj)
     for (j in 1:nj){
       ## Get the index of the Pred to compute Shat
       II <- which(id.seu == id.sub[Ni])[1] + jall[j] - 1
-      Shat_j = ipred::getsurv(pred[[II]], tpnt[r.ID == jall[j]])
+      Shat_j = ipred::getsurv(pred[[II]], tpntLod[r.ID == jall[j]])
       
       qL[j] <- Shat_j[1]
       # S_{j}(R_{j}), j=1,...nj-1
@@ -180,16 +181,28 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     }
     
     ql0 <- which(qL == 0)
-    if(length(ql0) > 0){
-      maxqlnot0 <- max(which(qL > 0))
-      for(j in ql0){
-        if (j < maxqlnot0) {
-          ShatR_temp[1, j + 1] <- 1
-          Shat_temp[1, r.ID == jall[j]] <- 1
-        } else{
-          ShatR_temp[1, j + 1] <- 0
-          Shat_temp[1, r.ID == jall[j]] <- 0
-        }
+    if (length(ql0) > 0){
+      if (any(qL > 0)){
+        maxqlnot0 <- max(which(qL > 0))
+        
+        ql0lmax <- ql0[ql0 < maxqlnot0]
+        ql0mmax <- ql0[ql0 >= maxqlnot0]
+        ShatR_temp[1, ql0lmax + 1] <- 1
+        Shat_temp[1, r.ID %in% jall[ql0lmax]] <- 1
+        ShatR_temp[1, ql0mmax + 1] <- 0
+        Shat_temp[1, r.ID %in% jall[ql0mmax]] <- 0
+        # for(j in ql0){
+        #   if (j < maxqlnot0) {
+        #     ShatR_temp[1, j + 1] <- 1
+        #     Shat_temp[1, r.ID == jall[j]] <- 1
+        #   } else{
+        #     ShatR_temp[1, j + 1] <- 0
+        #     Shat_temp[1, r.ID == jall[j]] <- 0
+        #   }
+        # }
+      } else {
+        ShatR_b[1, 2:(nj + 1)] <- 0
+        Shat_temp[1, r.ID %in% jall] <- 0
       }
     }
     m <- cumprod(ShatR_temp[1, 1:nj])
@@ -198,7 +211,8 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     }
   }
   
-  return(Shat_temp[1, ])
+  # since: tpntLod[torder == 1] == TestData[1, 1]
+  return(Shat_temp[1, -match(TestT, tpntLod)])
   rm(Shat_temp)
   rm(ShatR_temp)
   rm(id.seu)
@@ -220,8 +234,8 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   wt <- object$inbag # of size Ndata x ntree
   
   yvar.names <- object$yvarLTRC.names[2:4]
-  Rname <- yvar.names[2]
   traindata <- object$yvarLTRC
+  
   if (OOB){
     # relabel the traindata
     traindata$I <- 1:nrow(traindata) # make sure partial/baseline has done this
@@ -239,10 +253,17 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       
       ## up to tau_i
       tpnt <- time.eval[time.eval <= time.tau[wi]]
-      tlen <- length(tpnt)
       
-      r.ID <- findInterval(tpnt, c(0, newi[, Rname]))
-      r.ID[tpnt >= newi[, Rname][n_newi]] = n_newi
+      ################ Changes at July 29th
+      newiIntT <- c(newi[1, yvar.names[1]], newi[, yvar.names[2]])
+      tpntL <- c(newiIntT, tpnt)
+      torder <- order(tpntL)
+      # torder == 1 corresponds with TestData[1, 1]: tpntLod[torder == 1] == TestData[1, 1]
+      tpntLod <- tpntL[torder]
+      tlen <- length(tpntLod)
+      
+      r.ID <- findInterval(tpntLod, newiIntT)
+      r.ID[r.ID > n_newi] <- n_newi
       
       jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
@@ -269,13 +290,12 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                   weights = KMwt, subset = KMwt > 0, conf.type = "none")
           ## Get survival probabilities
-          Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
+          Shat_ti <- ipred::getsurv(KM, tpntLod[r.ID == jall[nj]])
           
           survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_ti / Shat_ti[1]
         }
         
         survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] / length(id_tree_wi_j)
-        RES <- survival[1, ]
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
@@ -301,14 +321,14 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             KMwt <- traindata$KMwt
             KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                     weights = KMwt, subset = KMwt > 0, conf.type = "none")
-            Shat_ti <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
+            Shat_ti <- ipred::getsurv(KM, tpntLod[r.ID == jall[j]])
             
             if (Shat_ti[1] == 0){# jL = Shat_ti[1]
               survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] + 1
               survivalR[1, j + 1] <- survivalR[1, j + 1] + 1
             } else {
               survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] + Shat_ti / Shat_ti[1]
-              survivalR[1, j + 1] <- survivalR[1, j + 1] + ipred::getsurv(KM, newi[, Rname][j]) / Shat_ti[1]
+              survivalR[1, j + 1] <- survivalR[1, j + 1] + ipred::getsurv(KM, newi[, yvar.names[2]][j]) / Shat_ti[1]
             }
             
           }
@@ -322,9 +342,10 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         for (j in 2:nj){
           survival[1, r.ID == jall[j]] <- m[j] * survival[1, r.ID == jall[j]]
         }
-        RES <- survival[1, ]
         
       }
+      
+      RES <- survival[1, -match(newiIntT, tpntLod)]
       return(RES)
     })
     obj <- Surv(traindata[, yvar.names[1]],
@@ -372,10 +393,19 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       
       ## up to tau_i
       tpnt = time.eval[time.eval <= time.tau[i]]
-      tlen <- length(tpnt)
+      ################ Changes at July 29th
+      newiIntT <- c(newi[1, yvar.names[1]], newi[, yvar.names[2]])
       
-      r.ID <- findInterval(tpnt, c(0, newi[, Rname]))
-      r.ID[tpnt >= newi[, Rname][n_newi]] <- n_newi
+      tpntL <- c(newiIntT, tpnt)
+      torder <- order(tpntL)
+      # torder == 1 corresponds with TestData[1, 1]: tpntLod[torder == 1] == TestData[1, 1]
+      tpntLod <- tpntL[torder]
+      tlen <- length(tpntLod)
+      
+      ################ Changes at July 29th
+      # deal with left truncation in the training data
+      r.ID <- findInterval(tpntLod, newiIntT)
+      r.ID[r.ID > n_newi] <- n_newi
       jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
       
@@ -384,9 +414,12 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         survival <- matrix(0, nrow = 1, ncol = tlen)
         # deal with left truncation
         survival[1, r.ID == 0] <- 1
+        
+        nlenb <- length(tpntLod[r.ID == 1])
+        Shat_b <- matrix(0, nrow = ntree, ncol = nlenb)
         for (b in 1:ntree){
           # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
-          IDnew <- which(nIDxdata[,b] == nIDxnewdata[newi$I[jall[nj]], b])
+          IDnew <- which(nIDxdata[, b] == nIDxnewdata[newi$I[jall[nj]], b])
           # ID of observations in the b-th bootstrap samples
           rw <- which(wt[, b] > 0)
           IDnew <- IDnew[IDnew %in% rw]
@@ -397,12 +430,15 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           KMwt <- traindata$KMwt
           KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                   weights = KMwt, subset = KMwt > 0, conf.type = "none")
-          Shat_b <- ipred::getsurv(KM, tpnt[r.ID == jall[nj]])
-          survival[1, r.ID == jall[nj]] <- survival[1, r.ID == jall[nj]] + Shat_b / Shat_b[1]
+          Shat_b[b, ] <- ipred::getsurv(KM, tpntLod[r.ID == 1]) # jall[nj] = 1
+          # NaN problem if Shat_b[1] = 0
+          # survival[1, r.ID == 1] <- survival[1, r.ID == 1] + Shat_b / Shat_b[1]
         }
-        
-        survival[1, r.ID == jall[nj]] = survival[1, r.ID == jall[nj]] / ntree
-        RES = survival[1, ]
+        rowid.nz <- which(Shat_b[, 1] != 0)
+        Shat_b[rowid.nz, ] <- sweep(Shat_b[rowid.nz, ], 1, Shat_b[rowid.nz, 1], "/")
+        survival[1, r.ID == 1] <- apply(Shat_b, 2, mean)
+        # Shat_b = apply(Shat_b, 2, mean)
+        # survival[1, r.ID == 1] <- Shat_b / Shat_b[1]
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
@@ -431,30 +467,42 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             KMwt <- traindata$KMwt
             KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
                                     weights = KMwt, subset = KMwt > 0, conf.type = "none")
-            Shat_bj <- ipred::getsurv(KM, tpnt[r.ID == jall[j]])
+            Shat_bj <- ipred::getsurv(KM, tpntLod[r.ID == jall[j]])
             
             qL[j] <- Shat_bj[1]
             # S_{j-1}(R_{j-1})
-            jR <- ipred::getsurv(KM, newi[, Rname][j])
+            jR <- ipred::getsurv(KM, newi[, yvar.names[2]][j])
             # S_{j-1}(R_{j-1})/S_{j-1}(L_{j-1})
             ShatR_b[1, j + 1] = jR / qL[j]
             Shat_b[1, r.ID == jall[j]] <- Shat_bj / qL[j]
           }
           
           ql0 <- which(qL == 0)
-          if(length(ql0) > 0){
-            maxqlnot0 <- max(which(qL > 0))
-            for(j in ql0){
-              if (j < maxqlnot0) {
-                ShatR_b[1, j + 1] <- 1
-                Shat_b[1, r.ID == jall[j]] <- 1
-              } else{
-                ShatR_b[1, j + 1] <- 0
-                Shat_b[1, r.ID == jall[j]] <- 0
-              }
+          if (length(ql0) > 0){
+            if (any(qL > 0)){
+              maxqlnot0 <- max(which(qL > 0))
+              
+              ql0lmax <- ql0[ql0 < maxqlnot0]
+              ql0mmax <- ql0[ql0 >= maxqlnot0]
+              ShatR_b[1, ql0lmax + 1] <- 1
+              Shat_b[1, r.ID %in% jall[ql0lmax]] <- 1
+              ShatR_b[1, ql0mmax + 1] <- 0
+              Shat_b[1, r.ID %in% jall[ql0mmax]] <- 0
+              
+              # for(j in ql0){
+              #   if (j < maxqlnot0) {
+              #     ShatR_b[1, j + 1] <- 1
+              #     Shat_b[1, r.ID == jall[j]] <- 1
+              #   } else{
+              #     ShatR_b[1, j + 1] <- 0
+              #     Shat_b[1, r.ID == jall[j]] <- 0
+              #   }
+              # }
+            } else {
+              ShatR_b[1, 2:(nj + 1)] <- 0
+              Shat_b[1, r.ID %in% jall] <- 0
             }
           }
-          
           survival <- survival + Shat_b
           survivalR <- survivalR + ShatR_b[1, 1:nj]
         }
@@ -467,8 +515,8 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         for (j in 2:nj){
           survival[1, r.ID == jall[j]] = m[j] * survival[1, r.ID == jall[j]]
         }
-        RES <- survival[1, ]
       }
+      RES <- survival[1, -match(newiIntT, tpntLod)]
       return(RES)
     })
     
@@ -480,7 +528,6 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     id <- newdata$id
     
   }
-  
   
   RES = list(survival.id = id,
              survival.probs = pred,
