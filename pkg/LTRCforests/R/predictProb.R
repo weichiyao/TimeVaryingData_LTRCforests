@@ -297,7 +297,7 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         
         ## Change at July 29th
         rowid.nz <- which(Shat_ti[, 1] != 0)
-        Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
+        if (rowid.nz > 0) Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
         survival[1, r.ID == jall[1]] <- apply(Shat_ti, 2, mean)
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
@@ -438,7 +438,7 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           # survival[1, r.ID == jall[1]] <- survival[1, r.ID == jall[1]] + Shat_b / Shat_b[1]
         }
         rowid.nz <- which(Shat_b[, 1] != 0)
-        Shat_b[rowid.nz, ] <- sweep(Shat_b[rowid.nz, ], 1, Shat_b[rowid.nz, 1], "/")
+        if (rowid.nz > 0) Shat_b[rowid.nz, ] <- sweep(Shat_b[rowid.nz, ], 1, Shat_b[rowid.nz, 1], "/")
         survival[1, r.ID == jall[1]] <- apply(Shat_b, 2, mean)
         # Shat_b = apply(Shat_b, 2, mean)
         # survival[1, r.ID == jall[1]] <- Shat_b / Shat_b[1]
