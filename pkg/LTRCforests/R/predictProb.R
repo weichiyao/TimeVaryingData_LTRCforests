@@ -258,7 +258,6 @@ predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       newiIntT <- c(newi[1, yvar.names[1]], newi[, yvar.names[2]])
       tpntL <- c(newiIntT, tpnt)
       torder <- order(tpntL)
-      # torder == 1 corresponds with TestData[1, 1]: tpntLod[torder == 1] == TestData[1, 1]
       tpntLod <- tpntL[torder]
       tlen <- length(tpntLod)
       
