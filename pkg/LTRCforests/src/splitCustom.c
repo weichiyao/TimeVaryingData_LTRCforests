@@ -315,7 +315,7 @@ double getCustomSplitStatisticSurvival (unsigned int n,
 
   sumParentEvent = 0.0;
   sumParentTime = 0.0;
-  for (i = 0; i < n; i++) {
+  for (i = 1; i <= n; i++) {
 	  sumParentEvent += event[i];
 	  sumParentTime += time[i];
   }
@@ -342,7 +342,7 @@ double getCustomSplitStatisticSurvival (unsigned int n,
     sumLeftTime = 0;
     sumRightEvent = 0;
     sumRightTime = 0;
-    for (i = 0; i < n; i++) {
+    for (i = 1; i <= n; i++) {
       if (membership[i] == LEFT) {
         sumLeftEvent += event[i];
         sumLeftTime += time[i];
