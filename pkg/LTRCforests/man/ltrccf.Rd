@@ -126,7 +126,7 @@ which allow for time-varying covariates.
 library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRCCF on the time-invariant data, with mtry tuned with stepFactor = 3.
-LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 50L, stepFactor = 3)
+LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 20L, stepFactor = 3)
 }
 \references{
 Andersen, P. and Gill, R. (1982). Cox's regression model for counting

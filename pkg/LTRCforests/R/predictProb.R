@@ -1,12 +1,12 @@
-#' Compute a Survival Curve from a LTRCCF model or a LTRCRSF model
+#' Compute a Survival Curve from a LTRCCF model or a LTRCRRF model
 #'
 #' Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model or a 
-#' LTRCRSF model for any given (left-truncated) right-censored survival data with time-varying 
+#' LTRCRRF model for any given (left-truncated) right-censored survival data with time-varying 
 #' covariates.
 #' It can also compute survival function estimates for left-truncated right-censored data
 #' with time-invariant covariates.
 #'
-#' @param object an object as returned by \code{\link{ltrccf}} or by \code{\link{ltrcrsf}}.
+#' @param object an object as returned by \code{\link{ltrccf}} or by \code{\link{ltrcrrf}}.
 #' @param newdata.id optional variable name of subject identifiers for \code{newdata}.
 #' If this is present, it will be searched for in the \code{newdata} data frame.
 #' Each group of rows in \code{newdata} with the same subject \code{id} represents
@@ -44,7 +44,7 @@
 #' @import partykit
 #' @import survival
 #' @import prodlim
-#' @aliases predictProb.ltrccf, predictProb.ltrcrsf
+#' @aliases predictProb.ltrccf, predictProb.ltrcrrf
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit
 #' @examples
 #' #### Example with data pbcsample
@@ -225,7 +225,7 @@ predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 }
 
 #' @export
-predictProb.ltrcrsf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
+predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                                 time.eval, time.tau = NULL){
   ntree <- object$ntree
   formula <- object$formulaLTRC

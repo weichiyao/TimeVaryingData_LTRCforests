@@ -1,10 +1,10 @@
-#' Print Summary Output of a ltrccf object or a ltrcrsf object
+#' Print Summary Output of a ltrccf object or a ltrcrrf object
 #'
-#' Print summary output after a LTRCCF or a LTRCRSF model is built.
+#' Print summary output after a LTRCCF or a LTRCRRF model is built.
 #' This is the default print method for objects in the class of \code{\link{ltrccf}} or 
-#' \code{\link{ltrcrsf}}.
+#' \code{\link{ltrcrrf}}.
 #'
-#' @param x an object of class \code{ltrccf} or \code{ltrcrsf}.
+#' @param x an object of class \code{ltrccf} or \code{ltrcrrf}.
 #'
 #' @importFrom survival Surv
 #' @examples
@@ -19,8 +19,8 @@
 #' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, samptype = "swr",
 #'                    mtry = 3, ntree = 50L)
 #' print(LTRCCFobj)
-#' @aliases print.ltrccf, print.ltrcrsf
-#' @seealso \code{\link{ltrccf}}, \code{\link{ltrcrsf}}
+#' @aliases print.ltrccf, print.ltrcrrf
+#' @seealso \code{\link{ltrccf}}, \code{\link{ltrcrrf}}
 #' @export
 
 print <- function(x){
@@ -86,16 +86,16 @@ print.ltrccf <- function(x) {
 }
 
 #' @export
-print.ltrcrsf <- function(x) {
+print.ltrcrrf <- function(x) {
   # ## default printing
-  # if (sum(inherits(x, c("ltrcrsf", "forest"), TRUE) == c(1, 2)) == 2) {
+  # if (sum(inherits(x, c("ltrcrrf", "forest"), TRUE) == c(1, 2)) == 2) {
   #   print.default(x)
   #   return()
   # }
   
   ## check that the object is interpretable
-  # if (sum(inherits(x, c("ltrcrsf", "grow"), TRUE) == c(1, 2)) != 2) {
-  #   stop("This function only works for objects of class `(ltrcrsf, grow)'.")
+  # if (sum(inherits(x, c("ltrcrrf", "grow"), TRUE) == c(1, 2)) != 2) {
+  #   stop("This function only works for objects of class `(ltrcrrf, grow)'.")
   # }
   # grow.mode <- TRUE
   
@@ -143,7 +143,7 @@ print.ltrcrsf <- function(x) {
       cat("      Resampling rate used to grow trees: ", x$forest$sampfracLTRC,            "\n",sep="")
     }
   }
-  cat("                                Analysis: ", "LTRCRSF",                  "\n", sep="")
+  cat("                                Analysis: ", "LTRCRRF",                  "\n", sep="")
   cat("                                  Family: ", familyOrg,                    "\n", sep="")
   if (x$nsplit > 0 & x$splitrule != "random") {
     cat("                          Splitting rule: ", paste(x$splitruleLTRC,"*random*"), "\n", sep="")

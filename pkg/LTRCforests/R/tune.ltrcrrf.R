@@ -1,7 +1,7 @@
-#' Tune \code{mtry} to the optimal value with respect to out-of-bag error for a LTRCRSF model
+#' Tune \code{mtry} to the optimal value with respect to out-of-bag error for a LTRCRRF model
 #'
 #' Starting with the default value of \code{mtry}, search for the optimal value
-#' (with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrcrsf}}.
+#' (with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrcrrf}}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -40,7 +40,7 @@
 #' of \code{mtry} if \code{mtry} is not specified.
 #' \code{trace = TRUE} is set by default.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
-#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
+#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrrf}}).
 #' The default value is \code{2}.
 #' @param nodedepth maximum depth to which a tree should be grown. The default behaviour
 #' is that this parameter is ignored.
@@ -69,13 +69,11 @@
 #' when \code{mtry} is not specified (see \code{\link{tuneLTRCCF}}). \code{trace = TRUE}
 #' is set by default.
 #' @param nodesizeTry forest average terminal node size used at the tuning step.
-#' It has been adjusted from the \code{\link[randomForestSRC]{rfsrc}} default
-#' \code{15} for survival families.
 #' @param ntreeTry number of trees used at the tuning step.
 #' @param trace whether to print the progress of the search. \code{trace = TRUE} is set by default.
 #' @param plot whether to plot the out-of-bag error as a function of \code{mtry}.
 #' \code{plot = FALSE} is set by default.
-#' @param doBest whether to run a \code{\link{ltrcrsf}} object using the optimal \code{mtry} found.
+#' @param doBest whether to run a \code{\link{ltrcrrf}} object using the optimal \code{mtry} found.
 #' \code{doBest = FALSE} is set by default.
 #' @param time.eval a vector of time points, at which the estimated survival probabilities
 #' are evaluated.
@@ -86,7 +84,7 @@
 #' @return
 #' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
-#' If \code{doBest = TRUE}, this returns the \code{\link{ltrcrsf}} object produced with the optimal \code{mtry}.
+#' If \code{doBest = TRUE}, this returns the \code{\link{ltrcrrf}} object produced with the optimal \code{mtry}.
 #' @importFrom survival Surv
 #' @importFrom graphics axis
 #' @import stats
@@ -97,12 +95,12 @@
 #' ### Example with data pbcsample
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 20.
-#' mtryT = tune.ltrcrsf(formula = Formula, data = pbcsample, stepFactor = 3,
-#'                      ntreeTry = 20L, plot = TRUE)
+#' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 10.
+#' mtryT = tune.ltrcrrf(formula = Formula, data = pbcsample, stepFactor = 3,
+#'                      ntreeTry = 10L)
 #' @export
 
-tune.ltrcrsf <- function(formula, data, id,
+tune.ltrcrrf <- function(formula, data, id,
                          mtryStart = NULL, stepFactor = 2,
                          time.eval = NULL, time.tau = NULL,
                          ntreeTry = 100L,
@@ -119,7 +117,7 @@ tune.ltrcrsf <- function(formula, data, id,
                          nodesizeTry = max(ceiling(sqrt(nrow(data))), 15),
                          nodedepth = NULL) {
   Call <- match.call()
-  # Call[[1]] <- as.name('tuneltrcrsf')  #make nicer printout for the user
+  # Call[[1]] <- as.name('tuneltrcrrf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'id'), names(Call), nomatch = 0)
@@ -222,7 +220,7 @@ tune.ltrcrsf <- function(formula, data, id,
                             esamp,
                             ena.action,
                             entime){
-    rsfOOB <- ltrcrsf(formula = eformula, data = edata, id = id,
+    rrfOOB <- ltrcrrf(formula = eformula, data = edata, id = id,
                       mtry = emtryTest,
                       ntree = entreeTry,
                       nodesize = enodesizeTry,
@@ -234,10 +232,10 @@ tune.ltrcrsf <- function(formula, data, id,
                       samp = esamp,
                       na.action = ena.action,
                       ntime = entime)
-    predOOB <- predictProb(object = rsfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
+    predOOB <- predictProb(object = rrfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = predOOB$survival.id,
                             pred = predOOB, type = "IBS")
-    rm(rsfOOB)
+    rm(rrfOOB)
     rm(predOOB)
     return(errorOOB)
   }
@@ -310,7 +308,7 @@ tune.ltrcrsf <- function(formula, data, id,
   }
 
   if (doBest) {
-    res <- ltrcrsf(formula = formula, data = data, id = id,
+    res <- ltrcrrf(formula = formula, data = data, id = id,
                    mtry = res,
                    ntree = ntreeTry,
                    nodesize = nodesizeTry,

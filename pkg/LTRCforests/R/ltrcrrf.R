@@ -1,13 +1,14 @@
-#' Fit a LTRC random survival forest with Poisson splitting rule
+#' Fit a LTRC relative risk forest
 #'
 #' An implementation of the random forest algorithms utilizing LTRC \code{rpart}
 #' trees \code{\link[LTRCtrees]{LTRCART}} as base learners for left-truncated right-censored
 #' survival data with time-invariant covariates. It also allows for (left-truncated)
 #' right-censored survival data with time-varying covariates.
 #'
-#' This function extends the random survival forest algorithm in
-#' \code{\link[randomForestSRC]{rfsrc}} to fit left-truncated and right-censored data,
-#' which allows for time-varying covariates.
+#' This function extends the relative risk forest algorithm (Ishwaran et al. 2004) 
+#' to fit left-truncated and right-censored data,
+#' which allows for time-varying covariates. The algorithm is built based on employing
+#' the fast C code from \code{\link[randomForestSRC]{rfsrc}}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -29,7 +30,7 @@
 #' missing values.
 #' @param mtry number of input variables randomly sampled as candidates at each node for
 #' random forest like algorithms. The default \code{mtry} is tuned by
-#' \code{\link{tune.ltrcrsf}}.
+#' \code{\link{tune.ltrcrrf}}.
 #' @param ntree an integer, the number of the trees to grow for the forest.
 #' \code{ntree = 100L} is set by default.
 #' @param bootstrap bootstrap protocol.
@@ -53,13 +54,12 @@
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' in each bootstrap sample.
 #' @param trace whether to print the progress of the search of the optimal value
-#' of \code{mtry} if \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
+#' of \code{mtry} if \code{mtry} is not specified (see \code{\link{tune.ltrcrrf}}).
 #' \code{trace = TRUE} is set by default.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
-#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrsf}}).
+#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrrf}}).
 #' The default value is \code{2}.
-#' @param nodesize an integer, forest average terminal node size. It has been
-#' adjusted from the \code{\link[randomForestSRC]{rfsrc}} default \code{15} for survival families.
+#' @param nodesize an integer, forest average terminal node size. 
 #' @param nodedepth maximum depth to which a tree should be grown. The default behaviour
 #' is that this parameter is ignored.
 #' @param nsplit an non-negative integer value for number of random splits to consider
@@ -84,30 +84,30 @@
 #' used will be the observed event times closest to the user supplied time points).
 #' If no value is specified, the default action is to use all observed event times.
 #' Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.
-#' @return An object belongs to the class \code{ltrcrsf},
-#' as a subclass of \code{\link[randomForestSRC]{rfsrc}}.
+#' @return An object belongs to the class \code{ltrcrrf}.
 #' @import survival
 #' @import stats
 #' @import utils
 #' @import prodlim
 #' @importFrom survival Surv
-#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrsf}}
+#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrrf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
+#' @references H. Ishwaran, E. H. Blackstone, C. Pothier, and M. S. Lauer. (2004).
+#' \emph{Journal of the American StatisticalAssociation}, \strong{99}(1):591–600.
 #' @examples
 #' #### Example with time-varying data pbcsample
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' # Built a LTRCRSF forest (based on bootstrapping subjects without replacement)
+#' # Built a LTRCRRF forest (based on bootstrapping subjects without replacement)
 #' # on the time-varying data by specifying id:
-#' LTRCRSFobj = ltrcrsf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-#'                      ntree = 20L)
-#' LTRCRSFobj
+#' LTRCRRFobj = ltrcrrf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+#'                      ntree = 10L)
 #'
 #'
 #' @export
-ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
+ltrcrrf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     nodesize = max(ceiling(sqrt(nrow(data))),15),
                     bootstrap = c("by.sub","by.root","by.node","by.user","none"),
                     samptype = c("swor", "swr"),
@@ -120,7 +120,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
                     nsplit = 10L,
                     ntime){
   Call <- match.call()
-  Call[[1]] <- as.name('ltrcrsf')  #make nicer printout for the user
+  Call[[1]] <- as.name('ltrcrrf')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'data', 'id'),
@@ -266,7 +266,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
 
   if (is.null(mtry)){
     # data$id = id # this is a must, otherwise id cannot be passed to the next level
-    mtry <- tune.ltrcrsf(formula = formula,
+    mtry <- tune.ltrcrrf(formula = formula,
                          data = data,
                          id = id,
                          bootstrap = bootstrap,
@@ -313,7 +313,7 @@ ltrcrsf <- function(formula, data, id, ntree = 100L, mtry = NULL,
   forest.fit$callLTRC = Call
   forest.fit$splitruleLTRC = "Poisson"
   forest.fit$formulaLTRC <- formula
-  class(forest.fit) <- "ltrcrsf"
+  class(forest.fit) <- "ltrcrrf"
   return(forest.fit)
 }
 

@@ -163,30 +163,30 @@ generic.predict.ltrcrfsrc <-
     # }
     ## classification specific details related to rfq and perf.type
     pi.hat <- NULL
-    # if (family == "class") {
-    #   ## rfq specific details
-    #   if (!is.null(rfq)) {##predict has specified rfq
-    #     if (!rfq) {##predict does not want rfq
-    #       ## nothing
-    #     }
-    #     else {##predict has requested rfq
-    #       pi.hat <- table(object$yvar) / length(object$yvar)
-    #     }
-    #   }
-    #   if (is.null(rfq)) {##predict  ambivalent about rfq
-    #     if (!object$rfq) {##grow did not use rfq
-    #       ## nothing -> rfq = FALSE
-    #     }
-    #     else {##grow used rfq - use grow spec
-    #       pi.hat <- table(object$yvar) / length(object$yvar)
-    #       rfq <- TRUE
-    #     }
-    #   }
-    #   ## performance details
-    #   if (is.null(perf.type) && !is.null(object$perf.type)) {
-    #     perf.type <- object$perf.type
-    #   }
-    # }
+    if (family == "class") {
+      ## rfq specific details
+      if (!is.null(rfq)) {##predict has specified rfq
+        if (!rfq) {##predict does not want rfq
+          ## nothing
+        }
+        else {##predict has requested rfq
+          pi.hat <- table(object$yvar) / length(object$yvar)
+        }
+      }
+      if (is.null(rfq)) {##predict  ambivalent about rfq
+        if (!object$rfq) {##grow did not use rfq
+          ## nothing -> rfq = FALSE
+        }
+        else {##grow used rfq - use grow spec
+          pi.hat <- table(object$yvar) / length(object$yvar)
+          rfq <- TRUE
+        }
+      }
+      ## performance details
+      if (is.null(perf.type) && !is.null(object$perf.type)) {
+        perf.type <- object$perf.type
+      }
+    }
     ## recover the split rule
     splitrule <- object$splitrule
     ## gk processing

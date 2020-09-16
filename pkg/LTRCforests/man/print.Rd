@@ -3,18 +3,18 @@
 \name{print}
 \alias{print}
 \alias{print.ltrccf,}
-\alias{print.ltrcrsf}
-\title{Print Summary Output of a ltrccf object or a ltrcrsf object}
+\alias{print.ltrcrrf}
+\title{Print Summary Output of a ltrccf object or a ltrcrrf object}
 \usage{
 print(x)
 }
 \arguments{
-\item{x}{an object of class \code{ltrccf} or \code{ltrcrsf}.}
+\item{x}{an object of class \code{ltrccf} or \code{ltrcrrf}.}
 }
 \description{
-Print summary output after a LTRCCF or a LTRCRSF model is built.
+Print summary output after a LTRCCF or a LTRCRRF model is built.
 This is the default print method for objects in the class of \code{\link{ltrccf}} or 
-\code{\link{ltrcrsf}}.
+\code{\link{ltrcrrf}}.
 }
 \examples{
 
@@ -30,5 +30,5 @@ LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, samptype = "swr",
 print(LTRCCFobj)
 }
 \seealso{
-\code{\link{ltrccf}}, \code{\link{ltrcrsf}}
+\code{\link{ltrccf}}, \code{\link{ltrcrrf}}
 }

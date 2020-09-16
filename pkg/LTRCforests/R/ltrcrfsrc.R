@@ -793,7 +793,7 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
         forest.out$time.interest <- event.info$time.interest
       }
       ## Initialize the default class of the forest.
-      class(forest.out) <- c("ltrcrsf", "forest", family)
+      class(forest.out) <- c("ltrcrrf", "forest", family)
       if (big.data) {
         class(forest.out) <- c(class(forest.out), "bigdata")
       }
@@ -905,29 +905,28 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
         split.depth.out <-  NULL
     }
     ## node statistics
-    # if (statistics) {
-    #     node.stats <- as.data.frame(cbind(nativeOutput$spltST[1:nativeArraySize]))
-    #     colnames(node.stats) <- "spltST"
-    #     node.mtry.stats <- t(array(nativeOutput$mtryST[1:nativeArraySize], c(mtry, forest.out$totalNodeCount)))
-    #     node.mtry.index <- t(array(nativeOutput$mtryID[1:nativeArraySize], c(mtry, forest.out$totalNodeCount)))
-    #     ## In the case of unsupervised splitting, output additional
-    #     ## statistics.
-    #     ## (TBD TBD) We need to output ytry related statistics in
-    #     ## the supervised case as well, following the introduction of ytry in
-    #     ## supervised settings.
-    #     if (family == "unsupv") {
-    #         node.ytry.index <- t(array(nativeOutput$uspvST[1:nativeArraySize], c(formulaDetail$ytry, forest.out$totalNodeCount)))
-    #     }
-    #     else {
-    #         node.ytry.index <- NULL
-    #     }
-    # }
-    # else {
+    if (statistics) {
+        node.stats <- as.data.frame(cbind(nativeOutput$spltST[1:nativeArraySize]))
+        colnames(node.stats) <- "spltST"
+        node.mtry.stats <- t(array(nativeOutput$mtryST[1:nativeArraySize], c(mtry, forest.out$totalNodeCount)))
+        node.mtry.index <- t(array(nativeOutput$mtryID[1:nativeArraySize], c(mtry, forest.out$totalNodeCount)))
+        ## In the case of unsupervised splitting, output additional
+        ## statistics.
+        ## (TBD TBD) We need to output ytry related statistics in
+        ## the supervised case as well, following the introduction of ytry in
+        ## supervised settings.
+        if (family == "unsupv") {
+            node.ytry.index <- t(array(nativeOutput$uspvST[1:nativeArraySize], c(formulaDetail$ytry, forest.out$totalNodeCount)))
+        }
+        else {
+            node.ytry.index <- NULL
+        }
+    } else {
         node.stats      <- NULL
         node.mtry.stats <- NULL
         node.mtry.index <- NULL
         node.ytry.index <- NULL
-    # }
+    }
     empr.risk <- NULL
     oob.empr.risk <- NULL
     if (empirical.risk) {
