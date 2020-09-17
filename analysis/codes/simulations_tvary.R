@@ -37,25 +37,25 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
                        Nfold = 10){
 
   L2mtry <- data.frame(matrix(0, nrow = 7, ncol = 3))
-  names(L2mtry) <- c("cf", "rsf", "tsf")
+  names(L2mtry) <- c("cf", "rrf", "tsf")
   rownames(L2mtry) = c("20", "10", "5", "3", "2", "1", "opt")
 
 
   OOBmtry <- data.frame(matrix(0, nrow = 6, ncol = 3))
-  names(OOBmtry) <- c("cf", "rsf", "tsf")
+  names(OOBmtry) <- c("cf", "rrf", "tsf")
   rownames(OOBmtry) = c("20", "10", "5", "3", "2", "1")
 
   L2 <- data.frame(matrix(0, nrow = 1, ncol = 8))
-  names(L2) <- c("KM", "cx", "cfD", "cfP", "rsfD", "rsfP", "tsfD", "tsfP")
+  names(L2) <- c("KM", "cx", "cfD", "cfP", "rrfD", "rrfP", "tsfD", "tsfP")
   
   mtryall = data.frame(matrix(0, nrow = 1, ncol = 3))
-  names(mtryall) <- c("cf", "rsf", "tsf")
+  names(mtryall) <- c("cf", "rrf", "tsf")
   
   L2seu = data.frame(matrix(0, nrow = 1, ncol = 3))
-  names(L2seu) <- c("cf", "rsf", "tsf")
+  names(L2seu) <- c("cf", "rrf", "tsf")
   
   ibsCVerr = data.frame(matrix(0, nrow = Nfold, ncol = 4))
-  names(ibsCVerr) = c("cx", "cf", "rsf", "tsf")
+  names(ibsCVerr) = c("cx", "cf", "rrf", "tsf")
   
   RES = list(caseI = list(L2mtry = L2mtry, OOBmtry = OOBmtry, L2 = L2, L2seu = L2seu,
                           mtryall = mtryall, ibsCVerr = ibsCVerr),
@@ -247,10 +247,10 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
       #### Different mtry for CF
       modelT <- ltrccf(formula = Formula, data = fullDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
-      predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+      predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseI$L2mtry$cf[jj] <- l2(data = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
       rm(predT)
-      predOOB <- predict.ltrccf(object = modelT, time.eval = Tpnt, time.tau = TauI)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI)
       RES$caseI$OOBmtry$cf[jj] <- bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
       # obj = Surv(fullDATA$Start,fullDATA$Stop,fullDATA$Event)
       # RES$caseI$OOBmtry$cf[jj] <- sbrier_ltrc(obj = obj, id = fullDATA$ID, pred = predOOB, type="IBS")
@@ -281,7 +281,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
                                                       minbucket = 7,
                                                       minprob = 0.01),
                     mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseI$L2$cfD <- l2(data = fullDATA, fulldata = fullDATA, 
                            info = Info, pred = predT$survival.probs, tpnt = Tpnt)
     rm(modelT)
@@ -296,10 +296,10 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
       #### Different mtry for CF
       modelT <- ltrccf(formula = Formula, data = ptlDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
-      predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+      predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseII$L2mtry$cf[jj] <- l2(data = ptlDATA, fulldata = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
       rm(predT)
-      predOOB <- predict.ltrccf(object = modelT, time.eval = Tpnt, time.tau = TauII)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII)
       RES$caseII$OOBmtry$cf[jj] <- bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
       print(sprintf("CASEII: CF -- mtry = %1.0f is done", mtrypool[jj]))
       rm(predOOB)
@@ -313,7 +313,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     modelT <- ltrccf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
                      bootstrap = "by.root",
                      mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     
     RES$caseI$L2seu$cf <- l2(data = fullDATA, info = Info, 
                               pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
@@ -342,7 +342,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
                                                       minbucket = 7,
                                                       minprob = 0.01),
                     mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrccf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     RES$caseII$L2$cfD <- l2(data = ptlDATA, fulldata = fullDATA, 
                             info = Info, pred = predT$survival.probs, tpnt = Tpnt)
     rm(modelT)
@@ -351,104 +351,104 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   }
   print("Case II -- cfD is done ...")
   
-  ################## ============== L2 -- LTRCRSF =================== #####################
-  leftzero = which(RES$caseI$L2mtry$rsf[1:6] == 0)
+  ################## ============== L2 -- LTRCRRF =================== #####################
+  leftzero = which(RES$caseI$L2mtry$rrf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
-      #### Different mtry for RSF
-      modelT = ltrcrsf(formula = Formula, data = fullDATA, id = ID, 
+      #### Different mtry for RRF
+      modelT = ltrcrrf(formula = Formula, data = fullDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
-      predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
-      RES$caseI$L2mtry$rsf[jj] = l2(data = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
-      predOOB <- predict.ltrcrsf(object = modelT, time.eval = Tpnt, time.tau = TauI)
-      RES$caseI$OOBmtry$rsf[jj] = bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
-      print(sprintf("CASEI: RSF -- mtry = %1.0f is done",mtrypool[jj]))
+      predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+      RES$caseI$L2mtry$rrf[jj] = l2(data = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI)
+      RES$caseI$OOBmtry$rrf[jj] = bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      print(sprintf("CASEI: RRF -- mtry = %1.0f is done",mtrypool[jj]))
       rm(predOOB)
       rm(modelT)
       gc()
     }
   }
 
-  if (RES$caseI$L2$rsfP[1] == 0){
-    idxmin = which.min(RES$caseI$OOBmtry$rsf)
+  if (RES$caseI$L2$rrfP[1] == 0){
+    idxmin = which.min(RES$caseI$OOBmtry$rrf)
     ## L2 errors of the forests with mtry chosen by OOB
-    RES$caseI$L2$rsfP = RES$caseI$L2mtry$rsf[idxmin]
+    RES$caseI$L2$rrfP = RES$caseI$L2mtry$rrf[idxmin]
     ## L2 errors of the forests with the best mtry 
-    RES$caseI$L2mtry$rsf[7] = min(RES$caseI$L2mtry$rsf[1:6])
-    RES$caseI$mtryall$rsf = mtrypool[idxmin]
+    RES$caseI$L2mtry$rrf[7] = min(RES$caseI$L2mtry$rrf[1:6])
+    RES$caseI$mtryall$rrf = mtrypool[idxmin]
   }
-  print("Case I -- rsfP is done ...")
+  print("Case I -- rrfP is done ...")
   
-  if (RES$caseI$L2$rsfD[1] == 0){
+  if (RES$caseI$L2$rrfD[1] == 0){
     ## Training
-    modelT = ltrcrsf(formula = Formula, data = fullDATA, id = ID, 
+    modelT = ltrcrrf(formula = Formula, data = fullDATA, id = ID, 
                      nodesize = 15,
                      mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
-    RES$caseI$L2$rsfD <- l2(data = fullDATA, fulldata = fullDATA, 
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    RES$caseI$L2$rrfD <- l2(data = fullDATA, fulldata = fullDATA, 
                             info = Info, pred = predT$survival.probs, tpnt = Tpnt)
     rm(modelT)
     rm(predT)
     gc()
   }
-  print("Case I -- rsfD is done ...")
+  print("Case I -- rrfD is done ...")
   
-  if (RES$caseI$L2seu$rsf[1] == 0){
+  if (RES$caseI$L2seu$rrf[1] == 0){
     ## Training
-    modelT <- ltrcrsf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
+    modelT <- ltrcrrf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
                      bootstrap = "by.root",
                      mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     
-    RES$caseI$L2seu$rsf <- l2(data = fullDATA, info = Info, 
+    RES$caseI$L2seu$rrf <- l2(data = fullDATA, info = Info, 
                              pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
     rm(modelT)
     rm(predT)
     gc()
   }
-  print("Case I -- rsf with bootstrapping pseudo-subject is done ...")
+  print("Case I -- rrf with bootstrapping pseudo-subject is done ...")
   
   
-  leftzero = which(RES$caseII$L2mtry$rsf[1:6] == 0)
+  leftzero = which(RES$caseII$L2mtry$rrf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
-      #### Different mtry for RSF
-      modelT = ltrcrsf(formula = Formula, data = ptlDATA, id = ID, 
+      #### Different mtry for RRF
+      modelT = ltrcrrf(formula = Formula, data = ptlDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
-      predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
-      RES$caseII$L2mtry$rsf[jj] = l2(data = ptlDATA, fulldata = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
-      predOOB <- predict.ltrcrsf(object = modelT, time.eval = Tpnt, time.tau = TauII)
-      RES$caseII$OOBmtry$rsf[jj] = bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
-      print(sprintf("CASEII: RSF -- mtry = %1.0f is done",mtrypool[jj]))
+      predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+      RES$caseII$L2mtry$rrf[jj] = l2(data = ptlDATA, fulldata = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII)
+      RES$caseII$OOBmtry$rrf[jj] = bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      print(sprintf("CASEII: RRF -- mtry = %1.0f is done",mtrypool[jj]))
       rm(predOOB)
       rm(modelT)
       gc()
     }
   }
   
-  if (RES$caseII$L2$rsfP[1] == 0){
-    idxmin = which.min(RES$caseII$OOBmtry$rsf)
+  if (RES$caseII$L2$rrfP[1] == 0){
+    idxmin = which.min(RES$caseII$OOBmtry$rrf)
     ## L2 errors of the forests with mtry chosen by OOB
-    RES$caseII$L2$rsfP <- RES$caseII$L2mtry$rsf[idxmin]
+    RES$caseII$L2$rrfP <- RES$caseII$L2mtry$rrf[idxmin]
     ## L2 errors of the forests with the best mtry 
-    RES$caseII$L2mtry$rsf[7] = min(RES$caseII$L2mtry$rsf[1:6])
-    RES$caseII$mtryall$rsf = mtrypool[idxmin]
+    RES$caseII$L2mtry$rrf[7] = min(RES$caseII$L2mtry$rrf[1:6])
+    RES$caseII$mtryall$rrf = mtrypool[idxmin]
   }
-  print("Case II -- rsfP is done ...")
+  print("Case II -- rrfP is done ...")
   
-  if (RES$caseII$L2$rsfD[1] == 0){
+  if (RES$caseII$L2$rrfD[1] == 0){
     ## Training
-    modelT = ltrcrsf(formula = Formula, data = ptlDATA, id = ID, 
+    modelT = ltrcrrf(formula = Formula, data = ptlDATA, id = ID, 
                      nodesize = 15,
                      mtry = mtryD, ntree = ntree)
-    predT <- predict.ltrcrsf(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
-    RES$caseII$L2$rsfD <- l2(data = ptlDATA, fulldata = fullDATA, 
+    predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
+    RES$caseII$L2$rrfD <- l2(data = ptlDATA, fulldata = fullDATA, 
                              info = Info, pred = predT$survival.probs, tpnt = Tpnt)
     rm(modelT)
     rm(predT)
     gc()
   }
-  print("Case II -- rsfD is done ...")
+  print("Case II -- rrfD is done ...")
   
   ################## ============== L2 -- Cox =================== #####################
   Coxfit <- coxph(formula = Formula, fullDATA)
@@ -524,7 +524,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
         
         modelT <- ltrccf(formula = Formula, data = data_b, id = ID, 
                          mtry = mtryT, ntree = ntree)
-        predT <- predict.ltrccf(object = modelT, newdata = newdata_b, newdata.id = ID, 
+        predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
                                 time.tau = tau_b)
       
@@ -534,14 +534,14 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
         rm(predT)
         gc()
       }
-      ## rsf
+      ## rrf
       if (RES$caseI$ibsCVerr[jj,3]==0){
-        mtryT = RES$caseI$mtryall$rsf
-        modelT <- ltrcrsf(formula = Formula, data = data_b, id = ID, 
+        mtryT = RES$caseI$mtryall$rrf
+        modelT <- ltrcrrf(formula = Formula, data = data_b, id = ID, 
                           mtry = mtryT, ntree = ntree)
-        predT <- predict.ltrcrsf(object = modelT, newdata = newdata_b, newdata.id = ID, 
-                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
-                                 time.tau = tau_b)
+        predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
+                             time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
+                             time.tau = tau_b)
         
         RES$caseI$ibsCVerr[jj, 3] <- sbrier_ltrc(obj = Sobj_b, pred = predT, id = newdata_b$ID)
         # RES$caseI$ibsCVerr[jj, 3] <- bs(data = newdata_b, pred = predT$survival.probs, tpnt = Tpnt)
@@ -615,7 +615,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
         
         modelT <- ltrccf(formula = Formula, data = data_b, id = ID, 
                          mtry = mtryT, ntree = ntree)
-        predT <- predict.ltrccf(object = modelT, newdata = newdata_b, newdata.id = ID, 
+        predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
                                 time.tau = tau_b)
         
@@ -627,14 +627,14 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
         rm(predT)
         gc()
       }
-      ## rsf
-      if (RES$caseII$ibsCVerr[jj,3]==0){
-        mtryT = RES$caseII$mtryall$rsf
-        modelT <- ltrcrsf(formula = Formula, data = data_b, id = ID, 
+      ## rrf
+      if (RES$caseII$ibsCVerr[jj, 3]==0){
+        mtryT = RES$caseII$mtryall$rrf
+        modelT <- ltrcrrf(formula = Formula, data = data_b, id = ID, 
                           mtry = mtryT, ntree = ntree)
-        predT <- predict.ltrcrsf(object = modelT, newdata = newdata_b, newdata.id = ID, 
-                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
-                                 time.tau = tau_b)
+        predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
+                             time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
+                             time.tau = tau_b)
         
         RES$caseII$ibsCVerr[jj, 3] <- sbrier_ltrc(obj = Sobj_b,
                                                   pred = predT,

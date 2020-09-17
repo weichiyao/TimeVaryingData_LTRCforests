@@ -5,7 +5,7 @@ modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
 cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
 ndataname <- c("N = 100", "N = 300", "N = 500", "N = 1000")
 distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-frname = c("CF","RSF","TSF")
+frname = c("CF","RRF","TSF")
 L2name <- c("old","new")
 mmodel <- 1:4
 ccrate = c(0,1,2)
@@ -40,18 +40,18 @@ for (ff in 1:3){
           ## L2 errors for cforest with different mtry
           L2mtryM = matrix(unlist(resall$L2mtry_cf),ncol = 7,byrow = FALSE)
         } else if (ff == 2){
-          ## L2 errors forr RSF with different mtry
-          L2mtry = matrix(unlist(resall$L2mtry_rsf),ncol = 7,byrow = FALSE)
+          ## L2 errors forr RRF with different mtry
+          L2mtry = matrix(unlist(resall$L2mtry_rrf),ncol = 7,byrow = FALSE)
         } else {
           ## L2 errors for TSF with different mtry
           L2mtry = matrix(unlist(resall$L2mtry_tsf),ncol = 7,byrow = FALSE)
         }
         
         ## L2 results with mtry = 1,2,3,5,20 and best mtry
-        Q[,1:7] = L2mtry[,c(6,5,4,3,2,1,7)]
+        Q[,1:7] = L2mtry[, c(6,5,4,3,2,1,7)]
 
         ## L2 results with mtry tuned by OOB
-        Q[,8] = L2[,ff*2+1]
+        Q[,8] = L2[, ff*2+1]
         
         ## Get rid of the invalid results    
         Q = Q[rowSums(Q==Inf)==0,]
@@ -101,7 +101,7 @@ for (nn in 1:4){
   
   resall <- readRDS(filename)
   Q = matrix(0, ncol = 7, nrow = 500)
-  ## L2 results for Cox, cfD, cfP, rsfD, rsfP, tsfD, tsfp
+  ## L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
   Q[,1:7] = matrix(unlist(resall$L2), ncol = 7, byrow = FALSE)
   
   Q = Q[rowSums(Q==0)==0,]
@@ -163,7 +163,7 @@ for (nn in 1:4){
     resall <- readRDS(filename)
     L2 = matrix(unlist(resall$L2),nrow = 500,byrow = FALSE)
     
-    ## Get the L2 errors of Cox, cfP, rsfP, tsfP
+    ## Get the L2 errors of Cox, cfP, rrfP, tsfP
     Q[,1:4]=L2[,c(1,3,5,7)]
     
     IIL = matrix(unlist(resall$ibsCVerr), ncol = 4, byrow = FALSE)

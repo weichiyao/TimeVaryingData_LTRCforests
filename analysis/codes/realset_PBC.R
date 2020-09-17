@@ -13,14 +13,14 @@ Tpnt = c(0, sort(unique(DATA$Stop)))
 BSt = NULL
 #####################################################################################################################
 Survobj = Surv(DATA$Start, DATA$Stop, DATA$Event)
-## LTRCRSF
-modelT <- ltrcrsf(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
-predT <- predict.ltrcrsf(modelT, time.eval = Tpnt)
-BSt$rsf <- sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predT, type = "BS")
+## LTRCRRF
+modelT <- ltrcrrf(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
+predT <- predictProb(modelT, time.eval = Tpnt)
+BSt$rrf <- sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predT, type = "BS")
 
 ## LTRCCF
 modelT <- ltrccf(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
-predT <- predict.ltrccf(modelT, time.eval = Tpnt)
+predT <- predictProb(modelT, time.eval = Tpnt)
 BSt$cf <- sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predT, type = "BS")
 
 ## Cox
@@ -79,10 +79,10 @@ for(i in 1:tlen){
 
 
 dataGP = data.frame(matrix(0, nrow = tlen, ncol = 6))
-names(dataGP) = c("Time", "LTRC CF", "LTRC RSF", "TSF", "Cox", "propAtRisk")
+names(dataGP) = c("Time", "LTRC CF", "LTRC RRF", "TSF", "Cox", "propAtRisk")
 dataGP$Time = Tpnt
 dataGP$`LTRC CF` = BSt$cf
-dataGP$`LTRC RSF` = BSt$rsf
+dataGP$`LTRC RRF` = BSt$rrf
 dataGP$`TSF` = BSt$tsf
 dataGP$`Cox` = BSt$cx
 dataGP$`propAtRisk` = propAtRisk
@@ -90,7 +90,7 @@ dataGP$`propAtRisk` = propAtRisk
 
 # Reshape for the ggplot2
 melted = melt(dataGP, id.vars=c("Time","propAtRisk"),
-              measure.vars = c("LTRC CF", "LTRC RSF", "TSF", "Cox"))
+              measure.vars = c("LTRC CF", "LTRC RRF", "TSF", "Cox"))
 names(melted)[3] = "Model"
 
 # Value used to transform the data

@@ -17,7 +17,7 @@ modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
 cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
 ndataname <- c("N = 50", "N = 100", "N = 300", "N = 500")
 distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-frname = c("CF","RSF","TSF")
+frname = c("CF","RRF","TSF")
 mmodel <- 1:4
 ccrate = c(0,1,2)
 nndata = c(50,100,300,500)
@@ -51,8 +51,8 @@ for (ff in 1:3){
           ## L2 errors for LTRCCF with different mtry
           L2mtry = matrix(unlist(resall$L2mtry_cf),ncol = 7,byrow = FALSE)
         } else if (ff == 2){
-          ## L2 errors for LTRCRSF with different mtry
-          L2mtry = matrix(unlist(resall$L2mtry_rsf),ncol = 7,byrow = FALSE)
+          ## L2 errors for LTRCRRF with different mtry
+          L2mtry = matrix(unlist(resall$L2mtry_rrf),ncol = 7,byrow = FALSE)
         } else {
           ## L2 errors for TSF with different mtry
           L2mtry = matrix(unlist(resall$L2mtry_tsf),ncol = 7,byrow = FALSE)
@@ -119,9 +119,9 @@ for (nn in 1:4){
   ## L2 results for KM fit
   L2KM = matrix(unlist(resall$caseI$L2KM),ncol = 1)
   
-  ## CaseI : L2 results for Cox, cfD, cfP, rsfD, rsfP, tsfD, tsfp
+  ## CaseI : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
   Ec[,1:7] = matrix(unlist(resall$caseI$L2), ncol = 7, byrow = FALSE)
-  ## CaseII : L2 results for Cox, cfD, cfP, rsfD, rsfP, tsfD, tsfp
+  ## CaseII : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
   Er[,1:7] = matrix(unlist(resall$caseII$L2), ncol = 7, byrow = FALSE)
   
   Ec = matrix(0,ncol = 7,nrow = 500)
@@ -183,9 +183,9 @@ for (dd in DD){
       ## L2 results for KM fit
       L2KM = matrix(unlist(resall$caseI$L2KM),ncol = 1)
       
-      ## CaseI : L2 results for Cox, cfD, cfP, rsfD, rsfP, tsfD, tsfp
+      ## CaseI : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
       Ec[,1:7] = matrix(unlist(resall$caseI$L2), ncol = 7, byrow = FALSE)
-      ## CaseII : L2 results for Cox, cfD, cfP, rsfD, rsfP, tsfD, tsfp
+      ## CaseII : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
       Er[,1:7] = matrix(unlist(resall$caseII$L2), ncol = 7, byrow = FALSE)
       
       
@@ -204,8 +204,8 @@ for (dd in DD){
       
       xtick <- c(1:8)
       text(x=xtick,  par("usr")[3],
-           labels = c("Cox","cfP","rsfP","tsfP",
-                      "Cox","cfP","rsfP","tsfP"),
+           labels = c("Cox","cfP","rrfP","tsfP",
+                      "Cox","cfP","rrfP","tsfP"),
            pos = 1, xpd = TRUE, cex = 1.6)
       
     }
@@ -247,9 +247,9 @@ for (dd in DD){
     L2c = matrix(unlist(resall$caseI$L2),nrow = 500,byrow = FALSE)
     L2r = matrix(unlist(resall$caseII$L2),nrow = 500,byrow = FALSE)
     
-    ## Get the L2 errors of Cox, cfP, rsfP, tsfP for CaseI
+    ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseI
     Qc[, 1:4] = L2c[, c(1,3,5,7)]
-    ## Get the L2 errors of Cox, cfP, rsfP, tsfP for CaseII
+    ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseII
     Qr[, 1:4] = L2r[, c(1,3,5,7)]
     
     IILc = matrix(unlist(resall$caseI$ibsCVerr), ncol = 4, byrow = FALSE)
@@ -350,10 +350,10 @@ for (setting in c("PH","nonPH")){
       filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
                           setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
       resall_cf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$cf), nrow=500, byrow=FALSE)[,3]
-      resall_rsf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$rsf), nrow=500, byrow=FALSE)[,3]
+      resall_rrf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$rrf), nrow=500, byrow=FALSE)[,3]
       resall_tsf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$tsf), nrow=500, byrow=FALSE)[,3]
       resall_seu <- matrix(unlist(readRDS(filename)$caseI$L2seu), nrow=500, byrow = FALSE)
-      E = cbind(resall_seu[,1],resall_cf,resall_seu[,2],resall_rsf,resall_seu[,3],resall_tsf)
+      E = cbind(resall_seu[,1],resall_cf,resall_seu[,2],resall_rrf,resall_seu[,3],resall_tsf)
       
       E = E[rowSums(E==0)==0,]
       #################

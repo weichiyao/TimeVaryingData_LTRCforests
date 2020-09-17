@@ -16,7 +16,7 @@ source("./Timefixed_gnrt_nonPH.R")
 setwd("../utils/")
 source("./Loss_funct_tfixed.R")
 #####################################################################################
-predictRSF <- function(object, data, newdata=NULL, tpnt, OOB=FALSE){
+predictRRF <- function(object, data, newdata=NULL, tpnt, OOB=FALSE){
   Formula0 = Surv(Stop, Event) ~ 1
   weights <- object$inbag #of size Ndata x ntree
   ntree = ncol(weights)
@@ -26,7 +26,7 @@ predictRSF <- function(object, data, newdata=NULL, tpnt, OOB=FALSE){
   if (OOB){
     node_all <- object$membership # of size Ndata*ntree
     
-    predrsf <- sapply(1:N, function(wi){
+    predrrf <- sapply(1:N, function(wi){
       survival <- rep(0, tlen)
       ## find out which trees does not contain the wi-th data
       id_tree_wi_j = which(weights[wi,]==0)
@@ -59,7 +59,7 @@ predictRSF <- function(object, data, newdata=NULL, tpnt, OOB=FALSE){
       nIDxnewdata <- predict(object, newdata = newdata, membership = TRUE)$membership # of size Newdata*ntree
       Nnew = nrow(newdata)
     }
-    predrsf <- sapply(1:Nnew, function(j){
+    predrrf <- sapply(1:Nnew, function(j){
       pred <- rep(0,length(tpnt))
       for (b in 1:ntree){
         ## ID of observations in the b-th bootstrap samples 
@@ -76,7 +76,7 @@ predictRSF <- function(object, data, newdata=NULL, tpnt, OOB=FALSE){
     })
   }
   
-  predrsf
+  predrrf
 }
 predictTSF <- function(object, data, newdata=NULL, OOB=FALSE){
   Formula0 = Surv(Stop, Event) ~ 1
@@ -143,21 +143,21 @@ Pred_CV <- function(N = 1000, Distribution = "WI", model = 2,
                     censor.rate = 1, ll, Nfold=10, setting){
   
   L2mtry <- data.frame(matrix(0,nrow = 7, ncol = 3))
-  names(L2mtry) <- c("cf","rsf","tsf")
+  names(L2mtry) <- c("cf","rrf","tsf")
   rownames(L2mtry) = c("20","10","5","3","2","1","opt")
   
   OOBmtry <- data.frame(matrix(0, nrow = 6, ncol = 3))
-  names(OOBmtry) <- c("cf","rsf","tsf")
+  names(OOBmtry) <- c("cf","rrf","tsf")
   rownames(OOBmtry) = c("20","10","5","3","2","1")
   
   L2 <- data.frame(matrix(0,nrow = 2, ncol = 7))
-  names(L2) = c("cx","cfD","cfP","rsfD","rsfP","tsfD","tsfP")
+  names(L2) = c("cx","cfD","cfP","rrfD","rrfP","tsfD","tsfP")
   
   mtryall = data.frame(matrix(0, nrow = 1, ncol = 3))
-  names(mtryall) <- c("cf", "rsf", "tsf")
+  names(mtryall) <- c("cf", "rrf", "tsf")
   
   ibsCVerr = data.frame(matrix(0, nrow = Nfold, ncol = 4))
-  names(ibsCVerr) = c("cx", "cf", "rsf", "tsf")
+  names(ibsCVerr) = c("cx", "cf", "rrf", "tsf")
   
   RES = list(L2mtry = L2mtry, OOBmtry = OOBmtry, 
              L2 = L2, 
@@ -243,47 +243,47 @@ Pred_CV <- function(N = 1000, Distribution = "WI", model = 2,
   }
   print("TSF is done ...")
   
-  ###################### ---------------- L2 RSF ----------------- ###############################
-  leftzero = which(RES$L2mtry$rsf[1:6] == 0)
+  ###################### ---------------- L2 RRF ----------------- ###############################
+  leftzero = which(RES$L2mtry$rrf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
-      #### Different mtry for rsf
+      #### Different mtry for rrf
       modelT <- rfsrc(formula = Formula, data = DATA, ntree = ntree,
                       mtry=mtrypool[jj],
                       nodesize = max(ceiling(sqrt(nrow(DATA))),15), 
                       splitrule = "custom1", 
                       membership = TRUE, forest = TRUE, samptype = "swor")
-      predT = predictRSF(object = modelT, data = DATA, tpnt = Tpnt)
-      RES$L2mtry$rsf[jj] = L2_tfixed(KM = predT, Data = DATA, Info = Info, T.pnt = Tpnt)
+      predT = predictRRF(object = modelT, data = DATA, tpnt = Tpnt)
+      RES$L2mtry$rrf[jj] = L2_tfixed(KM = predT, Data = DATA, Info = Info, T.pnt = Tpnt)
       rm(predT)
-      predOOB = predictRSF(object = modelT,data = DATA, tpnt = Tpnt, OOB = TRUE)
+      predOOB = predictRRF(object = modelT,data = DATA, tpnt = Tpnt, OOB = TRUE)
       rm(modelT)
-      RES$OOBmtry$rsf[jj] = unname(ipred::sbrier(Test.obj, predOOB[-1,])[1])
-      print(sprintf("RSF -- mtry = %1.0f is done",mtrypool[jj]))
+      RES$OOBmtry$rrf[jj] = unname(ipred::sbrier(Test.obj, predOOB[-1,])[1])
+      print(sprintf("RRF -- mtry = %1.0f is done",mtrypool[jj]))
       rm(predOOB)
       gc()
     }
   }
-  if (RES$L2$rsfT[1] == 0){
-    idxmin <- which.min(RES$OOBmtry$rsf)
-    RES$L2$rsfT <- RES$L2mtry$rsf[idxmin]
-    RES$mtryall$rsf <- mtrypool[idxmin]
-    RES$L2mtry$rsf[7] <- min(RES$OOBmtry$rsf[1:6])
+  if (RES$L2$rrfT[1] == 0){
+    idxmin <- which.min(RES$OOBmtry$rrf)
+    RES$L2$rrfT <- RES$L2mtry$rrf[idxmin]
+    RES$mtryall$rrf <- mtrypool[idxmin]
+    RES$L2mtry$rrf[7] <- min(RES$OOBmtry$rrf[1:6])
   }
-  if (RES$L2$rsfD[1] == 0){
+  if (RES$L2$rrfD[1] == 0){
     ## Training
     modelT <- rfsrc(formula = Formula, data = DATA, ntree = ntree,
                     mtry = mtryD,
                     nodesize = 15, splitrule = "custom1", 
                     membership = TRUE, forest = TRUE, samptype = "swor")
     
-    predT = predictRSF(object = modelT,data = DATA, tpnt = Tpnt)
+    predT = predictRRF(object = modelT,data = DATA, tpnt = Tpnt)
     rm(modelT)
-    RES$L2$rsfD = L2_tfixed(KM = predT, Data = DATA, Info = Info, T.pnt = Tpnt)
+    RES$L2$rrfD = L2_tfixed(KM = predT, Data = DATA, Info = Info, T.pnt = Tpnt)
     rm(predT)
     gc()
   }
-  print("RSF is done ...")
+  print("RRF is done ...")
   
   ###################### ---------------- L2 CF ----------------- ###############################
   leftzero = which(RES$L2mtry$cf[1:6] == 0)
@@ -384,15 +384,15 @@ Pred_CV <- function(N = 1000, Distribution = "WI", model = 2,
         rm(modelT)
         gc()
       }
-      ## rsf
+      ## rrf
       if (RES$ibsCVerr[jj,3]==0){
-        mtryT = RES$mtryall$rsf
+        mtryT = RES$mtryall$rrf
         modelT <- rfsrc(formula = Formula, data = data_b, ntree = ntree,
                         mtry=mtryT,
                         nodesize = max(ceiling(sqrt(nrow(data_b))),15), 
                         splitrule = "custom1", 
                         membership = TRUE, forest = TRUE, samptype = "swor")
-        predT = predictRSF(object=modelT, data=data_b, newdata=newdata_b, tpnt = sort(unique(newdata_b$Stop)))
+        predT = predictRRF(object=modelT, data=data_b, newdata=newdata_b, tpnt = sort(unique(newdata_b$Stop)))
         rm(modelT)
         RES$ibsCVerr[jj, 3] = unname(ipred::sbrier(Test.obj, predT)[1])
         rm(modelT)
