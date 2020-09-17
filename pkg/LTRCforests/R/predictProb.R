@@ -273,34 +273,41 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         
         ## find out which trees does not contain the I[jall[j]]-th wi-th data
         id_tree_wi_j <- which(wt[newi$I[jall[1]], ] == 0)
-        
-        Shat_ti <- matrix(0, ncol = length(tpntLod[r.ID == jall[1]]), nrow = length(id_tree_wi_j))
-        for (ti in 1:length(id_tree_wi_j)){
-          ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
-          id_node_witi_j <- node_all[newi$I[jall[1]], id_tree_wi_j[ti]]
-          ## id of samples that fall into the same node
-          id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
-          ## Pick out those appearing in the bootstrapped samples
-          id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
-          id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
-          ## Build the survival tree
-          traindata$KMwt <- 0
-          traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
-          KMwt <- traindata$KMwt
-          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                  weights = KMwt, subset = KMwt > 0, conf.type = "none")
-          ## Get survival probabilities
+        ## add the if-else at Sept 16th, for id_tree_wi_j == integer(0)
+        if (length(id_tree_wi_j) > 0){
+          Shat_ti <- matrix(0, ncol = length(tpntLod[r.ID == jall[1]]), nrow = length(id_tree_wi_j))
+          for (ti in 1:length(id_tree_wi_j)){
+            ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
+            id_node_witi_j <- node_all[newi$I[jall[1]], id_tree_wi_j[ti]]
+            ## id of samples that fall into the same node
+            id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
+            ## Pick out those appearing in the bootstrapped samples
+            id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
+            id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
+            ## Build the survival tree
+            traindata$KMwt <- 0
+            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
+            KMwt <- traindata$KMwt
+            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
+                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+            ## Get survival probabilities
+            ## Changed at July 29th
+            Shat_ti[ti, ] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]])
+            
+          }
           ## Changed at July 29th
-          Shat_ti[ti, ] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]])
+          rowid.nz <- which(Shat_ti[, 1] != 0)
+          Shat_ti[rowid.nz, ] <- Shat_ti[rowid.nz, ] / Shat_ti[rowid.nz, 1]
+          # if (length(rowid.nz) > 0) {
+          #   Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
+          # }
+          survival[1, r.ID == jall[1]] <- apply(Shat_ti, 2, mean)
+        } else {
+          ## Changed at Sept 16th, for id_tree_wi_j == integer(0)
+          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
+                                  conf.type = "none")
+          survival[1, r.ID == jall[1]] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]])
         }
-        
-        ## Change at July 29th
-        rowid.nz <- which(Shat_ti[, 1] != 0)
-        Shat_ti[rowid.nz, ] <- Shat_ti[rowid.nz, ] / Shat_ti[rowid.nz, 1]
-        # if (length(rowid.nz) > 0) {
-        #   Shat_ti[rowid.nz, ] <- sweep(Shat_ti[rowid.nz, ], 1, Shat_ti[rowid.nz, 1], "/")
-        # }
-        survival[1, r.ID == jall[1]] <- apply(Shat_ti, 2, mean)
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)

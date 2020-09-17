@@ -40,12 +40,12 @@ It uses LTRC risk relative tree
 (see \code{\link[LTRCtrees]{LTRCART}}) as base learners.
 The main functions \code{\link{ltrccf}} and \code{\link{ltrcrrf}} 
 fit a corresponding LTRC forest for LTRC data, with parameter
-\code{mtry} tuned by \code{\link{tune.ltrccf}} or \code{\link{tune.ltrcrsf}}. This tuning
+\code{mtry} tuned by \code{\link{tune.ltrccf}} or \code{\link{tune.ltrcrrf}}. This tuning
 procedure relies on the evaluation of the out-of-bag errors, which is performed by the
 function \code{\link{sbrier_ltrc}}. \code{\link{print}}
 prints summary output for \code{ltrccf} objects and \code{ltrcrrf} objects.
 \code{\link{predictProb}}
-constructs survival function estimates for \code{ltrccf} objects and \code{ltrcrsf} objects.
+constructs survival function estimates for \code{ltrccf} objects and \code{ltrcrrf} objects.
 
 For (left-truncated) right-censored survival data with time-varying covariates,
 one can first reformat the data structure to one with LTRC observations,
