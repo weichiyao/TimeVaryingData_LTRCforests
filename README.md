@@ -17,7 +17,7 @@ Analysis codes for "Ensemble Methods for Survival Data with Time-Varying Covaria
     
     In particular, simulations_tvary.R and simulations_tvary.R provide results
     - to compare performance of LTRC forests with default parameter settings and proposed parameter settings.
-    - to evaluate performance comparison for the four methods, the Cox model, LTRCCF, LTRCRSF and TSF (all forests trained with proposed parameter settings)
+    - to evaluate performance comparison for the four methods, the Cox model, LTRCCF, LTRCRRF and TSF (all forests trained with proposed parameter settings)
     - to choose methods by using IBS-based 10-fold CV, and compare the results produced by the selection rule with the best method. 
   - The subfolder **utils** contains the source functions used to perform the analysis in the folder **codes**, including the functions to compute the integrated L_2 difference. 
   
