@@ -47,7 +47,7 @@ covariates.}
 \item{mtryStart}{starting value of \code{mtry}; default is \code{sqrt(nvar)}.}
 
 \item{stepFactor}{at each iteration, \code{mtry} is inflated (or deflated)
-by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrrf}}).
+by this value, used when \code{mtry} is not specified (see \code{\link{ltrcrrf}}).
 The default value is \code{2}.}
 
 \item{time.eval}{a vector of time points, at which the estimated survival probabilities

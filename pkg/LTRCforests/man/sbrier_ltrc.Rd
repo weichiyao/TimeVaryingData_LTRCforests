@@ -41,14 +41,14 @@ as well as left-truncated right-censored data with time-invariant covariates.
 library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRC conditional inference forest on time-varying data
-LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
+LTRCCIFobj = ltrccif(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
 
 # Time points
 tpnt = seq(0, 6000, by = 100)
 # Set different upper time limits for each of the subjects
 tau = seq(4001, 6200, length.out = length(unique(pbcsample$ID)))
 ## Obstain estimation at time points tpnt
-Predobj = predictProb(object = LTRCCFobj, time.eval = tpnt, time.tau = tau)
+Predobj = predictProb(object = LTRCCIFobj, time.eval = tpnt, time.tau = tau)
 
 ## Compute the integrated Brier score:
 pbcobj = Surv(pbcsample$Start, pbcsample$Stop, pbcsample$Event)

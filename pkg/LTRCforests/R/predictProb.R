@@ -1,12 +1,12 @@
-#' Compute a Survival Curve from a LTRCCF model or a LTRCRRF model
+#' Compute a Survival Curve from a LTRCCIF model or a LTRCRRF model
 #'
-#' Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model or a 
+#' Constructs a monotone nonincreasing estimated survival curve from a LTRCCIF model or a 
 #' LTRCRRF model for any given (left-truncated) right-censored survival data with time-varying 
 #' covariates.
 #' It can also compute survival function estimates for left-truncated right-censored data
 #' with time-invariant covariates.
 #'
-#' @param object an object as returned by \code{\link{ltrccf}} or by \code{\link{ltrcrrf}}.
+#' @param object an object as returned by \code{\link{ltrccif}} or by \code{\link{ltrcrrf}}.
 #' @param newdata.id optional variable name of subject identifiers for \code{newdata}.
 #' If this is present, it will be searched for in the \code{newdata} data frame.
 #' Each group of rows in \code{newdata} with the same subject \code{id} represents
@@ -44,21 +44,21 @@
 #' @import partykit
 #' @import survival
 #' @import prodlim
-#' @aliases predictProb.ltrccf, predictProb.ltrcrrf
+#' @aliases predictProb.ltrccif, predictProb.ltrcrrf
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit
 #' @examples
 #' #### Example with data pbcsample
 #' library(survival)
 #' Formula <- Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## Fit an LTRC conditional inference forest on time-varying data
-#' LTRCCFobj <- ltrccf(formula = Formula, data = pbcsample, id = ID,
-#'                     mtry = 3, ntree = 50L)
+#' LTRCCIFobj <- ltrccif(formula = Formula, data = pbcsample, id = ID,
+#'                       mtry = 3, ntree = 50L)
 #'
 #'
 #' ## Construct an estimated survival estimate for the second subject
 #' tpnt <- seq(0, max(pbcsample$Stop), length.out = 50)
 #' newData <- pbcsample[pbcsample$ID == 2, ]
-#' Pred <- predictProb(object = LTRCCFobj, newdata = newData, newdata.id = ID,
+#' Pred <- predictProb(object = LTRCCIFobj, newdata = newData, newdata.id = ID,
 #'                     time.eval = tpnt)
 #' ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
 #' dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)
@@ -75,8 +75,8 @@ predictProb <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   UseMethod("predictProb", object)
 }
 #' @export
-predictProb.ltrccf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
-                               time.eval, time.tau = NULL){
+predictProb.ltrccif <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
+                                time.eval, time.tau = NULL){
   
   pred <- partykit::predict.cforest(object = object, newdata = newdata, OOB = OOB, type = "prob",
                                     FUN = .pred_Surv_nolog)
@@ -354,7 +354,7 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         for (j in 2:nj){
           survival[1, r.ID == jall[j]] <- m[j] * survival[1, r.ID == jall[j]]
         }
-        
+       
       }
       
       RES <- survival[1, -match(newiIntT, tpntLod)]
@@ -380,8 +380,9 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       } else {
         names(newdata)[names(newdata) == deparse(substitute(newdata.id))] <- "id"
       }
+      if (any(is.na.data.frame(newdata[, x.IDs]))) stop("newdata contains missing values in the covariates!")
     }
-    if (any(is.na.data.frame(newdata[, x.IDs]))) stop("newdata contains missing values in the covariates!")
+    
     rm(object)
     obj.IDs <- match(c("id", yvar.names), names(newdata), nomatch = 0)
     if (any(obj.IDs == 0)) stop("newdata has to be with variables as in formula (time1, time2, event)")
@@ -459,7 +460,7 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         survival <- matrix(0, nrow = 1, ncol = tlen)
         
         # c(1, S_{1}(R_{1})/S_{1}(L_{1}),...,S_{n-1}(R_{n-1})/S_{n-1}(L_{n-1}))
-        survivalR <- matrix(0,nrow = 1, ncol = nj)
+        survivalR <- matrix(0, nrow = 1, ncol = nj)
         for (b in 1:ntree){
           # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
           # deal with left truncation ==> all 1 to start, so that Shat_b[, r.ID == 0] == 1
@@ -496,40 +497,34 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           if (length(ql0) > 0){
             if (any(qL > 0)){
               maxqlnot0 <- max(which(qL > 0))
-              
+
               ql0lmax <- ql0[ql0 < maxqlnot0]
               ql0mmax <- ql0[ql0 >= maxqlnot0]
               ShatR_b[1, ql0lmax + 1] <- 1
               Shat_b[1, r.ID %in% jall[ql0lmax]] <- 1
               ShatR_b[1, ql0mmax + 1] <- 0
               Shat_b[1, r.ID %in% jall[ql0mmax]] <- 0
-              
-              # for(j in ql0){
-              #   if (j < maxqlnot0) {
-              #     ShatR_b[1, j + 1] <- 1
-              #     Shat_b[1, r.ID == jall[j]] <- 1
-              #   } else{
-              #     ShatR_b[1, j + 1] <- 0
-              #     Shat_b[1, r.ID == jall[j]] <- 0
-              #   }
-              # }
+
             } else {
               ShatR_b[1, 2:(nj + 1)] <- 0
               Shat_b[1, r.ID %in% jall] <- 0
             }
           }
+          
+          
           survival <- survival + Shat_b
           survivalR <- survivalR + ShatR_b[1, 1:nj]
         }
         
         survival <- survival / ntree
         survivalR <- survivalR / ntree
-        
+
         m <- cumprod(survivalR[1, ])
-        ## construct the survival curve with the averaged ratio
-        for (j in 2:nj){
+        # construct the survival curve with the averaged ratio
+        for (j in 1:nj){
           survival[1, r.ID == jall[j]] = m[j] * survival[1, r.ID == jall[j]]
         }
+        
       }
       RES <- survival[1, -match(newiIntT, tpntLod)]
       return(RES)

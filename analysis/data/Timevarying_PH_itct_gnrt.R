@@ -1,23 +1,42 @@
 #####################################################################################################
 itct_term <- function(beta,x1,x2,x3,x4,x5,x6){
-  R1 = x1*x2-log(x3+x4)-x6/x5
-  R2 = beta[1]*x1+beta[2]*x2+beta[3]*x3+beta[4]*x4+beta[5]*x5+beta[6]*x6
-  R3 = cos(pi*(x1+x5))+sqrt(x6+x2)-x3
-  R4 = -beta[1]*x1+beta[2]*x2-beta[3]*x3+beta[4]*x4-beta[5]*x5+beta[6]*x6
-  R0 = (x4>=0.7)*((x5==2)+(x5==5))*R1+(x4>=0.7)*(1-(x5==2)-(x5==5))*R2+
-    (x4<0.7)*((x5==2)+(x5==5))*R3 + (x4<0.7)*(1-(x5==2)-(x5==5))*R4
+  R1 = beta[9] * (x1 * x2 - log(x3 + x4) - x6 / x5) + beta[10]
+  R2 = beta[1] * x1 + beta[2] * x2 + beta[3] * x3 + beta[4] * x4 + beta[5] * x5 + beta[6] * x6 + beta[7]
+  R3 = beta[11] * (cos(pi*(x1 + x5)) + sqrt(x6 + x2) - x3) + beta[12]
+  R4 = -beta[1] * x1 + beta[2] * x2 - beta[3] * x3 + beta[4] * x4 - beta[5] * x5 + beta[6] * x6 + beta[8]
+  R0 = (x4 >= 0.7) * ((x5 == 2) + (x5 == 5)) * R1 + (x4 >= 0.7) * (1 - (x5 == 2) - (x5 == 5)) * R2 +
+    (x4 < 0.7) * ((x5 == 2) + (x5 == 5)) * R3 + (x4 < 0.7) * (1 - (x5 == 2) - (x5 == 5)) * R4
   return(R0)
 }
+
+itct_term_variation <- function(beta,x1,x2,x3,x4,x5,x6){
+  R1 = x1 * x2 - log(0.5 + 0.5) - 1 / x5
+  R2 = beta[1] * x1 + beta[2] * x2 + beta[3] * 0.5 + beta[4] * 0.5 + beta[5] * x5 + beta[6]
+  R3 = cos(pi*(x1 + x5)) + sqrt(1 + x2) - 0.5
+  R4 = -beta[1] * x1 + beta[2] * x2 - beta[3] * 0.5 + beta[4] * 0.5 - beta[5] * x5 + beta[6]
+  R0 = (x2 >= 0.7) * ((x5 == 2) + (x5 == 5)) * R1 + (x2 >= 0.7) * (1 - (x5 == 2) - (x5 == 5)) * R2 +
+    (x2 < 0.7) * ((x5 == 2) + (x5 == 5)) * R3 + (x2 < 0.7) * (1 - (x5 == 2) - (x5 == 5)) * R4
+  return(R0)
+}
+
 #####################################################################################################
 ## Range_T function returns simulated survival time 
-Range_T_itct <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
+Range_T_itct <- function(TALL, DIST, X, U, variation = FALSE, snrhigh = FALSE){  # TALL = c(0,TS)
+  if (variation) itct_term <- itct_term_variation
+  
   u = U
   tlen = length(TALL)
-  Beta <- c(1,1,-1,-1,0.5,-0.5)
+  if (snrhigh) {
+    #         1 2 3   4   5    6   7    8  9   10 11        12   
+    Beta <- c(5,5,-5,-5,2.5,-2.5, -7, -10, 5, 1.5, 5, 1.101021)
+  } else {
+    Beta <- c(1,1,-1,-1,0.5,-0.5, 0,   0,  1,  0,  1,        0)
+  }
+  
   R0 = sapply(1:tlen, function(i) itct_term(beta=Beta,
-                                            x1=X$X1[i],x2=X$X2[i],
-                                            x3=X$X3[i],x4=X$X4[i],
-                                            x5=X$X5[i],x6=X$X6[i]))
+                                            x1=X$X1[i], x2=X$X2[i],
+                                            x3=X$X3[i], x4=X$X4[i],
+                                            x5=X$X5[i], x6=X$X6[i]))
   R0 = exp(R0)
   if(DIST == "Exp"){
     Lambda = 0.05
@@ -71,8 +90,8 @@ Range_T_itct <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
 }
 
 #####################======== Large number of pseudo-subjects ===============#####################
-Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate = 1,
-                                  partial = TRUE){
+Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "WI", censor.rate = 1,
+                                     partial = TRUE, variation = FALSE, snrhigh = FALSE){
   npseu = 11
   Data <- as.data.frame(matrix(NA,npseu*N,27))
   names(Data)<-c("I","ID","X1","X2","X3","X4","X5","X6","X7","X8","X9","X10", 
@@ -99,7 +118,7 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
   Data$X19 <- sample(c(0,1),npseu*N,replace=TRUE) 
   
   Count = 1
-  tall = rep(0,N)
+  tall = rep(0, N)
   while(Count <= N){
     TS <- rep(0, npseu-1)
     if (Distribution == "Exp"){
@@ -141,14 +160,19 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
     Data[Data$ID==Count,]$X16 <- c(rep(x161,x16r),rep(x161+1,npseu-x16r))
     
     x18r <- sort(sample(npseu-1,2))
-    Data[Data$ID==Count,]$X18 <- c(rep(0,x18r[1]),rep(1,x18r[2]-x18r[1]),rep(2,npseu-x18r[2]))
+    Data[Data$ID == Count, ]$X18 <- c(rep(0, x18r[1]), rep(1, x18r[2] - x18r[1]), rep(2, npseu - x18r[2]))
     
-    Data[Data$ID==Count,]$X20 <- k[1] * c(0,TS) + k[2]
+    Data[Data$ID == Count, ]$X20 <- k[1] * c(0, TS) + k[2]
     
-    Data[Data$ID==Count,]$Start <- c(0,TS)
-    Data[Data$ID==Count,]$Stop <- c(TS,NA)
+    Data[Data$ID == Count, ]$Start <- c(0, TS)
+    Data[Data$ID == Count, ]$Stop <- c(TS, NA)
     
-    RT <- Range_T_itct(TALL=c(0,TS),DIST=Distribution,X=Data[Data$ID==Count,],U=u)
+    RT <- Range_T_itct(TALL = c(0, TS), 
+                       DIST = Distribution, 
+                       X = Data[Data$ID == Count, ], 
+                       U = u, 
+                       variation = variation,
+                       snrhigh = snrhigh)
     t = RT$Time
     rID = RT$Row
     Data[Data$ID==Count,]$Xi <- RT$Xi
@@ -161,7 +185,6 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
       Data[Data$ID==Count,][rID,]$Event = 1
       Data[Data$ID==Count,][rID,]$Stop = t
     }
-    # print(Count)
     Count = Count + 1
     
   }## end of the while loop
@@ -176,38 +199,94 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
   }
   RET <- NULL
   
-  if(censor.rate == 0){
-    Censor.time <- rep(Inf,N)
-  }else if(censor.rate == 1){
-    if(Distribution == "Exp"){
-      Censor.time = rexp(N,rate = 1/85)
-    }else if(Distribution == "WD"){
-      Censor.time = rexp(N,rate = 1/310)
-    }else if(Distribution == "WI"){
-      Censor.time = rexp(N,rate = 1/700)
-    }else if(Distribution == "Gtz"){
-      Censor.time = rexp(N,rate = 1/88)
+  if (variation) { 
+    if (snrhigh) {
+      if(Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf, N)
+        } else if (censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/1760) # NEW
+        } else if (censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/140) # NEW
+        } else {
+          stop("Wrong censoring type")
+        }
+      } else {
+        stop("Wrong distribution")
+      }
+    } else { # snrhigh == FALSE
+      if(Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf, N)
+        } else if (censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/760)
+        } else if (censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/190) # NEW
+        } else {
+          stop("Wrong censoring type")
+        }
+      } else {
+        stop("Wrong distribution")
+      }
     }
-  }else{
-    stop("Wrong censoring type")
+    
+  } else { # variation normal
+    if (snrhigh) {
+      if(Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf, N)
+        } else if(censor.rate == 1) {
+          Censor.time = rexp(N,rate = 1/350)
+        } else if(censor.rate == 2){ 
+          Censor.time = rexp(N,rate = 1/45) # NEW 
+        }else{
+          stop("Wrong censoring type")
+        }
+      }else {
+        stop("Wrong distribution")
+      }
+    } else { # snrhigh = FALSE
+      if(censor.rate == 0){
+        Censor.time <- rep(Inf, N)
+      }else if(censor.rate == 1) {
+        if(Distribution == "Exp"){
+          Censor.time = rexp(N,rate = 1/85)
+        }else if(Distribution == "WD"){
+          Censor.time = rexp(N,rate = 1/310)
+        }else if(Distribution == "WI"){
+          Censor.time = rexp(N,rate = 1/700)
+        }else if(Distribution == "Gtz"){
+          Censor.time = rexp(N,rate = 1/88)
+        }
+        
+      } else if(censor.rate == 2){ 
+        if(Distribution == "WI"){
+          Censor.time = rexp(N,rate = 1/250)
+        } else {
+          stop("Wrong distribution")
+        }
+      }else{
+        stop("Wrong censoring type")
+      }
+    }
   }
 
   
   for( j in 1:length(unique(DATA$ID)) ){
-    Vec <- c(0,DATA[DATA$ID==j,]$Stop,Inf)
+    Vec <- c(0, DATA[DATA$ID == j, ]$Stop, Inf)
     ID <- findInterval(Censor.time[j], Vec)
     
-    if( ID <= nrow(DATA[DATA$ID==j,]) ){
-      DATA[DATA$ID==j,][ID,]$C = 1
-      DATA[DATA$ID==j,][ID,]$Event = 0
-      DATA[DATA$ID==j,][ID,]$Stop = Censor.time[j]
-      if( ID != nrow(DATA[DATA$ID==j,]) ){
-        DATA[DATA$ID==j,][(ID+1):nrow(DATA[DATA$ID==j,]),]$Event = NA
+    if( ID <= nrow(DATA[DATA$ID == j, ]) ){
+      DATA[DATA$ID == j, ][ID, ]$C = 1
+      DATA[DATA$ID == j, ][ID, ]$Event = 0
+      DATA[DATA$ID == j, ][ID, ]$Stop = Censor.time[j]
+      if( ID != nrow(DATA[DATA$ID==j, ]) ){
+        DATA[DATA$ID == j, ][(ID + 1):nrow(DATA[DATA$ID==j, ]), ]$Event = NA
       }
     }
   }
   
-  Data <- DATA[!is.na(DATA$Event),]
+  Data <- DATA[!is.na(DATA$Event), ]
   rm(DATA)
   gc()
   
@@ -216,18 +295,21 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
   }
   Data$I <- 1:nrow(Data)
   RET$fullData <- Data
-  RET$Info = list(Coeff=list(Lambda = RT$Lambda, Alpha = RT$Alpha, Beta = RT$Beta, V = RT$V),
-                  Dist=Distribution,
+  RET$fullData$Start <- round(RET$fullData$Start, 3)
+  RET$fullData$Stop <- round(RET$fullData$Stop, 3)
+  RET$fullData$Stop[RET$fullData$Start == RET$fullData$Stop] = RET$fullData$Stop[RET$fullData$Start == RET$fullData$Stop] + 0.001
+  RET$Info = list(Coeff = list(Lambda = RT$Lambda, Alpha = RT$Alpha, Beta = RT$Beta, V = RT$V),
+                  Dist = Distribution,
                   Set = "PH")
   
-  DATA = data.frame(matrix(0,nrow=N,ncol=ncol(Data)))
+  DATA = data.frame(matrix(0, nrow = N, ncol = ncol(Data)))
   names(DATA) = names(Data)
   for (ii in 1:N){
-    DATA[ii,] = Data[Data$ID==ii,][1,]
-    ni = nrow(Data[Data$ID==ii,])
-    if (ni >1){
-      DATA[ii,]$Stop = Data[Data$ID==ii,]$Stop[ni]
-      DATA[ii,]$Event = Data[Data$ID==ii,]$Event[ni]
+    DATA[ii, ] = Data[Data$ID == ii, ][1, ]
+    ni = nrow(Data[Data$ID == ii, ])
+    if (ni > 1){
+      DATA[ii, ]$Stop = Data[Data$ID==ii, ]$Stop[ni]
+      DATA[ii, ]$Event = Data[Data$ID==ii, ]$Event[ni]
     }
   }
   DATA$I = 1:nrow(DATA)
@@ -269,6 +351,9 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
     }
     Data$I = 1:nrow(Data)
     RET$partialData = Data
+    RET$partialData$Start <- round(RET$partialData$Start, 3)
+    RET$partialData$Stop <- round(RET$partialData$Stop, 3)
+    RET$partialData$Stop[RET$partialData$Start == RET$partialData$Stop, "Stop"] + 0.001
     
     # RET$partialInfo = round(colMeans(partialInfo),digits = 3)
     # RET$partialInfo[5] = sum(partialInfo$n_unobv==0)
@@ -279,5 +364,6 @@ Timevarying_PH_itct_gnrt <- function(N = 200, Distribution = "Exp", censor.rate 
   rm(Data)
   gc()
   return(RET)
+  # return(tall)
   
 }

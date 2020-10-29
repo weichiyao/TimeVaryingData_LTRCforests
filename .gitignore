@@ -8,4 +8,5 @@ makepackage/
 *.o
 *.so
 tryLTRCforests
+old
 

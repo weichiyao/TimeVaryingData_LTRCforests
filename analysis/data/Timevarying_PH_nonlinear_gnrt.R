@@ -1,6 +1,6 @@
 #####################################################################################################
 ## Range_T function returns simulated survival time 
-Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
+Range_T_nonlinr <- function(TALL, DIST, X, U, variation, snrhigh){  # TALL = c(0,TS)
   u = U
   x1 = X$X1
   x2 = X$X2
@@ -8,10 +8,20 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
   x4 = X$X4
   x5 = X$X5
   x6 = X$X6
-  tlen = length(TALL)
+  if (variation){
+    x3 = 0.5
+    x4 = 0.5
+    x6 = 1
+  }
+  if (snrhigh){
+    beta <- c(5, 5)
+  } else {
+    beta <- c(1, 0)
+  }
   
+  R0 = exp(-beta[1]*log(x6+x3/10+x5/20+1/5)-beta[1]*x1*(x2*2)^(4*x4)+beta[2])
+  tlen = length(TALL)
   if(DIST == "Exp"){
-    R0 = exp(-log(x6+x3/10+x5/20+1/5)-x1*(x2*2)^(4*x4))
     Lambda = 0.1
     Alpha = 0
     V = 0
@@ -24,8 +34,6 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
     TT = -log(u) - VEC[R.ID]
     TT = TT/Lambda/R0[R.ID] + TALL[R.ID]
   }else if(DIST == "WD"){
-    R0 = exp(-log(x6+x3/10+x5/20+1/5)-x1*(x2*2)^(4*x4))
-    
     Lambda = 0.15
     V = 0.8
     Beta <- rep(0,6)
@@ -40,7 +48,6 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
     TT = (TT/Lambda/R0[R.ID] + TALL[R.ID]^V)^(1/V)
     
   }else if(DIST == "WI"){
-    R0 = exp(-log(x6+x3/10+x5/20+1/5)-x1*(x2*2)^(4*x4))
     V = 1.8
     Lambda = 0.0025
     Alpha = 0
@@ -55,7 +62,6 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
     TT = (TT/Lambda/R0[R.ID] + TALL[R.ID]^V)^(1/V)
     
   }else if(DIST == "Gtz"){
-    R0 = exp(-log(x6+x3/10+x5/20+1/5)-x1*(x2*2)^(4*x4))
     Alpha = 0.1
     Lambda = 0.02
     Beta = rep(0,6)
@@ -76,8 +82,8 @@ Range_T_nonlinr <- function(TALL, DIST, X, U){  # TALL = c(0,TS)
 
 
 #####################======== Large number of pseudo-subjects ===============#####################
-Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.rate = 1, 
-                                       partial = TRUE){
+Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "WI", censor.rate = 1, 
+                                       partial = TRUE, variation = FALSE, snrhigh = FALSE){
   npseu = 11
   Data <- as.data.frame(matrix(NA,npseu*N,27))
   names(Data)<-c("I","ID","X1","X2","X3","X4","X5","X6","X7","X8","X9","X10", 
@@ -104,6 +110,7 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
   Data$X19 <- sample(c(0,1),npseu*N,replace=TRUE) 
   
   Count = 1
+  tall = rep(0, N)
   while(Count <= N){
     TS <- rep(0, npseu-1)
     if (Distribution == "Exp"){
@@ -153,10 +160,16 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
     Data[Data$ID==Count,]$Start <- c(0,TS)
     Data[Data$ID==Count,]$Stop <- c(TS,NA)
     
-    RT <- Range_T_nonlinr(TALL=c(0,TS),DIST=Distribution,X=Data[Data$ID==Count,],U=u)
+    RT <- Range_T_nonlinr(TALL = c(0, TS), 
+                          DIST = Distribution, 
+                          X = Data[Data$ID == Count, ], 
+                          U = u, 
+                          variation = variation, 
+                          snrhigh = snrhigh)
     t = RT$Time
     rID = RT$Row
     Data[Data$ID==Count,]$Xi = RT$Xi
+    tall[Count] = t
     if(rID==1){
       Data[Data$ID==Count,][1,]$Stop = t
       Data[Data$ID==Count,][1,]$Event = 1
@@ -179,21 +192,76 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
   }
   RET <- NULL
   
-  if(censor.rate == 0){
-    Censor.time <- rep(Inf,N)
-  }else if(censor.rate == 1){
-    if(Distribution == "Exp"){
-      Censor.time = rexp(N,rate = 1/155)
-    }else if(Distribution == "WD"){
-      Censor.time = rexp(N,rate = 1/288)
-    }else if(Distribution == "WI"){
-      Censor.time = rexp(N,rate = 1/240)
-    }else if(Distribution == "Gtz"){
-      Censor.time = rexp(N,rate = 1/130)
+  if (variation){
+    if (snrhigh) {
+      if (Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        } else if (censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/420) # NEW
+        } else if (censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/13) # NEW 
+        } else {
+          stop("Wrong censoring type")
+        }
+      } else {
+        stop("Wrong distribution")
+      }
+    } else { # snrhigh == FALSE
+      if (Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        } else if (censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/240)
+        } else if (censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/57.5) # NEW 
+        } else {
+          stop("Wrong censoring type")
+        }
+      } else {
+        stop("Wrong distribution")
+      }
     }
-  }else{
-    stop("Wrong censoring type")
+  } else { # basic DGP
+    if (snrhigh) {
+      if (Distribution == "WI"){
+        if (censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        } else if (censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/240) 
+        } else if (censor.rate == 2){ 
+          Censor.time = rexp(N,rate = 1/15) # NEW 
+        } else {
+          stop("Wrong censoring type")
+        }
+      } else {
+        stop("Wrong distribution")
+      }
+    } else {
+      if(censor.rate == 0){
+        Censor.time <- rep(Inf,N)
+      }else if(censor.rate == 1){
+        if(Distribution == "Exp"){
+          Censor.time = rexp(N,rate = 1/155)
+        }else if(Distribution == "WD"){
+          Censor.time = rexp(N,rate = 1/288)
+        }else if(Distribution == "WI"){
+          Censor.time = rexp(N,rate = 1/240)
+        }else if(Distribution == "Gtz"){
+          Censor.time = rexp(N,rate = 1/130)
+        }
+      }else if(censor.rate == 2){ 
+        if(Distribution == "WI"){
+          Censor.time = rexp(N,rate = 1/55)
+        }else {
+          stop("Wrong distribution")
+        }
+      }else{
+        stop("Wrong censoring type")
+      }
+    }
   }
+
   
   
   for( j in 1:length(unique(DATA$ID)) ){
@@ -218,6 +286,10 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
   }
   Data$I <- 1:nrow(Data)
   RET$fullData <- Data
+  
+  RET$fullData$Start <- round(RET$fullData$Start, 3)
+  RET$fullData$Stop <- round(RET$fullData$Stop, 3)
+  RET$fullData$Stop[RET$fullData$Start == RET$fullData$Stop] = RET$fullData$Stop[RET$fullData$Start == RET$fullData$Stop] + 0.001
   RET$Info = list(Coeff=list(Lambda = RT$Lambda, Alpha = RT$Alpha, Beta = RT$Beta, V = RT$V),
                   Dist=Distribution,
                   Set = "PH")
@@ -271,7 +343,9 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
     }
     Data$I = 1:nrow(Data)
     RET$partialData = Data
-    
+    RET$partialData$Start <- round(RET$partialData$Start, 3)
+    RET$partialData$Stop <- round(RET$partialData$Stop, 3)
+    RET$partialData$Stop[RET$partialData$Start == RET$partialData$Stop, "Stop"] + 0.001
     # RET$partialInfo = round(colMeans(partialInfo),digits = 3)
     # RET$partialInfo[5] = sum(partialInfo$n_unobv==0)
     # RET$partialInfo[6] = round(mean(partialInfo$percT_unobv[partialInfo$percT_unobv!=0]),digits = 3)
@@ -281,5 +355,6 @@ Timevarying_PH_nonlinear_gnrt <- function(N = 200, Distribution = "Exp", censor.
   rm(Data)
   gc()
   return(RET)
+  # return(tall)
   
 }

@@ -13,7 +13,9 @@ itct_term_tfnPH <- function(beta,x1,x2,x3,x4,x5,x6){
   return(R0)
 }
 #####################======== Large number of pseudo-subjects ===============#####################
-Timefixed_gnrt_nonPH <- function(N = 200, model = 1, censor.rate = 1){
+TimeindepLTRC_gnrt_nonPH <- function(N = 200, model = 1, censor.rate = 1, Distibution = "WI"){
+  Nadd = N * 0.20
+  N = Nadd + N
   Data <- as.data.frame(matrix(NA, N, 28))
   names(Data)<-c("I","ID","X1","X2","X3","X4","X5","X6","X7","X8","X9","X10", 
                  "X11","X12","X13","X14","X15","X16","X17","X18","X19","X20",
@@ -46,14 +48,17 @@ Timefixed_gnrt_nonPH <- function(N = 200, model = 1, censor.rate = 1){
     Beta <- c(1,1,1,1,10,1)
     Data$Fstar <- sapply(1:N, function(Ni) {itct_term_tfnPH(beta=Beta,Data$X1[Ni],Data$X2[Ni],Data$X3[Ni],Data$X4[Ni],Data$X5[Ni],Data$X6[Ni])})
     Lambda = 0.001
+    truncation = 100
   } else if (model == 2){
     Beta <- c(1,1,1,1,10,1)
     Data$Fstar <- Beta[1]*Data$X1+Beta[2]*Data$X2+Beta[3]*Data$X3+
       Beta[4]*Data$X4+Beta[5]*Data$X5+Beta[6]*Data$X6
     Lambda = 0.001
+    truncation = 100
   } else if (model == 3){
     Data$Fstar <- cos(Data$X1+Data$X3+Data$X5+Data$X6+Data$X4+Data$X2)
     Lambda = 0.002
+    truncation = 100
   } else {
     stop("Wrong model type is given.")
   }
@@ -116,6 +121,14 @@ Timefixed_gnrt_nonPH <- function(N = 200, model = 1, censor.rate = 1){
       Data[j,][ID,]$Stop = Censor.time[j]
     }
   }
+  
+  L = runif(N, 0, truncation)
+  idx = which(Data$Stop > L)
+  Data$Start = L
+  
+  
+  N = N - Nadd
+  Data = Data[idx[1:N], ]
   Data$I <- 1:nrow(Data)
   Data$ID <- 1:nrow(Data)
   RET <- NULL

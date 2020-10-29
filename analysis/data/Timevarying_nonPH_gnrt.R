@@ -1,31 +1,54 @@
 #####################################################################################################
 itct_term_WI <- function(beta,x1,x2,x3,x4,x5,x6){
-  R1 = x1*x2-log(x3+x4)-x6/x5
-  R2 = -beta[1]*x1-beta[2]*x2-beta[3]*x3-beta[4]*x4-beta[5]*x5-beta[6]*x6
-  R3 = cos(pi*(x1+x5))+sqrt(x6+x2)-x3 
-  R4 = beta[1]*x1+beta[2]*x2+beta[3]*x3+beta[4]*x4+beta[5]*x5+beta[6]*x6
-  R0 = (x4>=0.7)*((x5==5))*R1+(x4>=0.7)*(1-(x5==5))*R3+
-    (x4<0.7)*((x5==5))*R2 + (x4<0.7)*(1-(x5==5))*R4
+  R1 = beta[9] * (x1 * x2 - log(x3 + x4) - x6 / x5) + beta[10]
+  R2 = - beta[1] * x1 - beta[2] * x2 - beta[3] * x3 - beta[4] * x4 - beta[5] * x5 - beta[6] * x6 + beta[8]
+  R3 = beta[11] * (cos(pi*(x1+x5))+sqrt(x6+x2)-x3) + beta[12]
+  R4 = beta[1] * x1 + beta[2] * x2 + beta[3] * x3 + beta[4] * x4 + beta[5] * x5 + beta[6] * x6 + beta[7]
+  R0 = (x4 >= 0.7) * ((x5 == 5)) * R1 + (x4 >= 0.7) * (1 - (x5 == 5)) * R3 +
+    (x4 < 0.7) * ((x5 == 5)) * R2 + (x4 < 0.7) * (1 - (x5 == 5)) * R4
+  return(R0)
+}
+
+itct_term_WI_variation <- function(beta,x1,x2,x3,x4,x5,x6){
+  R1 = x1*x2 - 1/x5
+  R2 = -beta[1]*x1-beta[2]*x2-beta[3]*0.5-beta[4]*0.5-beta[5]*x5-beta[6]
+  R3 = cos(pi*(x1+x5))+sqrt(1+x2)-0.5
+  R4 = beta[1]*x1+beta[2]*x2+beta[3]*0.5+beta[4]*0.5+beta[5]*x5+beta[6]
+  R0 = (x2>=0.7)*((x5==5))*R1+(x2>=0.7)*(1-(x5==5))*R3+
+    (x2<0.7)*((x5==5))*R2 + (x2<0.7)*(1-(x5==5))*R4
   return(R0)
 }
 #####################################################################################################
-Comp_fstar_WI <- function(TALL, M, X){  # TALL = c(0,TS)
+Comp_fstar_WI <- function(TALL, M, X, variation, snrhigh){  # TALL = c(0,TS)
   x1 = X$X1
   x2 = X$X2
   x3 = X$X3
   x4 = X$X4
   x5 = X$X5
   x6 = X$X6
+  if (variation) {
+    x3 = 0.5
+    x4 = 0.5
+    x6 = 1
+    itct_term_WI <- itct_term_WI_variation
+  }
+  
+  if (snrhigh){ 
+    #         1 2 3 4  5 6  7       8 9  10 11      12 13       14
+    Beta <- c(3,3,3,3,30,3,-64.5,64.5,5,0.6,5,1.101021, 5, -2.834679)
+    # Beta <- c(5,5,5,5,10,5,-12,12,5,0.6,5,1.101021, 5, -2.834679)
+  } else {
+    Beta <- c(1,1,1,1,10,1,  0, 0,1,  0,1,       0, 1,         0)
+  }
   tlen = length(TALL)
   if (M == "linear"){
-    Beta <- c(1,1,1,1,10,1) 
-    Fstar <- Beta[1]*x1+Beta[2]*x2+Beta[3]*x3+Beta[4]*x4+Beta[5]*x5+Beta[6]*x6
+    Fstar <- Beta[1] * x1 + Beta[2] * x2 + Beta[3] * x3 + Beta[4] * x4 + Beta[5] * x5 + Beta[6] * x6 + Beta[7]
   } else if (M == "nonlinear"){
-    Fstar = cos(x1+x3+x5+x6+x4+x2)
+    Fstar <- Beta[13] * cos(x1 + x3 + x5 + x6 + x4 + x2) + Beta[14]
   } else if (M == "interaction"){
-    Beta <- c(1,1,1,1,10,1)
-    Fstar <- sapply(1:tlen, function(i) itct_term_WI(beta=Beta,x1[i],x2[i],x3[i],
-                                                     x4[i],x5[i],x6[i]))
+    Fstar <- sapply(1:tlen, function(i) itct_term_WI(beta = Beta,
+                                                     x1[i], x2[i], x3[i],
+                                                     x4[i], x5[i], x6[i]))
   } else {
     stop("Wrong model type is given.")
   }
@@ -59,7 +82,8 @@ Comp_xi_WI <- function(TALL, M, Fstar, U){  # TALL = c(0,TS)
 
 #####################======== Large number of pseudo-subjects ===============#####################
 Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","interaction"), 
-                                   censor.rate = 1, partial = TRUE){
+                                   Distribution = "WI",
+                                   censor.rate = 1, partial = TRUE, variation = FALSE, snrhigh = FALSE){
   npseu = 11
   if (model == "linear"){
     Nadd = 100
@@ -121,7 +145,11 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
     Data[Data$ID==Count,]$Start <- c(0,TS)
     Data[Data$ID==Count,]$Stop <- c(TS,NA)
     
-    Fstar[Data$ID==Count] <- Comp_fstar_WI(TALL=c(0,TS),M=model,X=Data[Data$ID==Count,])
+    Fstar[Data$ID==Count] <- Comp_fstar_WI(TALL = c(0, TS), 
+                                           M = model, 
+                                           X = Data[Data$ID == Count, ], 
+                                           variation = variation, 
+                                           snrhigh = snrhigh)
     Count = Count + 1
   }## end of the while loop
   Fstar = (Fstar - min(Fstar)+0.005)/diff(range(Fstar))*3
@@ -130,8 +158,8 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
   Count = 1
   CountR = 1
   N=N-Nadd
-  t_res <- rep(0,N)
-  rID_res <- rep(0,N)
+  tall <- rep(0,N)
+  rIDall <- rep(0,N)
   while (CountR <= N){
     RT <- Comp_xi_WI(TALL=Data[Data$ID==Count,]$Start, M=model, Fstar=Fstar[Data$ID==Count], U=u[Count])
     Data[Data$ID==Count,]$Xi <- RT$Xi
@@ -150,8 +178,8 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
       }
       DATA <- rbind(DATA,Data[Data$ID==Count,])
       DATA[DATA$ID==Count,]$ID = CountR
-      t_res[CountR] = t
-      rID_res[CountR] = rID
+      tall[CountR] = t
+      rIDall[CountR] = rID
       CountR = CountR+1
       # print(CountR)
     }
@@ -167,33 +195,147 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
   RET <- NULL
   RET$evalData = DATA[,c("ID","X1","X2","X3","X4","X5","X6","Xi","Start","Stop","Event")]
   
-
-  if (model == "linear"){
-    if(censor.rate == 0){
-      Censor.time <- rep(Inf,N)
-    }else if(censor.rate == 1){
-      Censor.time = rexp(N,rate = 1/4202)
-    }else{
-      stop("Wrong censoring type")
+  if (variation) { # only censor.rate = 1 is adjusted
+    if (snrhigh) {
+      if (model == "linear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202) # NEW
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1242) # NEW
+        } else{
+          stop("Wrong censoring type")
+        }
+      }else if (model == "nonlinear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/2202) # NEW
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/642) # NEW
+        } else{
+          stop("Wrong censoring type.")
+        }
+      } else if (model == "interaction"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202) # NEW
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1332) # NEW
+        } else{
+          stop("Wrong censoring type.")
+        }
+      } else {
+        stop("Wrong model type.")
+      }
+    } else { # snrhigh == FALSE
+      if (model == "linear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1252) # new
+        } else{
+          stop("Wrong censoring type")
+        }
+      }else if (model == "nonlinear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/2202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/682) # new
+        } else{
+          stop("Wrong censoring type.")
+        }
+      } else if (model == "interaction"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1322) # new
+        } else{
+          stop("Wrong censoring type.")
+        }
+      } else {
+        stop("Wrong model type.")
+      }
     }
-  }else if (model == "nonlinear"){
-    if(censor.rate == 0){
-      Censor.time <- rep(Inf,N)
-    }else if(censor.rate == 1){
-      Censor.time = rexp(N,rate = 1/2202)
-    }else{
-      stop("Wrong censoring type.")
+    
+  } else { # Basic DGP
+    if (snrhigh) {
+      if (model == "linear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1270) # NEW
+        }else{
+          stop("Wrong censoring type")
+        }
+      }else if (model == "nonlinear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/2202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/652) # NEW
+        }else{
+          stop("Wrong censoring type.")
+        }
+      } else if (model == "interaction"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202)
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1302) # NEW
+        }else{
+          stop("Wrong censoring type.")
+        }
+      } else {
+        stop("Wrong model type.")
+      }
+    } else { # snrhigh == FALSE
+      if (model == "linear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202) 
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1302) 
+        }else{
+          stop("Wrong censoring type")
+        }
+      }else if (model == "nonlinear"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/2202) 
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/702) 
+        }else{
+          stop("Wrong censoring type.")
+        }
+      } else if (model == "interaction"){
+        if(censor.rate == 0){
+          Censor.time <- rep(Inf,N)
+        }else if(censor.rate == 1){
+          Censor.time = rexp(N,rate = 1/4202) 
+        }else if(censor.rate == 2){
+          Censor.time = rexp(N,rate = 1/1302) 
+        }else{
+          stop("Wrong censoring type.")
+        }
+      } else {
+        stop("Wrong model type.")
+      }
     }
-  } else if (model == "interaction"){
-    if(censor.rate == 0){
-      Censor.time <- rep(Inf,N)
-    }else if(censor.rate == 1){
-      Censor.time = rexp(N,rate = 1/4202)
-    }else{
-      stop("Wrong censoring type.")
-    }
-  } else {
-    stop("Wrong model type.")
   }
   
   for( j in 1:length(unique(DATA$ID)) ){
@@ -319,7 +461,8 @@ Timevarying_nonPH_gnrt <- function(N = 200, model = c("linear","nonlinear","inte
   
   rm(Data)
   gc()
-  return(RET)  
+  return(RET)
+  # return(tall)
   
 }
 

@@ -1,7 +1,7 @@
 #' Fit a LTRC relative risk forest
 #'
 #' An implementation of the random forest algorithms utilizing LTRC \code{rpart}
-#' trees \code{\link[LTRCtrees]{LTRCART}} as base learners for left-truncated right-censored
+#' trees \code{LTRCART} as base learners for left-truncated right-censored
 #' survival data with time-invariant covariates. It also allows for (left-truncated)
 #' right-censored survival data with time-varying covariates.
 #'
@@ -93,9 +93,13 @@
 #' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrrf}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
-#' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
+#' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}:1100-1120.
 #' @references H. Ishwaran, E. H. Blackstone, C. Pothier, and M. S. Lauer. (2004).
+#' Relative risk forests for exercise heart rate recovery as a predictor of mortality.
 #' \emph{Journal of the American StatisticalAssociation}, \strong{99}(1):591–600.
+#' @references Fu, W. and Simonoff, J.S. (2016). Survival trees for left-truncated and 
+#' right-censored data, with application to time-varying covariate data. 
+#' \emph{Biostatistics}, \strong{18}(2):352–369.
 #' @examples
 #' #### Example with time-varying data pbcsample
 #' library(survival)

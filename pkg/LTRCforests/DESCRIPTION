@@ -1,6 +1,6 @@
 Package: LTRCforests
-Version: 0.5.1
-Date: 2020-09-16
+Version: 0.5.2
+Date: 2020-10-28
 Title: Ensemble Methods for Survival Data with Time-Varying Covariates
 Authors@R: c(person(given = "Weichi", family = "Yao", role = c("aut", "cre"), 
                     email = "wy635@stern.nyu.edu"),
@@ -14,7 +14,7 @@ Author: Weichi Yao [aut, cre],
 Maintainer: Weichi Yao <wy635@stern.nyu.edu>
 Depends: R (>= 3.5.0)
 Imports: stats, utils, survival, ipred, parallel, prodlim, partykit
-Suggests: randomForestSRC, LTRCtrees
+Suggests: randomForestSRC
 Description: Implements the conditional inference forest and relative risk forest 
              algorithm to modeling left-truncated right-censored data with time-invariant        
              covariates, and (left-truncated) right-censored survival data with time-varying 
@@ -24,4 +24,4 @@ NeedsCompilation: yes
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

@@ -1,26 +1,26 @@
-#' Print Summary Output of a ltrccf object or a ltrcrrf object
+#' Print Summary Output of a ltrccif object or a ltrcrrf object
 #'
-#' Print summary output after a LTRCCF or a LTRCRRF model is built.
-#' This is the default print method for objects in the class of \code{\link{ltrccf}} or 
+#' Print summary output after a LTRCCIF or a LTRCRRF model is built.
+#' This is the default print method for objects in the class of \code{\link{ltrccif}} or 
 #' \code{\link{ltrcrrf}}.
 #'
-#' @param x an object of class \code{ltrccf} or \code{ltrcrrf}.
+#' @param x an object of class \code{ltrccif} or \code{ltrcrrf}.
 #'
 #' @importFrom survival Surv
 #' @examples
 #'
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' # Built a LTRCCF forest on the time-varying data by specifying id, with mtry specified:
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
-#' print(LTRCCFobj)
+#' # Built a LTRCCIF forest on the time-varying data by specifying id, with mtry specified:
+#' LTRCCIFobj = ltrccif(formula = Formula, data = pbcsample, id = ID, mtry = 3, ntree = 50L)
+#' print(LTRCCIFobj)
 #'
-#' # Built a LTRCCF forest on the time-invariant data, with resampling, with mtry specified:
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, samptype = "swr",
-#'                    mtry = 3, ntree = 50L)
-#' print(LTRCCFobj)
-#' @aliases print.ltrccf, print.ltrcrrf
-#' @seealso \code{\link{ltrccf}}, \code{\link{ltrcrrf}}
+#' # Built a LTRCCIF forest on the time-invariant data, with resampling, with mtry specified:
+#' LTRCCIFobj = ltrccif(formula = Formula, data = pbcsample, samptype = "swr",
+#'                      mtry = 3, ntree = 50L)
+#' print(LTRCCIFobj)
+#' @aliases print.ltrccif, print.ltrcrrf
+#' @seealso \code{\link{ltrccif}}, \code{\link{ltrcrrf}}
 #' @export
 
 print <- function(x){
@@ -28,14 +28,14 @@ print <- function(x){
 }
 
 #' @export
-print.ltrccf <- function(x) {
+print.ltrccif <- function(x) {
   ## check that the object is interpretable
-  # if (any(inherits(x, c("ltrccf", "grow"), TRUE) ) == 0 ) {
-  #   stop("This function only works for objects (of subclass) of class `(ltrccf, grow).")
+  # if (any(inherits(x, c("ltrccif", "grow"), TRUE) ) == 0 ) {
+  #   stop("This function only works for objects (of subclass) of class `(ltrccif, grow).")
   # }
   
   ## x will be processed if it's multivariate - therefore save some values from it
-  familyPretty <- "LTRCCF"
+  familyPretty <- "LTRCCIF"
   familyOrg <- "surv"
   
   ## error rates

@@ -1,4 +1,5 @@
 #####################################################################################################
+## Last updated Sept 28th: it can also deal with indepLTRC
 ## Last updated May 18th: to match Timevarying_linear_gnrt_0707_partial.R, Xi added 
 ##  == Also: T.pnt = T.pnt[T.pnt<=Testdata$Stop]
 #####################################################################################################
@@ -46,7 +47,7 @@ getSurv <- function(obj, times)
 }
 
 #####################################################################################################
-Surv_funct_tfixed <- function(X, t, info){
+Surv_funct_tindep <- function(X, t, info){
   Xi = X$Xi
   if (info$Set == "PH"){
     Distribution = info$Dist
@@ -70,10 +71,10 @@ Surv_funct_tfixed <- function(X, t, info){
 }
 
 #####################################################################################################
-Loss_funct_tfixed <- function(KM, Testdata, Info, T.pnt){
+Loss_funct_tindep <- function(KM, Testdata, Info, T.pnt){
   ## Compute the true survival probability of the i-th data
   Surv_t <- function(t){
-    Surv_funct_tfixed(Testdata, t, Info)
+    Surv_funct_tindep(Testdata, t, Info)
   }
   
   if ("survfit" %in% class(KM)){
@@ -128,7 +129,7 @@ Loss_funct_tfixed <- function(KM, Testdata, Info, T.pnt){
   }
 }## end of function
 
-L2_tfixed <- function(KM, Data, Info, T.pnt){
+L2_tindep <- function(KM, Data, Info, T.pnt){
   n_uniq = nrow(Data)
   
   L2res <- sapply(1:n_uniq, function(Ni){
@@ -141,7 +142,7 @@ L2_tfixed <- function(KM, Data, Info, T.pnt){
     }  else {
       pred <- KM[[Ni]]
     }
-    Loss_funct_tfixed(pred, Data[Ni, ], Info, tpnt)
+    Loss_funct_tindep(pred, Data[Ni, ], Info, tpnt)
   })
   ret <- mean(L2res)
   return(ret)

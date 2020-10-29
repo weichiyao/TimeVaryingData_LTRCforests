@@ -153,7 +153,7 @@ l2_funct <- function(Ni, data, fulldata, info, pred, tpnt, obj.roc = NULL){
   TTpnt = tpnt[tpnt <= maxT]
 
   ## Compute the estimated survival probabilities
-  if (class(pred)[1] == "matrix"){
+  if (class(pred)[1] %in% c("rfsrcmatrix", "matrix")){
     ShatA <- pred[1:length(TTpnt), Ni]
   } else {
     ShatA <- shat_funct(Ni = Ni, data = data, pred = pred, tpnt = TTpnt, obj.roc = obj.roc)
@@ -189,7 +189,9 @@ bs_funct <- function(Ni, data, data_sbrier, pred, tpnt){
   tpnt <- tpnt[tpnt <= 1.5 * maxT]
 
   ## Compute the estimated survival probabilities
-  if (class(pred)[1] %in% "matrix"){
+  if (class(pred)[1] %in% c("rfsrcmatrix","matrix")){
+    ShatA <- pred[1:length(tpnt), Ni]
+  } else if (class(pred)[1] %in% "rfsrclist"){
     ShatA <- pred[[Ni]]
     if (length(pred[[Ni]]) != length(tpnt)) stop("Something is wrong that the length of prediction does not match")
   } else {

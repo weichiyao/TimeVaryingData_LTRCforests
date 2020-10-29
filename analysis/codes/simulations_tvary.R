@@ -1,7 +1,6 @@
 ##########################################################################
 ## load the LTRCforests package
-setwd("./TimeVaryingData_LTRCforests/pkg/LTRCforests")
-devtools::load_all()
+library(LTRCforests)
 
 ## load the modified transformation packages 
 setwd("./TimeVaryingData_LTRCforests/analysis/utils/transformation/mlt_mod")
@@ -32,9 +31,14 @@ source("Surv_funct.R")
 source("tsf_tvary_funct.R")
 
 #####################################################################################################################
-Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
-                       censor.rate = 1, ll, setting = c("PH","nonPH"),
-                       Nfold = 10){
+Pred_funct <- function(N = 1000, 
+                       model = c("linear", "nonlinear", "interaction"), 
+                       censor.rate = 1, 
+                       ll, 
+                       setting = c("PH","nonPH"),
+                       Nfold = 10,
+                       snrhigh = FALSE,
+                       variation = FALSE){
 
   L2mtry <- data.frame(matrix(0, nrow = 7, ncol = 3))
   names(L2mtry) <- c("cf", "rrf", "tsf")
@@ -68,12 +72,18 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     set.seed(101)
     sampleID = sample(10000000, 500)
     set.seed(sampleID[ll])
-    if (model == 2){
-      RET <- Timevarying_PH_linear_gnrt(N = N, Distribution = Distribution)
-    } else if (model == 3) {
-      RET <- Timevarying_PH_nonlinear_gnrt(N = N, Distribution = Distribution)
-    } else if (model == 4) {
-      RET <- Timevarying_PH_itct_gnrt(N = N, Distribution = Distribution)
+    if (model == "linear"){
+      RET <- Timevarying_PH_linear_gnrt(N = N, censor.rate = censor.rate, 
+                                        variation = variation,
+                                        snrhigh = snrhigh)
+    } else if (model == "nonlinear") {
+      RET <- Timevarying_PH_nonlinear_gnrt(N = N, censor.rate = censor.rate, 
+                                           variation = variation,
+                                           snrhigh = snrhigh)
+    } else if (model == "interaction") {
+      RET <- Timevarying_PH_itct_gnrt(N = N, censor.rate = censor.rate, 
+                                      variation = variation,
+                                      snrhigh = snrhigh)
     } else {
       stop("Wrong model type is used.")
     }
@@ -81,16 +91,10 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
     set.seed(101)
     sampleID = sample(10000000,500)
     set.seed(sampleID[ll])
-    if (model == 2){
-      model = "linear"
-    } else if (model == 3) {
-      model = "nonlinear"
-    } else if (model == 4) {
-      model = "interaction"
-    } else {
-      stop("Wrong model type is used.")
-    }
-    RET = Timevarying_nonPH_gnrt(N = N, model = model)
+    
+    RET = Timevarying_nonPH_gnrt(N = N, model = model, censor.rate = censor.rate, 
+                                 variation = variation,
+                                 snrhigh = snrhigh)
   }
   ptlDATA <- RET$partialData
   fullDATA <- RET$fullData
@@ -114,7 +118,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   ## The pool of mtry searched by the tuning procedure
   mtrypool <- c(20, 10, 5, 3, 2, 1)
   mtryD <- ceiling(sqrt(20))
-  ################## ============== L2 -- TSF =================== #####################
+  ################## ============== L2 -- LTRCTSF =================== #####################
   leftzero = which(RES$caseI$L2mtry$tsf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
@@ -240,18 +244,20 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   }
   print("Case II -- tsfD is done ...")
   
-  ################## ============== L2 -- LTRCCF =================== #####################
+  ################## ============== L2 -- LTRCCIF =================== #####################
   leftzero = which(RES$caseI$L2mtry$cf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
       #### Different mtry for CF
-      modelT <- ltrccf(formula = Formula, data = fullDATA, id = ID, 
+      modelT <- ltrccif(formula = Formula, data = fullDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
       predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseI$L2mtry$cf[jj] <- l2(data = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
       rm(predT)
-      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI)
-      RES$caseI$OOBmtry$cf[jj] <- bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI, OOB = TRUE)
+      # RES$caseI$OOBmtry$cf[jj] <- bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      RES$caseI$OOBmtry$cf[jj] <- sbrier_ltrc(obj = Surv(fullDATA$Start, fullDATA$Stop, fullDATA$Event), 
+                                              id = fullDATA$ID, pred = predOOB, type="IBS")
       # obj = Surv(fullDATA$Start,fullDATA$Stop,fullDATA$Event)
       # RES$caseI$OOBmtry$cf[jj] <- sbrier_ltrc(obj = obj, id = fullDATA$ID, pred = predOOB, type="IBS")
       print(sprintf("CASEI: CF -- mtry = %1.0f is done", mtrypool[jj]))
@@ -274,7 +280,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   
   if (RES$caseI$L2$cfD[1] == 0){
     ## Training
-    modelT = ltrccf(formula = Formula, data = fullDATA, id = ID, 
+    modelT = ltrccif(formula = Formula, data = fullDATA, id = ID, 
                     control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
                                                       mincriterion = 0, saveinfo = FALSE,
                                                       minsplit = 20,
@@ -293,14 +299,16 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   leftzero = which(RES$caseII$L2mtry$cf[1:6] == 0)
   if (length(leftzero) > 0){
     for (jj in leftzero){
-      #### Different mtry for CF
-      modelT <- ltrccf(formula = Formula, data = ptlDATA, id = ID, 
+      #### Different mtry for LTRCCIF
+      modelT <- ltrccif(formula = Formula, data = ptlDATA, id = ID, 
                        mtry = mtrypool[jj], ntree = ntree)
       predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseII$L2mtry$cf[jj] <- l2(data = ptlDATA, fulldata = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
       rm(predT)
-      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII)
-      RES$caseII$OOBmtry$cf[jj] <- bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII, OOB = TRUE)
+      # RES$caseII$OOBmtry$cf[jj] <- bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      RES$caseII$OOBmtry$cf[jj] <- sbrier_ltrc(obj = Surv(ptlDATA$Start, ptlDATA$Stop, ptlDATA$Event), 
+                                               id = ptlDATA$ID, pred = predOOB, type="IBS")
       print(sprintf("CASEII: CF -- mtry = %1.0f is done", mtrypool[jj]))
       rm(predOOB)
       rm(modelT)
@@ -310,13 +318,13 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
 
   if (RES$caseI$L2seu$cf[1] == 0){
     ## Training
-    modelT <- ltrccf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
+    modelT <- ltrccif(formula = Formula, data = fullDATA, id = ID, 
                      bootstrap = "by.root",
                      mtry = mtryD, ntree = ntree)
     predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     
     RES$caseI$L2seu$cf <- l2(data = fullDATA, info = Info, 
-                              pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
+                             pred = predT$survival.probs, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
     rm(modelT)
     rm(predT)
     gc()
@@ -335,7 +343,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   
   if (RES$caseII$L2$cfD[1] == 0){
     ## Training
-    modelT = ltrccf(formula = Formula, data = ptlDATA, id = ID, 
+    modelT = ltrccif(formula = Formula, data = ptlDATA, id = ID, 
                     control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
                                                       mincriterion = 0, saveinfo = FALSE,
                                                       minsplit = 20,
@@ -360,8 +368,10 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
                        mtry = mtrypool[jj], ntree = ntree)
       predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseI$L2mtry$rrf[jj] = l2(data = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
-      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI)
-      RES$caseI$OOBmtry$rrf[jj] = bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauI, OOB = TRUE)
+      # RES$caseI$OOBmtry$rrf[jj] = bs(data = fullDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      RES$caseI$OOBmtry$rrf[jj] = sbrier_ltrc(obj = Surv(fullDATA$Start, fullDATA$Stop, fullDATA$Event), 
+                                              id = fullDATA$ID, pred = predOOB, type = "IBS")
       print(sprintf("CASEI: RRF -- mtry = %1.0f is done",mtrypool[jj]))
       rm(predOOB)
       rm(modelT)
@@ -395,13 +405,13 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
   
   if (RES$caseI$L2seu$rrf[1] == 0){
     ## Training
-    modelT <- ltrcrrf(formula = Formula, data = fullDATA, id = ID, mtry = mtryD,
-                     bootstrap = "by.root",
-                     mtry = mtryD, ntree = ntree)
+    modelT <- ltrcrrf(formula = Formula, data = fullDATA, id = ID, 
+                      bootstrap = "by.root",
+                      mtry = mtryD, ntree = ntree)
     predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
     
     RES$caseI$L2seu$rrf <- l2(data = fullDATA, info = Info, 
-                             pred = predT, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
+                             pred = predT$survival.probs, tpnt = Tpnt[Tpnt <= max(fullDATA$Stop)])
     rm(modelT)
     rm(predT)
     gc()
@@ -417,8 +427,10 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
                        mtry = mtrypool[jj], ntree = ntree)
       predT <- predictProb(object = modelT, time.eval = Tpnt[Tpnt <= max(fullDATA$Stop)])
       RES$caseII$L2mtry$rrf[jj] = l2(data = ptlDATA, fulldata = fullDATA, info = Info, pred = predT$survival.probs, tpnt = Tpnt)
-      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII)
-      RES$caseII$OOBmtry$rrf[jj] = bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      predOOB <- predictProb(object = modelT, time.eval = Tpnt, time.tau = TauII, OOB = TRUE)
+      # RES$caseII$OOBmtry$rrf[jj] = bs(data = ptlDATA, pred = predOOB$survival.probs, tpnt = Tpnt)
+      RES$caseII$OOBmtry$rrf[jj] = sbrier_ltrc(obj = Surv(ptlDATA$Start, ptlDATA$Stop, ptlDATA$Event), 
+                                               id = ptlDATA$ID, pred = predOOB, type = "IBS")
       print(sprintf("CASEII: RRF -- mtry = %1.0f is done",mtrypool[jj]))
       rm(predOOB)
       rm(modelT)
@@ -518,11 +530,11 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
         rm(Coxfit)
         rm(predT)
       }
-      ## cfT
+      ## cif
       if (RES$caseI$ibsCVerr[jj, 2]==0){
         mtryT = RES$caseI$mtryall$cf
         
-        modelT <- ltrccf(formula = Formula, data = data_b, id = ID, 
+        modelT <- ltrccif(formula = Formula, data = data_b, id = ID, 
                          mtry = mtryT, ntree = ntree)
         predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
@@ -613,7 +625,7 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
       if (RES$caseII$ibsCVerr[jj, 2]==0){
         mtryT = RES$caseII$mtryall$cf
         
-        modelT <- ltrccf(formula = Formula, data = data_b, id = ID, 
+        modelT <- ltrccif(formula = Formula, data = data_b, id = ID, 
                          mtry = mtryT, ntree = ntree)
         predT <- predictProb(object = modelT, newdata = newdata_b, newdata.id = ID, 
                                 time.eval = Tpnt[Tpnt <= max(newdata_b$Stop) * 1.5],
@@ -670,17 +682,22 @@ Pred_funct <- function(N = 1000, Distribution = "WI", model = 2:4,
 }
 
 ############################################################################################
-ddist = c("Exp","WD","WI","Gtz")
-nndata = c(50,100,300,500) 
+nndata = c(100,300,500) 
 Nfold = 10 # 10-fold IBS-based CV
 
 setting = "nonPH" # or "PH"
-Distribution = "WI" # PH: "Exp", "WD", "WI", "Gtz"
-model = 2 # 2-linear 3-nonlinear 4-interaction
-nn = 1 # nndata = c(50, 100, 300, 500) 
+model = "linear" # or "nonlinear", "interaction"
+nn = 1 # nndata = c(100, 300, 500) 
+censor.rate = 1 # 1-10%, 2-50%
+variation = FALSE # FALSE -- "2TI + 4TV"; TRUE -- "2TI + 1TV"
+snrhigh = FALSE # FALSE -- signal-to-noise ratio LOW; signal-to-noise ratio HIGH
 
 # ll-th iteration
 ll = 1
-RES <- Pred_funct(N = 20, Distribution = Distribuion, model = model,
-                  ll = ll, setting = setting, Nfold = Nfold)
+RES <- Pred_funct(N = 20, 
+                  model = model, 
+                  ll = ll, setting = setting, Nfold = Nfold, 
+                  censor.rate = censor.rate, 
+                  variation = variation,
+                  snrhigh = snrhigh)
 ############################################################################################

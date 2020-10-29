@@ -37,10 +37,10 @@
 #' Array of dim \code{n x ntree} specifying how many times each record appears
 #' in each bootstrap sample.
 #' @param trace whether to print the progress of the search of the optimal value
-#' of \code{mtry} if \code{mtry} is not specified.
+#' of \code{mtry}.
 #' \code{trace = TRUE} is set by default.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
-#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrcrrf}}).
+#' by this value, used when \code{mtry} is not specified (see \code{\link{ltrcrrf}}).
 #' The default value is \code{2}.
 #' @param nodedepth maximum depth to which a tree should be grown. The default behaviour
 #' is that this parameter is ignored.

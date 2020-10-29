@@ -31,7 +31,7 @@
 #' Fit a LTRC conditional inference forest
 #'
 #' An implementation of the random forest and bagging ensemble algorithms utilizing
-#' LTRC conditional inference trees \code{\link[LTRCtrees]{LTRCIT}} as base learners for
+#' LTRC conditional inference trees \code{LTRCIT} as base learners for
 #' left-truncated right-censored survival data with time-invariant covariates.
 #' It also allows for (left-truncated) right-censored survival data with
 #' time-varying covariates.
@@ -78,7 +78,7 @@
 #' in \code{formula}). See function \code{\link[partykit]{cforest}} for
 #' other available options.
 #' @param mtry number of input variables randomly sampled as candidates at each node for
-#' random forest algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccf}}.
+#' random forest algorithms. The default \code{mtry} is tuned by \code{\link{tune.ltrccif}}.
 #' @param ntree an integer, the number of the trees to grow for the forest.
 #' \code{ntree = 100L} is set by default.
 #' @param samptype choices are \code{swor} (sampling without replacement) and
@@ -97,51 +97,54 @@
 #' See \code{\link[partykit]{ctree_control}}.
 #' @param cores numeric. See \code{\link[partykit]{ctree_control}}.
 #' @param trace whether to print the progress of the search of the optimal value of
-#' \code{mtry}, when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
+#' \code{mtry}, when \code{mtry} is not specified (see \code{\link{tune.ltrccif}}).
 #' \code{trace = TRUE} is set by default.
 #' @param stepFactor at each iteration, \code{mtry} is inflated (or deflated)
-#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrccf}}).
+#' by this value, used when \code{mtry} is not specified (see \code{\link{tune.ltrccif}}).
 #' The default value is \code{2}.
 #' @param control a list of control parameters, see \code{\link[partykit]{ctree_control}}.
 #' \code{control} parameters \code{minsplit}, \code{minbucket} have been adjusted from the
 #' \code{\link[partykit]{cforest}} defaults. Other default values correspond to those of the
 #' default values used by \code{\link[partykit]{ctree_control}}.
-#' @return An object belongs to the class \code{ltrccf}, as a subclass of
+#' @return An object belongs to the class \code{ltrccif}, as a subclass of
 #' \code{\link[partykit]{cforest}}.
 #' @import partykit
 #' @import survival
-#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrccf}}
+#' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrccif}}
 #' for \code{mtry} tuning.
 #' @references Andersen, P. and Gill, R. (1982). Cox's regression model for counting
-#' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}, 1100-1120.
+#' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}:1100-1120.
+#' @references Fu, W. and Simonoff, J.S. (2016). Survival trees for left-truncated and 
+#' right-censored data, with application to time-varying covariate data. 
+#' \emph{Biostatistics}, \strong{18}(2):352–369.
 #' @examples
 #' #### Example with time-varying data pbcsample
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
-#' ## Fit an LTRCCF on the time-invariant data, with mtry tuned with stepFactor = 3.
-#' LTRCCFobj = ltrccf(formula = Formula, data = pbcsample, ntree = 20L, stepFactor = 3)
+#' ## Fit an LTRCCIF on the time-invariant data, with mtry tuned with stepFactor = 3.
+#' LTRCCIFobj = ltrccif(formula = Formula, data = pbcsample, ntree = 20L, stepFactor = 3)
 #' @export
 
-ltrccf <- function(formula, data, id,
-                   mtry = NULL, ntree = 100L,
-                   bootstrap = c("by.sub","by.root","by.user","none"),
-                   samptype = c("swor","swr"),
-                   sampfrac = 0.632,
-                   samp = NULL,
-                   na.action = "na.omit",
-                   stepFactor = 2,
-                   trace = TRUE,
-                   applyfun = NULL, cores = NULL,
-                   control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
-                                                     minsplit = max(ceiling(sqrt(nrow(data))), 20),
-                                                     minbucket = max(ceiling(sqrt(nrow(data))), 7),
-                                                     minprob = 0.01,
-                                                     mincriterion = 0, saveinfo = FALSE)){
+ltrccif <- function(formula, data, id,
+                    mtry = NULL, ntree = 100L,
+                    bootstrap = c("by.sub","by.root","by.user","none"),
+                    samptype = c("swor","swr"),
+                    sampfrac = 0.632,
+                    samp = NULL,
+                    na.action = "na.omit",
+                    stepFactor = 2,
+                    trace = TRUE,
+                    applyfun = NULL, cores = NULL,
+                    control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                      minsplit = max(ceiling(sqrt(nrow(data))), 20),
+                                                      minbucket = max(ceiling(sqrt(nrow(data))), 7),
+                                                      minprob = 0.01,
+                                                      mincriterion = 0, saveinfo = FALSE)){
 
   #requireNamespace("inum")
 
   Call <- match.call()
-  Call[[1]] <- as.name('ltrccf')  #make nicer printout for the user
+  Call[[1]] <- as.name('ltrccif')  #make nicer printout for the user
   # create a copy of the call that has only the arguments we want,
   #  and use it to call model.frame()
   indx <- match(c('formula', 'data', 'id'),
@@ -179,7 +182,7 @@ ltrccf <- function(formula, data, id,
   ## The following code to define id does not work since it could not handle missing values
   # id <- model.extract(mf, 'id')
 
-  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccf
+  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccif
   if (indx[3] == 0){
     ## If id is not present, then we add one more variable
     # mf$id <- 1:nrow(mf) ## Relabel
@@ -243,17 +246,17 @@ ltrccf <- function(formula, data, id,
   }
 
   if (is.null(mtry)){
-    mtry <- tune.ltrccf(formula = formula, data = data, id = id,
-                        control = control, ntreeTry = ntree,
-                        bootstrap = "by.user",
-                        samptype = samptype,
-                        sampfrac = sampfrac,
-                        samp = samp,
-                        na.action = na.action,
-                        stepFactor = stepFactor,
-                        applyfun = applyfun,
-                        cores = cores,
-                        trace = trace)
+    mtry <- tune.ltrccif(formula = formula, data = data, id = id,
+                         control = control, ntreeTry = ntree,
+                         bootstrap = "by.user",
+                         samptype = samptype,
+                         sampfrac = sampfrac,
+                         samp = samp,
+                         na.action = na.action,
+                         stepFactor = stepFactor,
+                         applyfun = applyfun,
+                         cores = cores,
+                         trace = trace)
     print(sprintf("mtry is tuned to be %1.0f", mtry))
   }
 
@@ -285,7 +288,7 @@ ltrccf <- function(formula, data, id,
   } else {
     ret$data$id <- data$id
   }
-  class(ret) <- "ltrccf"
+  class(ret) <- "ltrccif"
   ret
 }
 

@@ -1,38 +1,30 @@
 ######################### ========== mtry =========================== ######################
 ############### ===== The following code is to reproduce mtry analysis===== ######################
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
 ndataname <- c("N = 100", "N = 300", "N = 500", "N = 1000")
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-frname = c("CF","RRF","TSF")
+frname = c("LTRCCIF","LTRCRRF","LTRCTSF")
 L2name <- c("old","new")
-mmodel <- 1:4
-ccrate = c(0,1,2)
+mmodel <- 1:3
+ccrate = c(1,2)
 nndata = c(100,300,500,1000)
-nnpseu = c(11,5)
 
-varN = 20
 
-pp = 1
-cc = 2
+cc = 1
 
 setting = "PH"
-DD = 2:4
 
 L2ll = 2 ###### Decided to go with L2 up to the last observed time point
 for (ff in 1:3){
-  if (setting == "nonPH") DD=3
-  for (dd in DD){
-    pdf_file_name <- sprintf("./RCmtry%s_%s_%1.0fvar_%s_c%1.0f_%s.pdf",
-                             frname[ff],setting,varN,ddist[dd],ccrate[cc],L2name[L2ll])
+    pdf_file_name <- sprintf("./LTRCmtry%s_%s_c%1.0f_%s.pdf",
+                             frname[ff],setting,ccrate[cc],L2name[L2ll])
     pdf(pdf_file_name, width=15, height = 18)
     par(mfrow=c(4,3))
     for (nn in 1:4){
-      for (mm in 2:4){ 
+      for (mm in 1:3){ 
         aa = NULL
-        filename <- sprintf('./L2RC_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f.rds',
-                            setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc])
+        filename <- sprintf('./L2LTRC_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                            setting,nndata[nn],mmodel[mm],ccrate[cc])
         
         Q = matrix(0,ncol = 8,nrow = 500)
         
@@ -49,7 +41,7 @@ for (ff in 1:3){
         
         ## L2 results with mtry = 1,2,3,5,20 and best mtry
         Q[,1:7] = L2mtry[, c(6,5,4,3,2,1,7)]
-
+        
         ## L2 results with mtry tuned by OOB
         Q[,8] = L2[, ff*2+1]
         
@@ -72,32 +64,27 @@ for (ff in 1:3){
       }
     }
     dev.off()
-  }
+  
 }
 
 ######################### ========== Default or Proposed? =========== ######################
 ########### ==== The following code is to reproduce Table of Default vs Proposed======= ##########
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
 ndataname <- c("N = 100", "N = 300", "N = 500", "N = 1000")
-mmodel <- 1:4
-ccrate = c(0,1,2)
+mmodel <- 1:3
+ccrate = c(1,2)
 nndata = c(100,300,500,1000)
 
-varN = 20
-pp = 1
-cc = 2
-varN = 20
+cc = 1
 Nfold = 10
 
 setting = "PH"
-dd = 3
 mm = 4
 xall = rep(0,8)
 for (nn in 1:4){
-  filename <- sprintf('./L2RC_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f.rds',
-                      setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc])
+  filename <- sprintf('./L2LTRC_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                      setting,nndata[nn],mmodel[mm],ccrate[cc])
   
   resall <- readRDS(filename)
   Q = matrix(0, ncol = 7, nrow = 500)
@@ -128,42 +115,34 @@ format_all(xall)
 
 ######################### ========== Boxplots of L2 =========== ##################################
 ##### ==== The following code is to reproduce the plots of performance comparison, including IBSCV==== #######
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
 ndataname <- c("N = 100", "N = 300", "N = 500", "N = 1000")
 
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-mmodel <- 1:4
-ccrate = c(0,1,2)
+
+mmodel <- 1:3
+ccrate = c(1,2)
 nndata = c(100,300,500,1000)
-nnpseu = c(11,5)
 
-varN = 20
-
-pp = 1
-cc = 2
-
-Nfold = 10
+cc = 1
 
 setting = "nonPH"
-dd=3
 
-pdf_file_name <- sprintf("./IBSCV_%s_%1.0fvar_%s_c%1.0f.pdf",
-                         setting,varN,ddist[dd],ccrate[cc])
+pdf_file_name <- sprintf("./IBSCV_%s_c%1.0f.pdf",
+                         setting,ccrate[cc])
 pdf(pdf_file_name, width=15, height = 18)
 par(mfrow=c(4,3))
 for (nn in 1:4){
-  for (mm in c(2,3,4)){
+  for (mm in 1:3){
     aa = NULL
     Q = matrix(0,ncol = 6, nrow = 500)
-    filename <- sprintf('./L2RC_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f.rds',
-                        setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc])
+    filename <- sprintf('./L2LTRC_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                        setting,nndata[nn],mmodel[mm],ccrate[cc])
     
     resall <- readRDS(filename)
     L2 = matrix(unlist(resall$L2),nrow = 500,byrow = FALSE)
     
-    ## Get the L2 errors of Cox, cfP, rrfP, tsfP
+    ## Get the L2 errors of Cox, cifP, rrfP, tsfP
     Q[,1:4]=L2[,c(1,3,5,7)]
     
     IIL = matrix(unlist(resall$ibsCVerr), ncol = 4, byrow = FALSE)

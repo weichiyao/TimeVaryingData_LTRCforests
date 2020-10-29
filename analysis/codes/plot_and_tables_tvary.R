@@ -12,37 +12,28 @@ format_all <- function(xall) {
 }
 ######################### ================== mtry =========================== ######################
 ########### ======= The following code is to reproduce mtry analysis ===== ######################
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
-ndataname <- c("N = 50", "N = 100", "N = 300", "N = 500")
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-frname = c("CF","RRF","TSF")
-mmodel <- 1:4
-ccrate = c(0,1,2)
-nndata = c(50,100,300,500)
-nnpseu = c(11,5)
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+frname = c("LTRCCIF","LTRCRRF","LTRCTSF")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
 
-varN = 20
-
-pp = 1
 cc = 2
-varN = 20
 
 setting = "nonPH"
-DD = 2:4
 for (ff in 1:3){
-  if (setting == "nonPH") DD=3
-  for (dd in DD){
-    pdf_file_name <- sprintf("./mtry%s_%s_%1.0fvar_%s_npseu%1.0f_c%1.0f.pdf",
-                             frname[ff],setting,varN,ddist[dd],nnpseu[pp],ccrate[cc])
-    pdf(pdf_file_name, width=15, height = 18)
-    par(mfrow=c(4,3))
-    for (nn in 1:4){
-      for (mm in 2:4){ 
+  
+    pdf_file_name <- sprintf("./mtry%s_%s_c%1.0f.pdf",
+                             frname[ff],setting,ccrate[cc])
+    pdf(pdf_file_name, width=15, height = 14)
+    par(mfrow=c(3,3))
+    for (nn in 1:3){
+      for (mm in 1:3){ 
         aa = NULL
-        filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
-                            setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
+        filename <- sprintf('./L2_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                            setting,nndata[nn],mmodel[mm],ccrate[cc])
         
         resall <- readRDS(filename)
         Q = matrix(0,ncol = 8,nrow = 500)
@@ -83,37 +74,26 @@ for (ff in 1:3){
       }
     }
     dev.off()
-  }
+  
 }
 
 
 ######################### ========== Default or Proposed? =========== ######################
 ########### ======= The following code is to reproduce Table of Default vs Proposed ======= ##########
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
 
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
-ndataname <- c("N = 50", "N = 100", "N = 300", "N = 500")
-distname <- c("Bathtub","Log-normal","Weibull-D","Weibull-I")
-mmodel <- 1:4
-ccrate = c(0,1,2)
-nndata = c(50,100,300,500)
-nnpseu = c(11,5)
-
-varN = 20
-
-pp = 1
-cc = 2
-varN = 20
-Nfold = 10
-
+cc = 1
 setting = "nonPH"
-dd = 3
 mm = 3
-xall = rep(0,8)
-for (nn in 1:4){
-  filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
-                         setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
+xall = rep(0,6)
+for (nn in 1:3){
+  filename <- sprintf('./L2_%s_N%1.0%_m%1.0f_c%1.0f.rds',
+                         setting,nndata[nn],mmodel[mm],ccrate[cc])
   resall <- matrix(unlist(readRDS(filename)),nrow=500,byrow=FALSE)
   
   ## L2 results for KM fit
@@ -148,207 +128,180 @@ for (nn in 1:4){
 format_all(xall)
 ######################### ========== Boxplots of L2 =========== ######################
 ########### ======= The following code is to reproduce boxplots of L2 ======= ##########
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
-ndataname <- c("N = 50", "N = 100", "N = 300", "N = 500")
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-mmodel <- 1:4
-ccrate = c(0,1,2)
-nndata = c(50,100,300,500)
-nnpseu = c(11,5)
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
 
-varN = 20
+cc = 1
 
-pp = 1
-cc = 2
-
-varN = 20
 setting = "nonPH"
-DD = 2:4
-if (setting == "nonPH") DD=3
-for (dd in DD){
-  pdf_file_name <- sprintf("./L2_%s_%1.0fvar_%s_npseu%1.0f_c%1.0f_ROC.pdf",
-                           setting,varN,ddist[dd],nnpseu[pp],ccrate[cc])
-  pdf(pdf_file_name, width=17, height = 18)
-  par(mfrow=c(4,3))
-  for (nn in 1:4){
-    for (mm in 2:4){ 
-      aa = NULL
-      
-      filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
-                          setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
-      resall <- matrix(unlist(readRDS(filename)),nrow=500,byrow=FALSE)
-      
-      ## L2 results for KM fit
-      L2KM = matrix(unlist(resall$caseI$L2KM),ncol = 1)
-      
-      ## CaseI : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
-      Ec[,1:7] = matrix(unlist(resall$caseI$L2), ncol = 7, byrow = FALSE)
-      ## CaseII : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
-      Er[,1:7] = matrix(unlist(resall$caseII$L2), ncol = 7, byrow = FALSE)
-      
-      
-      E = cbind(L2KM, Ec, Er)
-      
-      E = E[rowSums(E==Inf)==0,]
-      E = E[rowSums(E==0)==0,]
-      ########## ======== presented way 1 ========= #######
-      boxplot.matrix(E, main=c(modelname[mm],"",ndataname[nn]), cex.main=2, cex.lab=1.5,
-                     xaxt="n", 
-                     ylim = aa,
-                     ylab = "Integrated L2")
-      
-      abline(v = 4.5, lty = 2, col = 4, lwd = 3)
-      abline(h = E[, 1], lty = 2, col = 2, lwd = 3)
-      
-      xtick <- c(1:8)
-      text(x=xtick,  par("usr")[3],
-           labels = c("Cox","cfP","rrfP","tsfP",
-                      "Cox","cfP","rrfP","tsfP"),
-           pos = 1, xpd = TRUE, cex = 1.6)
-      
-    }
+
+pdf_file_name <- sprintf("./L2_%s_c%1.0f_ROC.pdf",
+                         setting,ccrate[cc])
+pdf(pdf_file_name, width=17, height = 18)
+par(mfrow=c(3,3))
+for (nn in 1:3){
+  for (mm in 1:3){ 
+    aa = NULL
+    
+    filename <- sprintf('./L2_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                        setting,nndata[nn],mmodel[mm],ccrate[cc])
+    resall <- matrix(unlist(readRDS(filename)),nrow=500,byrow=FALSE)
+    
+    ## L2 results for KM fit
+    L2KM = matrix(unlist(resall$caseI$L2KM),ncol = 1)
+    
+    ## CaseI : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
+    Ec[,1:7] = matrix(unlist(resall$caseI$L2), ncol = 7, byrow = FALSE)
+    ## CaseII : L2 results for Cox, cfD, cfP, rrfD, rrfP, tsfD, tsfp
+    Er[,1:7] = matrix(unlist(resall$caseII$L2), ncol = 7, byrow = FALSE)
+    
+    
+    E = cbind(L2KM, Ec, Er)
+    
+    E = E[rowSums(E==Inf)==0,]
+    E = E[rowSums(E==0)==0,]
+    ########## ======== presented way 1 ========= #######
+    boxplot.matrix(E, main=c(modelname[mm],"",ndataname[nn]), cex.main=2, cex.lab=1.5,
+                   xaxt="n", 
+                   ylim = aa,
+                   ylab = "Integrated L2")
+    
+    abline(v = 4.5, lty = 2, col = 4, lwd = 3)
+    abline(h = E[, 1], lty = 2, col = 2, lwd = 3)
+    
+    xtick <- c(1:8)
+    text(x=xtick,  par("usr")[3],
+         labels = c("Cox","LTRC CIF(P)","LTRC RRF(P)","LTRC TSF(P)",
+                    "Cox","LTRC CIF(P)","LTRC RRF(P)","LTRC TSF(P)"),
+         pos = 1, xpd = TRUE, cex = 1.6)
+    
   }
-  dev.off()
 }
+dev.off()
+
 ######################### ========== IBS based CV rule =========== ######################
 ########### ======= The following code is to reproduce Table of Summary of IBS-based CV rules ======= ############
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
-ndataname <- c("Subject size N = 50", "Subject size N = 100", "Subject size N = 300", "Subject size N = 500")
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-mmodel <- 1:4
-ccrate = c(0,1,2)
-nndata = c(50,100,300,500)
-nnpseu = c(11,5)
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
 
-varN = 20
 
-pp = 1
-cc = 2
-
-varN = 20
-Nfold = 10
+cc = 1
 nn = 3
-
 setting = "PH"
-DD = 3
-if (setting == "PH") DD = c(2:4)
-for (dd in DD){
-  for (mm in c(2,3,4)){
-    Qc = matrix(0, ncol = 7, nrow = 500)
-    Qr = matrix(0, ncol = 7, nrow = 500)
-    filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f.rds',
-                        setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc])
-    
-    resall <- readRDS(filename)
-    L2c = matrix(unlist(resall$caseI$L2),nrow = 500,byrow = FALSE)
-    L2r = matrix(unlist(resall$caseII$L2),nrow = 500,byrow = FALSE)
-    
-    ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseI
-    Qc[, 1:4] = L2c[, c(1,3,5,7)]
-    ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseII
-    Qr[, 1:4] = L2r[, c(1,3,5,7)]
-    
-    IILc = matrix(unlist(resall$caseI$ibsCVerr), ncol = 4, byrow = FALSE)
-    IILr = matrix(unlist(resall$caseII$ibsCVerr), ncol = 4, byrow = FALSE)
-    
-    idx_iLc = apply(IILc, 1, which.min)
-    idx_iLr = apply(IILr, 1, which.min)
-    
-    nz_ic = which(as.numeric(rowSums(IILc != 0) < 4) > 0)
-    nz_ir = which(as.numeric(rowSums(IILr != 0) < 4) > 0)
-    
-    for (ll in 1:500){
-      ## L2 error of the method chosen by OOB for CaseI
-      Qc[ll,5] = Qc[ll,idx_iLc[ll]]
-      
-      ## L2 error of the method chosen by OOB for CaseII
-      Qr[ll,5] = Qr[ll,idx_iLr[ll]]
-    }
-    
+
+for (mm in 1:3){
+  Qc = matrix(0, ncol = 7, nrow = 500)
+  Qr = matrix(0, ncol = 7, nrow = 500)
+  filename <- sprintf('./L2_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                      setting,nndata[nn],mmodel[mm],ccrate[cc])
   
-    Qc[nz_ic, 5] = 0 
-    Qr[nz_ir, 5] = 0 
+  resall <- readRDS(filename)
+  L2c = matrix(unlist(resall$caseI$L2),nrow = 500,byrow = FALSE)
+  L2r = matrix(unlist(resall$caseII$L2),nrow = 500,byrow = FALSE)
+  
+  ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseI
+  Qc[, 1:4] = L2c[, c(1,3,5,7)]
+  ## Get the L2 errors of Cox, cfP, rrfP, tsfP for CaseII
+  Qr[, 1:4] = L2r[, c(1,3,5,7)]
+  
+  IILc = matrix(unlist(resall$caseI$ibsCVerr), ncol = 4, byrow = FALSE)
+  IILr = matrix(unlist(resall$caseII$ibsCVerr), ncol = 4, byrow = FALSE)
+  
+  idx_iLc = apply(IILc, 1, which.min)
+  idx_iLr = apply(IILr, 1, which.min)
+  
+  nz_ic = which(as.numeric(rowSums(IILc != 0) < 4) > 0)
+  nz_ir = which(as.numeric(rowSums(IILr != 0) < 4) > 0)
+  
+  for (ll in 1:500){
+    ## L2 error of the method chosen by OOB for CaseI
+    Qc[ll,5] = Qc[ll,idx_iLc[ll]]
     
-    Qc = Qc[rowSums(Qc[,1:5]==0)==0,]
-    Qr = Qr[rowSums(Qr[,1:5]==0)==0,]
-    Qc = Qc[rowSums(Qc==Inf)==0,]
-    Qr = Qr[rowSums(Qr==Inf)==0,]
-    
-    k_r = 0
-    for (ll in 1:nrow(Qr)){
-      L2min = min(Qr[ll, 1:4])
-      L2max = max(Qr[ll, 1:4])
-      Qr[ll,6] = abs(Qr[ll,5] - L2min)/L2min
-      Qr[ll,7] = abs(Qr[ll,5] - L2max)/L2max
-      if (Qr[ll,5]==L2min){
-        k_r = k_r+1
-      }
-    }
-    p_r = k_r/nrow(Er)
-    
-    k_c = 0
-    for (ll in 1:nrow(Qc)){
-      L2min = min(Qc[ll,1:4])
-      L2max = max(Qc[ll,1:4])
-      Qc[ll,6] = abs(Qc[ll,5]-L2min)/L2min
-      Qc[ll,7] = abs(Qc[ll,5]-L2max)/L2max
-      if (Qc[ll,5]==L2min){
-        k_c = k_c+1
-      }
-    }
-    p_c = k_c/nrow(Ec)
-    
-    
-    Ire = matrix(0,nrow = 1,ncol = 6)
-    Ire[1,1] =  p_c
-    Ire[1,2:3] =  colMeans(Qc)[6:7]
-    Ire[1,4] =  p_r
-    Ire[1,5:6] =  colMeans(Qr)[6:7]
-    Ire = format(round(Ire,digits=2), nsmall = 2, scientific=FALSE)
-    Ire = format_row(Ire)
-    if (mm == 2){
-      cat(sprintf("\\multirow{9}{*}{%s}& \\multirow{3}{*}{%s}& %s & %s\\\\\n",setting,distname[dd],modelname[mm],Ire))
-    } else if (mm == 3){
-      cat(sprintf("&& %s & %s\\\\\n",modelname[mm],Ire))
-    } else {
-      cat(sprintf("&& %s & %s\\\\\n",modelname[mm],Ire))
-    }
+    ## L2 error of the method chosen by OOB for CaseII
+    Qr[ll,5] = Qr[ll,idx_iLr[ll]]
   }
   
+
+  Qc[nz_ic, 5] = 0 
+  Qr[nz_ir, 5] = 0 
+  
+  Qc = Qc[rowSums(Qc[,1:5]==0)==0,]
+  Qr = Qr[rowSums(Qr[,1:5]==0)==0,]
+  Qc = Qc[rowSums(Qc==Inf)==0,]
+  Qr = Qr[rowSums(Qr==Inf)==0,]
+  
+  k_r = 0
+  for (ll in 1:nrow(Qr)){
+    L2min = min(Qr[ll, 1:4])
+    L2max = max(Qr[ll, 1:4])
+    Qr[ll,6] = abs(Qr[ll,5] - L2min)/L2min
+    Qr[ll,7] = abs(Qr[ll,5] - L2max)/L2max
+    if (Qr[ll,5]==L2min){
+      k_r = k_r+1
+    }
+  }
+  p_r = k_r/nrow(Er)
+  
+  k_c = 0
+  for (ll in 1:nrow(Qc)){
+    L2min = min(Qc[ll,1:4])
+    L2max = max(Qc[ll,1:4])
+    Qc[ll,6] = abs(Qc[ll,5]-L2min)/L2min
+    Qc[ll,7] = abs(Qc[ll,5]-L2max)/L2max
+    if (Qc[ll,5]==L2min){
+      k_c = k_c+1
+    }
+  }
+  p_c = k_c/nrow(Ec)
+  
+  
+  Ire = matrix(0,nrow = 1,ncol = 6)
+  Ire[1,1] =  p_c
+  Ire[1,2:3] =  colMeans(Qc)[6:7]
+  Ire[1,4] =  p_r
+  Ire[1,5:6] =  colMeans(Qr)[6:7]
+  Ire = format(round(Ire,digits=2), nsmall = 2, scientific=FALSE)
+  Ire = format_row(Ire)
+  if (mm == 1){
+    cat(sprintf("\\multirow{9}{*}{%s}& \\multirow{3}{*}{%s}& %s & %s\\\\\n",setting,distname[dd],modelname[mm],Ire))
+  } else if (mm == 2){
+    cat(sprintf("&& %s & %s\\\\\n",modelname[mm],Ire))
+  } else {
+    cat(sprintf("&& %s & %s\\\\\n",modelname[mm],Ire))
+  }
 }
+
+
 
 
 ################## ========= Plot Pseudo-subject vs Subject (side by side, only the forests) ========= ##################################################
 ########### ======= The following code is to reproduce the plot of Pseudo-subject vs Subject ======= ######################
-ddist = c("Exp","WD","WI","Gtz")
-modelname <- c("Tree", "Linear", "Nonlinear","Interaction")
-cratename <- c("Censoring: 0", "Censoring: 20%", "Censoring: 50%")
-ndataname <- c("N = 50", "N = 100", "N = 300", "N = 500")
-distname <- c("Exponential","Weibull-D","Weibull-I","Gompertz")
-mmodel <- 1:4
-ccrate = c(0,1,2)
-nndata = c(50,100,300,500)
-nnpseu = c(11,5)
-pp = 1
-cc = 2
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("Censoring: 20%", "Censoring: 50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
+cc = 1
 
-varN = 20
-Nfold = 10
-dd=3
 for (setting in c("PH","nonPH")){
-  pdf_file_name <- sprintf("./subseu_%s_%1.0fvar_%s_npseu%1.0f_c%1.0f.pdf",
-                           setting,varN,ddist[dd],nnpseu[pp],ccrate[cc])
+  pdf_file_name <- sprintf("./subseu_%s_c%1.0f.pdf",
+                           setting,ccrate[cc])
   pdf(pdf_file_name, width=15, height = 15)
-  par(mfrow=c(4,3))
+  par(mfrow=c(3,3))
   aa = NULL
-  for (nn in 1:4){
-    for (mm in 2:4){ 
-      filename <- sprintf('./L2_%s_%1.0fvar_N%1.0f_%s_m%1.0f_c%1.0f_p%1.0f.rds',
-                          setting,varN,nndata[nn],ddist[dd],mmodel[mm],ccrate[cc],nnpseu[pp])
+  for (nn in 1:3){
+    for (mm in 1:3){ 
+      filename <- sprintf('./L2_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                          setting,nndata[nn],mmodel[mm],ccrate[cc])
       resall_cf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$cf), nrow=500, byrow=FALSE)[,3]
       resall_rrf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$rrf), nrow=500, byrow=FALSE)[,3]
       resall_tsf <- matrix(unlist(readRDS(filename)$caseI$L2mtry$tsf), nrow=500, byrow=FALSE)[,3]
@@ -377,4 +330,139 @@ for (setting in c("PH","nonPH")){
 
 
 
-############################################################################################
+###################### =========== Main effects plots ========= #################################
+modelname <- c("Linear", "Nonlinear","Interaction")
+cratename <- c("20%", "50%")
+ndataname <- c("N = 100", "N = 300", "N = 500")
+ssetting <- c("PH", "nonPH")
+ssettingname <- c("PH", "non-PH")
+SNRname <- c("Low", "High")
+knowledgename <- c("Full", "Half")
+scenname <- c("2TI + 1TV", "2TI + 4TV")
+mmodel <- 1:3
+ccrate = c(1,2)
+nndata = c(100,300,500)
+
+resaggre <- 
+  lapply(1:2, function(ee){ #scenario
+    if (ee == 1){ # "2TI + 1TV"
+      varfile = "_vT"
+    } else {
+      varfile = ""
+    }
+    
+    lapply(1:2, function(rr){
+      
+      if (rr == 1){ # Low
+        snrfile = ""
+      } else {
+        snrfile =  "_sH"
+      }
+      lapply(1:2, function(ss){
+        lapply(1:2, function(cc){
+          lapply(1:3, function(nn){
+            lapply(1:3, function(mm){
+              filename <- sprintf('./L2%s%s_%s_N%1.0f_m%1.0f_c%1.0f.rds',
+                                  snrfile, varfile, ssetting[ss], nndata[nn], mmodel[mm], ccrate[cc])
+              
+              resall <- readRDS(filename)
+              ## KM, CIFPI, RRFPI, CIFPII, RRFPII
+              Q <- as.matrix(resall$L2[, c(1,3,4,9,10)])
+              Q = Q[rowSums(Q==Inf)==0, ]
+              Q = Q[rowSums(Q==0)==0, ]
+              ########## ======== presented way 1 ========= #######
+              xrow <- colMeans((Q[, c(2,3,4,5)] - Q[, 1]) / Q[, 1])
+              res = data.frame(matrix(0, ncol = 9, nrow = 2))
+              names(res) <- c("LTRCCIF", "LTRCRRF",
+                              "scenario","SNR","setting","model","crate","ntrain","knowledge")
+              res$model <- modelname[mm]
+              res$setting <- ssettingname[ss]
+              res$ntrain <- nndata[nn]
+              res$crate <- cratename[cc]
+              res$scenario <- scenname[ee]
+              res$SNR <- SNRname[rr]
+              res$knowledge <- c("Full", "Half")
+              res$LTRCCIF <- xrow[c(1,3)]
+              res$LTRCRRF <- xrow[c(2,4)]
+              print(sprintf("ee=%1.0f, rr = %1.0f, nn = %1.0f, ss = %1.0f, mm = %1.0f, nz = %1.0f", 
+                            ee, rr, nn, ss, mm, sum(rowSums(Q==0)==0)))
+              res
+              
+            }) %>% bind_rows()
+          }) %>% bind_rows()
+        }) %>% bind_rows()
+      }) %>% bind_rows()
+    }) %>% bind_rows()
+  }) %>% bind_rows()
+
+
+resallcombined <- resaggre %>% as_tibble() 
+resallcombined$ntrain = factor(resallcombined$ntrain, levels = c("100", "300", "500"))
+# resallcombined$scenario = factor(resallcombined$scenario, levels = c("2TI + 1TV", "2TI + 4TV"))
+resallcombined$SNR = factor(resallcombined$SNR, levels = c("Low", "High"))
+# resallcombined$knowledge = factor(resallcombined$knowledge, levels = c("Full", "Half"))
+resallcombined$crate = factor(resallcombined$crate, levels = c("20%", "50%"))
+resallcombined$setting = factor(resallcombined$setting, levels = c("PH", "non-PH"))
+resallcombined$model = factor(resallcombined$model, levels = c("Linear", "Nonlinear","Interaction"))
+######################### ========== main effect plot ========== #########################
+create_tblplot <- function(dblfinal, method){
+  
+  tblplot <- lapply(method, function(met){
+    # Formula <- as.formula(met ~ scenario + SNR + setting + model + crate + ntrain + knowledge)
+    Formula <- as.formula(met ~ scenario + SNR + setting + crate + ntrain + knowledge)
+    Formula <- as.formula(paste(c(met, "~", Formula[[3]]), collapse = " "))
+    mod  <- lm(Formula, data = dblfinal)
+    
+    # mean of all
+    MEall <- mean(dblfinal[[met]])
+    
+    MEdf <- as.data.frame(effects::allEffects(mod))
+    namMEdf <- names(MEdf)
+    # namMEdfnew <- c("Scenario", "SNR", "Setting", "Relationship", "Censoring rate", "Sample size", "Knowledge")
+    namMEdfnew <- c("Scenario", "SNR", "Setting", "Censoring rate", "Sample size", "Knowledge")
+    
+    lapply(1:length(MEdf), function(mm){
+      MEdf[[mm]][, 1:2] %>%
+        mutate(cat = namMEdfnew[mm]) %>%
+        rename("subcat" = namMEdf[mm],
+               "Mean" = fit)
+    }) %>%
+      bind_rows() %>%
+      select(cat, subcat, Mean) %>%
+      as_tibble() %>%
+      mutate(method = met) %>%
+      mutate(meanall = MEall)
+  }) %>%
+    bind_rows()  %>%
+    mutate(method = recode(method,
+                           "LTRCCIF" = "LTRC CIF(P)",
+                           "LTRCRRF" = "LTRC RRF(P)"))
+  
+  p1 <- tblplot %>%
+    # mutate(cat = factor(cat, levels = c("Scenario", "Relationship", "Distribution", "SNR", 
+    #                                     "Autocorrelation", "Censor rate", "Sample size"))) %>%
+    mutate(subcat = factor(subcat, levels = unique(subcat))) %>% # this is important to made ntrain = 200, 1000, 5000 in order
+    # arrange(match(subcat, c("200", "1000", "5000"))) %>%
+    ggplot(aes(subcat, Mean)) +
+    geom_point(group = 1, color = "steelblue") +
+    geom_line(group = 1, color = "steelblue") +
+    facet_grid(cols = vars(cat), 
+               rows = vars(method), 
+               scales = "free_x") +
+    geom_hline(aes(yintercept = meanall), linetype = "dashed", color = "#999999") + 
+    geom_hline(aes(yintercept = 0), linetype = "solid", color = "gray40") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.title.x = element_blank(),
+          strip.background = element_rect(fill="white")) 
+  
+  print(p1) # has to print, or do nothing 
+  # dev.off()
+}
+
+dblfinal <- resallcombined %>% filter(model == "Interaction")
+create_tblplot(dblfinal = dblfinal, 
+               method = c("LTRCCIF", "LTRCRRF"))
+
+
+

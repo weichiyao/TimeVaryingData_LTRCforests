@@ -1,7 +1,7 @@
-#' Tune \code{mtry} to the optimal value with respect to out-of-bag error for a LTRCCF model
+#' Tune \code{mtry} to the optimal value with respect to out-of-bag error for a LTRCCIF model
 #'
 #' Starting with the default value of \code{mtry}, search for the optimal value
-#' (with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrccf}}.
+#' (with respect to out-of-bag error estimate) of \code{mtry} for \code{\link{ltrccif}}.
 #'
 #' @param formula a formula object, with the response being a \code{\link[survival]{Surv}}
 #' object, with form
@@ -54,16 +54,15 @@
 #' basic \code{lapply} function unless the \code{cores} argument is specified (see below).
 #' See \code{\link[partykit]{ctree_control}}.
 #' @param cores numeric. See \code{\link[partykit]{ctree_control}}.
-#' @param trace whether to print the progress of the search of the optimal value of \code{mtry}
-#' when \code{mtry} is not specified (see \code{\link{tuneLTRCCF}}). \code{trace = TRUE}
-#' is set by default.
+#' @param trace whether to print the progress of the search of the optimal value of \code{mtry}.
+#' \code{trace = TRUE} is set by default.
 #' @param control a list with control parameters, see \code{\link[partykit]{cforest}}.
-#' The default values correspond to those of the default values used by \code{\link{ltrccf}}.
+#' The default values correspond to those of the default values used by \code{\link{ltrccif}}.
 #' @param ntreeTry number of trees used at the tuning step.
 #' @param trace whether to print the progress of the search. \code{trace = TRUE} is set by default.
 #' @param plot whether to plot the out-of-bag error as a function of \code{mtry}.
 #' \code{plot = FALSE} is set by default.
-#' @param doBest whether to run a \code{\link{ltrccf}} object using the optimal \code{mtry} found.
+#' @param doBest whether to run a \code{\link{ltrccif}} object using the optimal \code{mtry} found.
 #' \code{doBest = FALSE} is set by default.
 #' @param time.eval a vector of time points, at which the estimated survival probabilities
 #' are evaluated.
@@ -74,7 +73,7 @@
 #' @return
 #' If \code{doBest = FALSE} (default), this returns the optimal mtry value of those searched.
 #' @return
-#' If \code{doBest = TRUE}, this returns the \code{\link{ltrccf}} object produced with the optimal \code{mtry}.
+#' If \code{doBest = TRUE}, this returns the \code{\link{ltrccif}} object produced with the optimal \code{mtry}.
 #' @importFrom survival Surv
 #' @importFrom graphics axis
 #' @seealso \code{\link{sbrier_ltrc}} for evaluation of model fit when searching
@@ -84,47 +83,35 @@
 #' library(survival)
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' ## mtry tuned by the OOB procedure with stepFactor 3, number of trees built 10.
-#' mtryT = tune.ltrccf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-#'                     ntreeTry = 10L)
+#' mtryT = tune.ltrccif(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
+#'                      ntreeTry = 10L)
 #'
 #'
 #' @export
 
-tune.ltrccf <- function(formula, data, id,
-                        mtryStart = NULL, stepFactor = 2,
-                        time.eval = NULL, time.tau = NULL,
-                        ntreeTry = 100L,
-                        bootstrap = c("by.sub", "by.root", "none", "by.user"),
-                        samptype = c("swor","swr"),
-                        sampfrac = 0.632,
-                        samp = NULL,
-                        na.action = "na.omit",
-                        trace = TRUE,
-                        doBest = FALSE,
-                        plot = FALSE,
-                        applyfun = NULL, cores = NULL,
-                        control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
-                                                          mincriterion = 0, saveinfo = FALSE,
-                                                          minsplit = max(ceiling(sqrt(nrow(data))), 20),
-                                                          minbucket = max(ceiling(sqrt(nrow(data))), 7),
-                                                          minprob = 0.01)) {
+tune.ltrccif  <- function(formula, data, id,
+                          mtryStart = NULL, stepFactor = 2,
+                          time.eval = NULL, time.tau = NULL,
+                          ntreeTry = 100L,
+                          bootstrap = c("by.sub", "by.root", "none", "by.user"),
+                          samptype = c("swor","swr"),
+                          sampfrac = 0.632,
+                          samp = NULL,
+                          na.action = "na.omit",
+                          trace = TRUE,
+                          doBest = FALSE,
+                          plot = FALSE,
+                          applyfun = NULL, cores = NULL,
+                          control = partykit::ctree_control(teststat = "quad", testtype = "Univ",
+                                                            mincriterion = 0, saveinfo = FALSE,
+                                                            minsplit = max(ceiling(sqrt(nrow(data))), 20),
+                                                            minbucket = max(ceiling(sqrt(nrow(data))), 7),
+                                                            minprob = 0.01)) {
 
   Call <- match.call()
-  # Call[[1]] <- as.name('tuneltrccf')  #make nicer printout for the user
-  # create a copy of the call that has only the arguments we want,
-  #  and use it to call model.frame()
+
   indx <- match(c('formula', 'id'), names(Call), nomatch = 0)
   if (indx[1] == 0) stop("a formula argument is required")
-
-  # temp <- Call[c(1, indx)]
-  # temp[[1L]] <- quote(stats::model.frame)
-  # mf <- eval.parent(temp)
-
-  # This will be checked in ltrccf!
-  # y <- model.extract(mf, 'response')
-  # if (!is.Surv(y)) stop("Response must be a survival object")
-  # if (!attr(y, "type") == "counting") stop("The Surv object must be of type 'counting'.")
-  # rm(y)
 
   # pull y-variable names
   yvar.names <- all.vars(formula(paste(as.character(formula)[2], "~ .")), max.names = 1e7)
@@ -153,7 +140,7 @@ tune.ltrccf <- function(formula, data, id,
   ## The following code to define id does not work since it could not handle missing values
   # id <- model.extract(mf, 'id')
 
-  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccf
+  # this is a must, otherwise id cannot be passed to the next level in tune.ltrccif
   if (indx[2] == 0){
     ## If id is not present, then we add one more variable
     # mf$`(id)` <- 1:nrow(mf) ## No relabel, due to missing value problem do not need this for tuning output
@@ -179,7 +166,7 @@ tune.ltrccf <- function(formula, data, id,
   n.sub <- length(id.sub)
 
   Rtimes <- Rtimes[takeid]
-  ## This is to determine time.tau and time.eval, so is different from ltrccf.R
+  ## This is to determine time.tau and time.eval, so is different from ltrccif.R
   if (n.seu == n.sub){ # time-invariant LTRC data
     # it includes the case 1) when id = NULL, which is that id.seu is not specified
     #                      2) when id is specified, but indeed LTRC time-invariant
@@ -210,17 +197,17 @@ tune.ltrccf <- function(formula, data, id,
                             esampfrac,
                             esamp,
                             ena.action, eapplyfun, ecores){
-    cfOOB <- ltrccf(formula = eformula, data = edata, id = id,
-                    mtry = emtryTest,
-                    ntree = entreeTry,
-                    control = econtrol,
-                    bootstrap = ebootstrap,
-                    samptype = esamptype,
-                    sampfrac = esampfrac,
-                    samp = esamp,
-                    na.action = ena.action,
-                    applyfun = eapplyfun,
-                    cores = ecores)
+    cfOOB <- ltrccif(formula = eformula, data = edata, id = id,
+                     mtry = emtryTest,
+                     ntree = entreeTry,
+                     control = econtrol,
+                     bootstrap = ebootstrap,
+                     samptype = esamptype,
+                     sampfrac = esampfrac,
+                     samp = esamp,
+                     na.action = ena.action,
+                     applyfun = eapplyfun,
+                     cores = ecores)
     predOOB <- predictProb(object = cfOOB, time.eval = etpnt, time.tau = etau, OOB = TRUE)
     errorOOB <- sbrier_ltrc(obj = predOOB$survival.obj, id = predOOB$survival.id,
                             pred = predOOB, type = "IBS")
@@ -299,16 +286,16 @@ tune.ltrccf <- function(formula, data, id,
   }
 
   if (doBest)
-    res <- ltrccf(formula = formula, data = data, id = id,
-                  mtry = res, ntree = ntreeTry,
-                  control = control,
-                  bootstrap = bootstrap,
-                  samptype = samptype,
-                  sampfrac = sampfrac,
-                  samp = samp,
-                  na.action = na.action,
-                  applyfun = applyfun,
-                  cores = cores)
+    res <- ltrccif(formula = formula, data = data, id = id,
+                   mtry = res, ntree = ntreeTry,
+                   control = control,
+                   bootstrap = bootstrap,
+                   samptype = samptype,
+                   sampfrac = sampfrac,
+                   samp = samp,
+                   na.action = na.action,
+                   applyfun = applyfun,
+                   cores = cores)
 
   return(res)
 }

@@ -2,9 +2,9 @@
 % Please edit documentation in R/predictProb.R
 \name{predictProb}
 \alias{predictProb}
-\alias{predictProb.ltrccf,}
+\alias{predictProb.ltrccif,}
 \alias{predictProb.ltrcrrf}
-\title{Compute a Survival Curve from a LTRCCF model or a LTRCRRF model}
+\title{Compute a Survival Curve from a LTRCCIF model or a LTRCRRF model}
 \usage{
 predictProb(
   object,
@@ -16,7 +16,7 @@ predictProb(
 )
 }
 \arguments{
-\item{object}{an object as returned by \code{\link{ltrccf}} or by \code{\link{ltrcrrf}}.}
+\item{object}{an object as returned by \code{\link{ltrccif}} or by \code{\link{ltrcrrf}}.}
 
 \item{newdata}{an optional data frame containing the test data
 (with the names of the variables the same as those in \code{data} from \code{object}).}
@@ -60,7 +60,7 @@ A list containing:
    \item{survival.times}{the input value \code{time.eval}. }
 }
 \description{
-Constructs a monotone nonincreasing estimated survival curve from a LTRCCF model or a 
+Constructs a monotone nonincreasing estimated survival curve from a LTRCCIF model or a 
 LTRCRRF model for any given (left-truncated) right-censored survival data with time-varying 
 covariates.
 It can also compute survival function estimates for left-truncated right-censored data
@@ -71,14 +71,14 @@ with time-invariant covariates.
 library(survival)
 Formula <- Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 ## Fit an LTRC conditional inference forest on time-varying data
-LTRCCFobj <- ltrccf(formula = Formula, data = pbcsample, id = ID,
-                    mtry = 3, ntree = 50L)
+LTRCCIFobj <- ltrccif(formula = Formula, data = pbcsample, id = ID,
+                      mtry = 3, ntree = 50L)
 
 
 ## Construct an estimated survival estimate for the second subject
 tpnt <- seq(0, max(pbcsample$Stop), length.out = 50)
 newData <- pbcsample[pbcsample$ID == 2, ]
-Pred <- predictProb(object = LTRCCFobj, newdata = newData, newdata.id = ID,
+Pred <- predictProb(object = LTRCCIFobj, newdata = newData, newdata.id = ID,
                     time.eval = tpnt)
 ## Since time.tau = NULL, Pred$survival.probs is in the matrix format, with dimensions:
 dim(Pred$survival.probs) # length(time.eval) x nrow(newdata)

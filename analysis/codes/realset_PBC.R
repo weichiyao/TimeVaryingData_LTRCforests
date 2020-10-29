@@ -18,8 +18,8 @@ modelT <- ltrcrrf(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
 predT <- predictProb(modelT, time.eval = Tpnt)
 BSt$rrf <- sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predT, type = "BS")
 
-## LTRCCF
-modelT <- ltrccf(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
+## LTRCCIF
+modelT <- ltrccif(formula = Formula, data = DATA, id = ID, stepFactor = 1.5)
 predT <- predictProb(modelT, time.eval = Tpnt)
 BSt$cf <- sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predT, type = "BS")
 
@@ -32,7 +32,7 @@ predTnew = list(survival.probs = Shat,
                 survival.tau = rep(max(Tpnt), length(unique(DATA$ID))))
 BSt$cx = sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predTnew, type = "BS")
   
-## TSF
+## LTRCTSF
 modelT <- tsf_wy(formula = Formula_TD, data = DATA, stepFactor = 1.5)
 predT <- predict_tsf_wy(object = modelT)
 
@@ -79,7 +79,7 @@ for(i in 1:tlen){
 
 
 dataGP = data.frame(matrix(0, nrow = tlen, ncol = 6))
-names(dataGP) = c("Time", "LTRC CF", "LTRC RRF", "TSF", "Cox", "propAtRisk")
+names(dataGP) = c("Time", "LTRC CIF", "LTRC RRF", "LTRC TSF", "Cox", "propAtRisk")
 dataGP$Time = Tpnt
 dataGP$`LTRC CF` = BSt$cf
 dataGP$`LTRC RRF` = BSt$rrf
@@ -90,7 +90,7 @@ dataGP$`propAtRisk` = propAtRisk
 
 # Reshape for the ggplot2
 melted = melt(dataGP, id.vars=c("Time","propAtRisk"),
-              measure.vars = c("LTRC CF", "LTRC RRF", "TSF", "Cox"))
+              measure.vars = c("LTRC CIF", "LTRC RRF", "LTRC TSF", "Cox"))
 names(melted)[3] = "Model"
 
 # Value used to transform the data
