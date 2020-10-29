@@ -20,7 +20,7 @@ mmodel <- 1:3
 ccrate = c(1,2)
 nndata = c(100,300,500)
 
-cc = 2
+cc = 1
 
 setting = "nonPH"
 for (ff in 1:3){
