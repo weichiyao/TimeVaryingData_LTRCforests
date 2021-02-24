@@ -1,7 +1,6 @@
 .DS_STORE
 .Rproj.user
 makepackage/
-*.pdf
 *.Rbuildignore
 .Rd2pdf*
 .Rhistory
