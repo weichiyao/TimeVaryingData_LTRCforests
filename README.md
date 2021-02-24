@@ -1,7 +1,7 @@
 # TimeVaryingData_LTRCforests
 Analysis codes for "Ensemble Methods for Survival Data with Time-Varying Covariates"
 
-1.The **pkg** folder contains the R package [LTRCforests].
+1.The **pkg** folder contains the R package [LTRCforests] (version 0.5.5, available on CRAN).
 
 2.The **analysis** folder provides analysis codes in the paper:
   - The subfolder **data** contains 
