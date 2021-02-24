@@ -25,13 +25,7 @@ Surv_funct_PH <- function(X, info, t){
   Beta = info$Coeff$Beta
   R.ID = findInterval(t,TALL)
 
-  if (Distribution == "Exp"){
-    if (R.ID == 1){
-      TD = Lambda * (t - TALL[1])
-    } else{
-      TD = Lambda * (c(TALL[2:R.ID],t) - TALL[1:R.ID])
-    }
-  } else if (Distribution == "WD") {
+  if (Distribution == "WD") {
     if (R.ID == 1){
       TD = Lambda * (t^V - TALL[1]^V)
     } else {
@@ -43,14 +37,8 @@ Surv_funct_PH <- function(X, info, t){
     } else {
       TD = Lambda * (c(TALL[2:R.ID]^V,t^V) - TALL[1:R.ID]^V)
     }
-  } else if (Distribution == "Gtz"){
-    if (R.ID == 1){
-      TD = Lambda * (exp(Alpha*t) - exp(Alpha*TALL[1]))/Alpha
-    } else {
-      TD = Lambda * (exp(Alpha*c(TALL[2:R.ID],t)) - exp(Alpha*TALL[1:R.ID]))/Alpha
-    }
   } else {
-    stop("Wrong distribution is given when continuous X5 is presented")
+    stop("Wrong distribution is given")
   } ## end loop for distribution
   
   R = Xi[1:R.ID]*TD

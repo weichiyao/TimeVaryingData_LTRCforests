@@ -117,7 +117,7 @@ An object belongs to the class \code{ltrcrrf}.
 }
 \description{
 An implementation of the random forest algorithms utilizing LTRC \code{rpart}
-trees \code{LTRCART} as base learners for left-truncated right-censored
+trees \code{\link[LTRCtrees]{LTRCART}} as base learners for left-truncated right-censored
 survival data with time-invariant covariates. It also allows for (left-truncated)
 right-censored survival data with time-varying covariates.
 }

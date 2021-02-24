@@ -226,20 +226,20 @@ predictProb.ltrccif <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
 
 #' @export
 predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
-                                time.eval, time.tau = NULL){
+         time.eval, time.tau = NULL){
   ntree <- object$ntree
   formula <- object$formulaLTRC
   formula[[3]] <- 1
-  
+
   wt <- object$inbag # of size Ndata x ntree
-  
+
   yvar.names <- object$yvarLTRC.names[2:4]
   traindata <- object$yvarLTRC
-  
+
   if (OOB){
     # relabel the traindata
     traindata$I <- 1:nrow(traindata) # make sure partial/baseline has done this
-    
+
     id_uniq <- unique(traindata$id) # id of subjects
     n_uniq <- length(id_uniq) # number of subjects
     node_all <- object$membership # of size Ndata*ntree
@@ -247,30 +247,54 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     if (is.null(time.tau)){
       time.tau <- rep(max(time.eval), n_uniq)
     }
+
+    predraw <- rep(list(0), ntree)
+    for (b in 1:ntree){
+      # ID of observations used in the b-th bootstrap samples
+      rw <- which(wt[, b] > 0)
+      # get terminal nodes in b-th tree for the new data
+      term_nodes = unique(node_all[, b])
+      # use max, sometimes the new data may not occupy all terminal nodes
+      predraw[[b]] <- rep(list(0), max(term_nodes))
+      for (i_term in term_nodes){
+        # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
+        IDnew <- which(node_all[, b] == i_term)
+        IDnew <- IDnew[IDnew %in% rw]
+        ## For each tree, we need to reset KMwt to be zero,
+        ## otherwise subset = KMwt > 0 is not correct
+        traindata$KMwt <- 0
+        traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
+        KMwt <- traindata$KMwt
+        predraw[[b]][[i_term]] <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
+                                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+      }
+    }
+    predraw0 <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
+                                  conf.type = "none")
     pred <- sapply(1:n_uniq, function(wi){
       newi <- traindata[traindata$id == id_uniq[wi], , drop = FALSE]
       n_newi <- nrow(newi)
-      
+
       ## up to tau_i
       tpnt <- time.eval[time.eval <= time.tau[wi]]
-      
-      ################ Changes at July 29th
+
+      ################ Changes at Feb 24th 2021
       newiIntT <- c(newi[1, yvar.names[1]], newi[, yvar.names[2]])
       tpntL <- c(newiIntT, tpnt)
       torder <- order(tpntL)
       tpntLod <- tpntL[torder]
       tlen <- length(tpntLod)
-      
+
       r.ID <- findInterval(tpntLod, newiIntT)
       r.ID[r.ID > n_newi] <- n_newi
-      
+
       jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
       if (nj == 1){
         survival <- matrix(0, nrow = 1, ncol = tlen)
         ## deal with left-truncation
         survival[1, r.ID == 0] <- 1
-        
+
         ## find out which trees does not contain the I[jall[j]]-th wi-th data
         id_tree_wi_j <- which(wt[newi$I[jall[1]], ] == 0)
         ## add the if-else at Sept 16th, for id_tree_wi_j == integer(0)
@@ -279,23 +303,15 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           for (ti in 1:length(id_tree_wi_j)){
             ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
             id_node_witi_j <- node_all[newi$I[jall[1]], id_tree_wi_j[ti]]
-            ## id of samples that fall into the same node
-            id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
-            ## Pick out those appearing in the bootstrapped samples
-            id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
-            id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
+
             ## Build the survival tree
-            traindata$KMwt <- 0
-            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
-            KMwt <- traindata$KMwt
-            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+            KM <- predraw[[id_tree_wi_j[ti]]][[id_node_witi_j]]
             ## Get survival probabilities
-            ## Changed at July 29th
+            ## Changed at July 29th, 2020
             Shat_ti[ti, ] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]])
-            
+
           }
-          ## Changed at July 29th
+          ## Changed at July 29th, 2020
           rowid.nz <- which(Shat_ti[, 1] != 0)
           Shat_ti[rowid.nz, ] <- Shat_ti[rowid.nz, ] / Shat_ti[rowid.nz, 1]
           # if (length(rowid.nz) > 0) {
@@ -304,8 +320,7 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
           survival[1, r.ID == jall[1]] <- apply(Shat_ti, 2, mean)
         } else {
           ## Changed at Sept 16th, for id_tree_wi_j == integer(0)
-          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                  conf.type = "none")
+          KM <- predraw0
           survival[1, r.ID == jall[1]] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]])
         }
       } else if (nj > 1) {
@@ -318,23 +333,15 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         for (j in 1:nj){
           ## find out which trees does not contain the I[jall[j]]-th wi-th data
           id_tree_wi_j <- which(wt[newi$I[jall[j]], ] == 0)
-          
+
           for (ti in 1:length(id_tree_wi_j)){
             ## In each tree of id in idTree_wi, it falls into terminal id_node_witi_j
             id_node_witi_j <- node_all[newi$I[jall[j]], id_tree_wi_j[ti]]
-            ## id of samples that fall into the same node
-            id_samenode_witi_j <- which(node_all[, id_tree_wi_j[ti]] == id_node_witi_j)
-            ## Pick out those appearing in the bootstrapped samples
-            id_inbag_j <- which(wt[, id_tree_wi_j[ti]] > 0)
-            id_buildtree_j <- id_samenode_witi_j[id_samenode_witi_j %in% id_inbag_j]
+
             ## Build the survival tree
-            traindata$KMwt <- 0
-            traindata$KMwt[id_buildtree_j] = wt[id_buildtree_j, id_tree_wi_j[ti]] / sum(wt[id_buildtree_j, id_tree_wi_j[ti]])
-            KMwt <- traindata$KMwt
-            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+            KM <- predraw[[id_tree_wi_j[ti]]][[id_node_witi_j]]
             Shat_ti <- ipred::getsurv(KM, tpntLod[r.ID == jall[j]])
-            
+
             if (Shat_ti[1] == 0){# jL = Shat_ti[1]
               survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] + 1
               survivalR[1, j + 1] <- survivalR[1, j + 1] + 1
@@ -342,21 +349,21 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
               survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] + Shat_ti / Shat_ti[1]
               survivalR[1, j + 1] <- survivalR[1, j + 1] + ipred::getsurv(KM, newi[, yvar.names[2]][j]) / Shat_ti[1]
             }
-            
+
           }
           survival[1, r.ID == jall[j]] <- survival[1, r.ID == jall[j]] / length(id_tree_wi_j)
           survivalR[1, j + 1] <- survivalR[1, j + 1] / length(id_tree_wi_j)
         }
-        
+
         survivalR[1, 1] <- 1
-        
+
         m <- cumprod(survivalR[1, 1:nj])
         for (j in 2:nj){
           survival[1, r.ID == jall[j]] <- m[j] * survival[1, r.ID == jall[j]]
         }
-       
+
       }
-      
+
       RES <- survival[1, -match(newiIntT, tpntLod)]
       return(RES)
     })
@@ -367,7 +374,7 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
     rm(traindata)
   } else {
     nIDxdata <- object$membership # of size Ndata*ntree
-    
+
     if (is.null(newdata)){
       newdata <- traindata
       nIDxnewdata <- nIDxdata
@@ -382,67 +389,81 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       }
       if (any(is.na.data.frame(newdata[, x.IDs]))) stop("newdata contains missing values in the covariates!")
     }
-    
+
     rm(object)
     obj.IDs <- match(c("id", yvar.names), names(newdata), nomatch = 0)
     if (any(obj.IDs == 0)) stop("newdata has to be with variables as in formula (time1, time2, event)")
     newdata = newdata[, obj.IDs]
-    
+
     # label the newdata
     newdata$I <- 1:nrow(newdata)
-    
+
     id_uniq <- unique(newdata$id) # id of subjects
     n_uniq <- length(id_uniq) # number of subjects
-    
+
     if (is.null(time.tau)){
       time.tau <- rep(max(time.eval), n_uniq)
     } else {
       if (n_uniq != length(time.tau)) stop("time.tau should be a vector of length equaling to number of SUBJECT observation! In the time-varying case, check whether newdata.id has been correctly specified!")
     }
-    
+
+
+    predraw <- rep(list(0), ntree)
+    for (b in 1:ntree){
+      # ID of observations used in the b-th bootstrap samples
+      rw <- which(wt[, b] > 0)
+      # get terminal nodes in b-th tree for the new data
+      term_nodes = unique(nIDxnewdata[, b])
+      # use max, sometimes the new data may not occupy all terminal nodes
+      predraw[[b]] <- rep(list(0), max(term_nodes))
+      for (i_term in term_nodes){
+        # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
+        IDnew <- which(nIDxdata[, b] == i_term)
+        IDnew <- IDnew[IDnew %in% rw]
+        ## For each tree, we need to reset KMwt to be zero,
+        ## otherwise subset = KMwt > 0 is not correct
+        traindata$KMwt <- 0
+        traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
+        KMwt <- traindata$KMwt
+        predraw[[b]][[i_term]] <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
+                                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+      }
+    }
+
     pred <- sapply(1:n_uniq, function(i){
       newi <- newdata[newdata$id == id_uniq[i], , drop = FALSE]
       n_newi <- nrow(newi)
-      
+
       ## up to tau_i
       tpnt = time.eval[time.eval <= time.tau[i]]
       ################ Changes at July 29th
       newiIntT <- c(newi[1, yvar.names[1]], newi[, yvar.names[2]])
-      
+
       tpntL <- c(newiIntT, tpnt)
       torder <- order(tpntL)
       # torder == 1 corresponds with TestData[1, 1]: tpntLod[torder == 1] == TestData[1, 1]
       tpntLod <- tpntL[torder]
       tlen <- length(tpntLod)
-      
+
       ################ Changes at July 29th
       # deal with left truncation in the training data
       r.ID <- findInterval(tpntLod, newiIntT)
       r.ID[r.ID > n_newi] <- n_newi
       jall <- unique(r.ID[r.ID > 0])
       nj <- length(jall)
-      
+
       if (nj == 1){
         # on [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
         # deal with left truncation
         survival[1, r.ID == 0] <- 1
-        
+
         nlenb <- length(tpntLod[r.ID == jall[1]])
         Shat_b <- matrix(0, nrow = ntree, ncol = nlenb)
         for (b in 1:ntree){
-          # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
-          IDnew <- which(nIDxdata[, b] == nIDxnewdata[newi$I[jall[1]], b])
-          # ID of observations in the b-th bootstrap samples
-          rw <- which(wt[, b] > 0)
-          IDnew <- IDnew[IDnew %in% rw]
-          ## For each tree, we need to reset KMwt to be zero,
-          ## otherwise subset = KMwt > 0 is not correct
-          traindata$KMwt <- 0
-          traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
-          KMwt <- traindata$KMwt
-          KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                  weights = KMwt, subset = KMwt > 0, conf.type = "none")
+          ## In each tree b, it falls into terminal id_node_b
+          id_node_b <- nIDxnewdata[newi$I[jall[1]], b]
+          KM <- predraw[[b]][[id_node_b]]
           Shat_b[b, ] <- ipred::getsurv(KM, tpntLod[r.ID == jall[1]]) # jall[nj] = 1
           # NaN problem if Shat_b[1] = 0
           # survival[1, r.ID == jall[1]] <- survival[1, r.ID == jall[1]] + Shat_b / Shat_b[1]
@@ -458,33 +479,23 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
       } else if (nj > 1) {
         # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
         survival <- matrix(0, nrow = 1, ncol = tlen)
-        
+
         # c(1, S_{1}(R_{1})/S_{1}(L_{1}),...,S_{n-1}(R_{n-1})/S_{n-1}(L_{n-1}))
         survivalR <- matrix(0, nrow = 1, ncol = nj)
         for (b in 1:ntree){
           # on [0, L_1), [L_1,R_1), [L_2,R_2), ..., [L_n,R_n]
           # deal with left truncation ==> all 1 to start, so that Shat_b[, r.ID == 0] == 1
           Shat_b <- matrix(1, nrow = 1, ncol = tlen)
-          
+
           ShatR_b <- matrix(1, nrow = 1, ncol = nj + 1)
           # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
           qL = rep(0, nj)
           for (j in 1:nj){
-            # observations that fall in the same terminal nodes as the new observation in b-th bootstrapped samples
-            IDnew <- which(nIDxdata[, b] == nIDxnewdata[newi$I[jall[j]], b])
-            # ID of observations in the b-th bootstrap samples
-            rw <- which(wt[, b] > 0)
-            IDnew <- IDnew[IDnew %in% rw]
-            
-            ## For each tree, we need to reset KMwt to be zero,
-            ## otherwise subset = KMwt > 0 is not correct
-            traindata$KMwt <- 0
-            traindata$KMwt[IDnew] = wt[IDnew, b] / sum(wt[IDnew, b])
-            KMwt <- traindata$KMwt
-            KM <- survival::survfit(formula = formula, data = traindata, se.fit = FALSE,
-                                    weights = KMwt, subset = KMwt > 0, conf.type = "none")
+            ## In each tree b, it falls into terminal id_node_b
+            id_node_b <- nIDxnewdata[newi$I[jall[j]], b]
+            KM <- predraw[[b]][[id_node_b]]
             Shat_bj <- ipred::getsurv(KM, tpntLod[r.ID == jall[j]])
-            
+
             qL[j] <- Shat_bj[1]
             # S_{j-1}(R_{j-1})
             jR <- ipred::getsurv(KM, newi[, yvar.names[2]][j])
@@ -492,7 +503,7 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
             ShatR_b[1, j + 1] = jR / qL[j]
             Shat_b[1, r.ID == jall[j]] <- Shat_bj / qL[j]
           }
-          
+
           ql0 <- which(qL == 0)
           if (length(ql0) > 0){
             if (any(qL > 0)){
@@ -510,12 +521,12 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
               Shat_b[1, r.ID %in% jall] <- 0
             }
           }
-          
-          
+
+
           survival <- survival + Shat_b
           survivalR <- survivalR + ShatR_b[1, 1:nj]
         }
-        
+
         survival <- survival / ntree
         survivalR <- survivalR / ntree
 
@@ -524,21 +535,21 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
         for (j in 1:nj){
           survival[1, r.ID == jall[j]] = m[j] * survival[1, r.ID == jall[j]]
         }
-        
+
       }
       RES <- survival[1, -match(newiIntT, tpntLod)]
       return(RES)
     })
-    
+
     rm(traindata)
-    
+
     obj <- Surv(newdata[, yvar.names[1]],
                 newdata[, yvar.names[2]],
                 newdata[, yvar.names[3]])
     id <- newdata$id
-    
+
   }
-  
+
   RES = list(survival.id = id,
              survival.probs = pred,
              survival.times = time.eval,

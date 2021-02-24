@@ -19,8 +19,8 @@ proportional hazards and a log-linear relationship between the hazard function a
 covariates. Furthermore, because these methods are often parametric, nonlinear effects
 of variables must be modeled by transformations or expanding the design matrix to
 include specialized basis functions for more complex data structures in real world
-applications. The functions \code{LTRCIT} and
-\code{LTRCART} provide a conditional inference tree method and 
+applications. The functions \code{\link[LTRCtrees]{LTRCIT}} and
+\code{\link[LTRCtrees]{LTRCART}} provide a conditional inference tree method and 
 a relative risk tree method for
 left-truncated right-censored survival data, which also allows for right-censored
 survival data with time-varying covariates. Tree estimators are nonparametric and 

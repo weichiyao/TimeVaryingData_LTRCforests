@@ -31,7 +31,7 @@
 #' Fit a LTRC conditional inference forest
 #'
 #' An implementation of the random forest and bagging ensemble algorithms utilizing
-#' LTRC conditional inference trees \code{LTRCIT} as base learners for
+#' LTRC conditional inference trees \code{\link[LTRCtrees]{LTRCIT}} as base learners for
 #' left-truncated right-censored survival data with time-invariant covariates.
 #' It also allows for (left-truncated) right-censored survival data with
 #' time-varying covariates.

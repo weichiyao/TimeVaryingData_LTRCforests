@@ -153,11 +153,16 @@ l2_funct <- function(Ni, data, fulldata, info, pred, tpnt, obj.roc = NULL){
   TTpnt = tpnt[tpnt <= maxT]
 
   ## Compute the estimated survival probabilities
-  if (class(pred)[1] %in% c("rfsrcmatrix", "matrix")){
-    ShatA <- pred[1:length(TTpnt), Ni]
+  if (is.null(pred)){
+    ShatA <- shat_funct(Ni = Ni, data = data, tpnt = TTpnt, obj.roc = obj.roc)
   } else {
-    ShatA <- shat_funct(Ni = Ni, data = data, pred = pred, tpnt = TTpnt, obj.roc = obj.roc)
+    if (class(pred)[1] %in% c("rfsrcmatrix", "matrix")){
+      ShatA <- pred[1:length(TTpnt), Ni]
+    } else {
+      ShatA <- shat_funct(Ni = Ni, data = data, pred = pred, tpnt = TTpnt)
+    }
   }
+    
 
   ## Compute the true survival probability of the Ni-th subject
   St <- s_funct(Ni = Ni, fulldata = fulldata, info = info, tpnt = TTpnt)
@@ -177,7 +182,7 @@ l2 <- function(data, fulldata = NULL, info, pred = NULL, tpnt, obj.roc = NULL){
   N <- length(id_uniq)
 
   ret = sapply(1:N, function(Ni) l2_funct(Ni = Ni, data = data, fulldata = fulldata, 
-                                          info = info, pred = pred, tpnt = tpnt, obj.roc = NULL))
+                                          info = info, pred = pred, tpnt = tpnt, obj.roc = obj.roc))
   return(mean(ret))
 }
 ############################################################################################################
