@@ -1,6 +1,7 @@
 .DS_STORE
 .Rproj.user
 makepackage/
+*.pdf
 *.Rbuildignore
 .Rd2pdf*
 .Rhistory
@@ -8,6 +9,8 @@ makepackage/
 *.so
 tryLTRCforests
 old
+
+!*/LTRCforests_*.pdf
 
 CRAN-RELEASE
 LTRCforests.Rproj
