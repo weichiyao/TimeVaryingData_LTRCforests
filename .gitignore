@@ -10,3 +10,8 @@ makepackage/
 tryLTRCforests
 old
 
+CRAN-RELEASE
+LTRCforests.Rproj
+README.Rmd
+cran-comments.md
+
