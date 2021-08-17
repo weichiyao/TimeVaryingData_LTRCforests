@@ -4,8 +4,7 @@ makepackage/
 *.Rbuildignore
 .Rd2pdf*
 .Rhistory
-*Rplots.pdf
-*tram.pdf
+*.pdf
 *.o
 *.so
 tryLTRCforests
