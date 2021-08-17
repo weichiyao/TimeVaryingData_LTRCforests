@@ -28,14 +28,43 @@ The [analysis](./analysis/) folder provides analysis codes in the paper:
   - The subfolder [utils](./analysis/utils/) contains the source functions used to perform the analysis in the folder [codes](./analysis/codes/), including the functions to compute the integrated L2 difference. 
 
 
-## LTRCforests for Time-invariant covariate data
+## LTRCforests for Time-Varying Covariate Data
+Main analysis for applying the methodology on time-varying covariate data have been provided in the paper "Ensemble Methods for Survival Data with Time-Varying Covariates". Here we provide some more detailed information as supplemental material.
+
+### `ntree` in the ensembles
+Throughout the experiments, we use `ntree=100L` for all forest ensembles. It has been recommended that a random forest should have a number of trees between 64 and 128 trees (see [Lecture Notes in Computer Science](https://www.researchgate.net/publication/230766603_How_Many_Trees_in_a_Random_Forest)). It is true that generally more trees will result in better accuracy. However, more trees also means higher computational cost, and after a certain number of trees, the improvement is negligible. See the following figure for performance comparisons for different numbers of trees built in the forest methods. 
+ 
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/5db207d2d92e9364c78028dd1e847f994d70dd9f/analysis/figures/LTRC_time-varying/ntree_WI_PH_20var_c1.png?raw=true" width="800" />
+
+
+### Bootstrap pseudo-subject observations vs. subject observations
+In forest-like algorithms, bootstrapped samples are typically used to construct each individual tree to increase independence between these base learners. For time-varying covariate data, we have considered two different ways to bootstrap the observations:
+ - *Bootstrapping pseudo-subjects*. Namely, it is to bootstrap "independent" observations as the first step of any forest algorithm; this is because all pseudo-subjects are treated as independent observations in the recursive partitioning process; 
+ - *Bootstrapping subjects*. It keeps all of the pseudo-subjects for each subject in the bootstrap sample. 
+
+Simulations have shown that the two different bootstrapping mechanisms do not result in fundamentally different levels of performance:
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/0d1944df06fb41940b984a8d04072a1fd4f69710/analysis/figures/LTRC_time-varying/Bootstrap_pseudosubject_vs_subject.png?raw=true" width="1000" />
+
+## LTRCforests for Time-Invariant Covariate Data
  "Ensemble Methods for Survival Data with Time-Varying Covariates" mainly focuses on the analysis of the methodology applied on time-varying covariate data. There are certainly many situations in which only time-invariant (baseline) covariate information is available, and understanding the properties of different methods in that situation is important. In fact, our developed methodology and algorithms allow for estimation using the proposed forests for (left-truncated) right-censored data with time-invariant covariates. 
   
-In fact, the same data-driven guidance for tuning the parameters or selecting a modeling method also applies to the time-invariant covariates case (for both left-truncated right-censored survival data and right-censored survival data). The following figures show how `LTRC CIF` performs with different values of `mtry` under the PH setting and non-PH setting, respectively. The datasets are generated with survival times following a Weibull-Increasing distribution, light (right-)censoring rate.  
-<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/e7f4e7a4a33039a00c5445a56df31d8efb29c5e8/analysis/figures/LTRC_time-invariant/mtryCIF_PH_20var_WI_c1_LTRC.pdf?raw=true" width="250" title="Integrated L2 difference of LTRC CIF with different mtry values distribution under the PH setting"> <img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/e7f4e7a4a33039a00c5445a56df31d8efb29c5e8/analysis/figures/LTRC_time-invariant/mtryCIF_nonPH_20var_WI_c1_LTRC.pdf?raw=true" width="250" title="Integrated L2 difference of LTRC CIF with different mtry values distribution under the non-PH setting">
+In fact, the same data-driven guidance for tuning the parameters or selecting a modeling method also applies to the time-invariant covariates case (for both left-truncated right-censored survival data and right-censored survival data). 
 
-This implies its broad effectiveness regardless of additional left-truncation and regardless of the presence of time-varying effects. 
+### How `mtry` affects the performance and how `mtry`-tuning algorithm performs
+The following figures show how `LTRC CIF` performs with different values of `mtry` under the PH setting and non-PH setting, respectively. The datasets are generated with survival times following a Weibull-Increasing distribution, light (right-)censoring rate. This implies its broad effectiveness regardless of additional left-truncation and regardless of the presence of time-varying effects.
 
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/86819cc4b1cdc5656ab9ecc2357890728c299366/analysis/figures/LTRC_time-invariant/mtryCIF_PH_20var_WI_c1_LTRC.png?raw=true" width="800" />
+
+**Figure 2.1**. Integrated L2 difference of LTRC CIF with different mtry values distribution under the PH setting.
+
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/86819cc4b1cdc5656ab9ecc2357890728c299366/analysis/figures/LTRC_time-invariant/mtryCIF_nonPH_20var_WI_c1_LTRC.png?raw=true" width="800" />
+
+**Figure 2.2**. Integrated L2 difference of LTRC CIF with different mtry values distribution under the non-PH setting.
+
+ 
+### Using IBS-CV to choose among different methods
 See below the boxplots of integrated L2 difference for performance comparison. Datasets are generated with time-invariant covariates, left-truncated right-censored survival times following a Weibull-Increasing distribution. The first row shows results for the number of subjects `N=100`, second row for `N=300`, third row for `N=500`, bottom row for `N=1000`; the first column shows results for linear survival relationship, second column for nonlinear, the third column for interaction. In each plot, `LTRC CIF(P)`--LTRC CIF with proposed parameter settings; `LTRC RRF(P)`--LTRC RRF with proposed parameter settings; `LTRC TSF(P)`--LTRC TSF with proposed parameter settings;  Opt--Best method; `IBSCV`--Method chosen by IBS-based 10-fold CV. 
 
-<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/e7f4e7a4a33039a00c5445a56df31d8efb29c5e8/analysis/figures/LTRC_time-invariant/boxplots_LTRC.pdf?raw=true" width="350" title="Boxplots of integrated L2 difference for performance comparison on time-invariant covariate data">
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/86819cc4b1cdc5656ab9ecc2357890728c299366/analysis/figures/LTRC_time-invariant/boxplots_LTRC.png?raw=true" width="1200" />
+
+**Figure 3.3**. Boxplots of integrated L2 difference for performance comparison on time-invariant covariate data.
