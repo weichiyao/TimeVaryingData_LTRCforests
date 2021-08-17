@@ -11,6 +11,8 @@ tryLTRCforests
 old
 
 !**/LTRCforests_*.pdf
+# Un-ignore the affected subdirectory
+!/analysis/figures/
 
 **/CRAN-RELEASE
 **/LTRCforests.Rproj

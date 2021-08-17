@@ -7,124 +7,135 @@ shat_funct <- function(Ni, data, pred = NULL, tpnt, obj.roc = NULL){
   ## the i-th data
   TestData <- data[data$ID == id_uniq[Ni], ]
 
-  TestT <- c(0, TestData$Stop)
+  TestT <- c(TestData[1, "Start"], TestData[, "Stop"])
   TestTIntN <- nrow(TestData)
+  
+  tpntL <- c(TestT, tpnt)
+  torder <- order(tpntL)
+  tpntLod <- tpntL[torder]
+  tlen <- length(tpntLod)
+  
 
-  ## tpnt can either be the original tpnt or can be the shorten one
-  tlen = length(tpnt)
   if (is.null(obj.roc)) {
     if ("survfit.cox" %in% class(pred) || "survfitcox" %in% class(pred)){
-      r.ID <- findInterval(tpnt, TestT)
-      r.ID[tpnt >= TestData$Stop[TestTIntN]] = TestTIntN
-      jall <- unique(r.ID)
-      nj <- length(jall)
-
-      Shat_temp <- matrix(0,nrow = 1, ncol = tlen)
       ## Compute the estimated survival probability of the Ni-th subject
+      Shat_temp <- matrix(0, nrow = 1, ncol = tlen)
+      
+      r.ID <- findInterval(tpntLod, TestT)
+      r.ID[r.ID > TestTIntN] <- TestTIntN
+      
+      jall <- unique(r.ID[r.ID > 0])
+      nj <- length(jall)
+      
+      ## Deal with left-truncation
+      Shat_temp[1, r.ID == 0] <- 1
+      
       if(nj == 1){
         ## Get the index of the Pred to compute Shat
-        II = which(data$ID == id_uniq[Ni])[1] + jall[1] - 1
-        Shat_temp[1,r.ID == jall[1]] <- getSurv(pred[II], tpnt[r.ID == jall[1]])
+        II = which(data$ID == id_uniq[Ni])[jall[nj]]
+        Shat_i = ipred::getsurv(pred[II], tpntLod[r.ID == jall[nj]])
+        Shat_temp[1, r.ID == jall[nj]] <- Shat_i / Shat_i[1]
       } else {
         ShatR_temp <- matrix(0, nrow = 1, ncol = nj + 1)
         ShatR_temp[1, 1] = 1
-        ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-        r.IDmax <- c(min(which(r.ID == 1)), sapply(jall[-nj], function(j){
-          max(which(r.ID == j)) + 1
-        }))
         
         # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
         qL = rep(0, nj)
         for (j in 1:nj){
           ## Get the index of the Pred to compute Shat
           II <- which(data$ID == id_uniq[Ni])[1] + jall[j] - 1
-          Shat_j = getSurv(pred[II], tpnt[r.ID == jall[j]])
+          Shat_j = ipred::getsurv(pred[II], tpntLod[r.ID == jall[j]])
           
           qL[j] <- Shat_j[1]
           # S_{j}(R_{j}), j=1,...nj-1
-          jR = getSurv(pred[II], TestT[j + 1])
+          jR = ipred::getsurv(pred[II], TestT[j + 1])
           ShatR_temp[1, j + 1] = jR / qL[j]
           Shat_temp[1, r.ID == jall[j]] <- Shat_j / qL[j]
         }
         
         ql0 <- which(qL == 0)
-        if(length(ql0) > 0){
-          maxqlnot0 <- max(which(qL > 0))
-          for(j in ql0){
-            if (j < maxqlnot0) {
-              ShatR_temp[1, j + 1] <- 1
-              Shat_temp[1, r.ID == jall[j]] <- 1
-            } else{
-              ShatR_temp[1, j + 1] <- 0
-              Shat_temp[1, r.ID == jall[j]] <- 0
-            }
+        if (length(ql0) > 0){
+          if (any(qL > 0)){
+            maxqlnot0 <- max(which(qL > 0))
+            
+            ql0lmax <- ql0[ql0 < maxqlnot0]
+            ql0mmax <- ql0[ql0 >= maxqlnot0]
+            ShatR_temp[1, ql0lmax + 1] <- 1
+            Shat_temp[1, r.ID %in% jall[ql0lmax]] <- 1
+            ShatR_temp[1, ql0mmax + 1] <- 0
+            Shat_temp[1, r.ID %in% jall[ql0mmax]] <- 0
+          } else {
+            ShatR_b[1, 2:(nj + 1)] <- 0
+            Shat_temp[1, r.ID %in% jall] <- 0
           }
         }
-        
         m <- cumprod(ShatR_temp[1, 1:nj])
         for (j in 1:nj){
           Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] * m[j]
         }
       }
-      Shat <- Shat_temp[1,]
+      Shat <- Shat_temp[1, -match(TestT, tpntLod)]
     } else {
       if (class(pred[[1]]) == "numeric"){
         Shat <- pred[[Ni]][1:tlen]
       } else {
-        r.ID <- findInterval(tpnt, TestT)
-        r.ID[tpnt >= TestData$Stop[TestTIntN]] <- TestTIntN
-        jall <- unique(r.ID)
-        nj <- length(jall)
-        
+        ## Compute the estimated survival probability of the Ni-th subject
         Shat_temp <- matrix(0, nrow = 1, ncol = tlen)
         
-        ## Compute the estimated survival probability of the Ni-th subject
+        r.ID <- findInterval(tpntLod, TestT)
+        r.ID[r.ID > TestTIntN] <- TestTIntN
+        
+        jall <- unique(r.ID[r.ID > 0])
+        nj <- length(jall)
+        
+        ## Deal with left-truncation
+        Shat_temp[1, r.ID == 0] <- 1
+        
         if(nj == 1){
           ## Get the index of the Pred to compute Shat
-          II <- which(data$ID == id_uniq[Ni])[1] + jall[1] - 1
-          Shat_temp[1,r.ID == jall[1]] <- getSurv(pred[[II]], tpnt[r.ID == jall[1]])
+          II = which(data$ID == id_uniq[Ni])[jall[nj]]
+          Shat_i = ipred::getsurv(pred[[II]], tpntLod[r.ID == jall[nj]])
+          Shat_temp[1, r.ID == jall[nj]] <- Shat_i / Shat_i[1]
         } else {
           ShatR_temp <- matrix(0, nrow = 1, ncol = nj + 1)
           ShatR_temp[1, 1] = 1
-          ## Get the position of L_1, ..., L_n. Note that, L_2=R_1, ..., L_{j+1} = R_{j}, ..., L_n = R_{n-1}
-          r.IDmax <- c(min(which(r.ID == 1)), sapply(jall[-nj], function(j){
-            max(which(r.ID == j)) + 1
-          }))
           
           # S_1(L_1), S_2(L_2), S_3(L_3), ..., S_{nj}(L_{nj})
           qL = rep(0, nj)
           for (j in 1:nj){
             ## Get the index of the Pred to compute Shat
             II <- which(data$ID == id_uniq[Ni])[1] + jall[j] - 1
-            Shat_j = getSurv(pred[[II]], tpnt[r.ID == jall[j]])
+            Shat_j = ipred::getsurv(pred[[II]], tpntLod[r.ID == jall[j]])
             
             qL[j] <- Shat_j[1]
             # S_{j}(R_{j}), j=1,...nj-1
-            jR = getSurv(pred[[II]], TestT[j + 1])
+            jR = ipred::getsurv(pred[[II]], TestT[j + 1])
             ShatR_temp[1, j + 1] = jR / qL[j]
             Shat_temp[1, r.ID == jall[j]] <- Shat_j / qL[j]
           }
           
           ql0 <- which(qL == 0)
-          if(length(ql0) > 0){
-            maxqlnot0 <- max(which(qL > 0))
-            for(j in ql0){
-              if (j < maxqlnot0) {
-                ShatR_temp[1, j + 1] <- 1
-                Shat_temp[1, r.ID == jall[j]] <- 1
-              } else{
-                ShatR_temp[1, j + 1] <- 0
-                Shat_temp[1, r.ID == jall[j]] <- 0
-              }
+          if (length(ql0) > 0){
+            if (any(qL > 0)){
+              maxqlnot0 <- max(which(qL > 0))
+              
+              ql0lmax <- ql0[ql0 < maxqlnot0]
+              ql0mmax <- ql0[ql0 >= maxqlnot0]
+              ShatR_temp[1, ql0lmax + 1] <- 1
+              Shat_temp[1, r.ID %in% jall[ql0lmax]] <- 1
+              ShatR_temp[1, ql0mmax + 1] <- 0
+              Shat_temp[1, r.ID %in% jall[ql0mmax]] <- 0
+            } else {
+              ShatR_b[1, 2:(nj + 1)] <- 0
+              Shat_temp[1, r.ID %in% jall] <- 0
             }
           }
-
           m <- cumprod(ShatR_temp[1, 1:nj])
           for (j in 1:nj){
             Shat_temp[1, r.ID == jall[j]] <- Shat_temp[1, r.ID == jall[j]] * m[j]
           }
         }
-        Shat <- Shat_temp[1, ]
+        Shat <- Shat_temp[1, -match(TestT, tpntLod)]
       }
     }
 
