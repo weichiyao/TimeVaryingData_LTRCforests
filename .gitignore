@@ -1,10 +1,11 @@
 .DS_STORE
 .Rproj.user
 makepackage/
-*.pdf
 *.Rbuildignore
 .Rd2pdf*
 .Rhistory
+*Rplots.pdf
+*tram.pdf
 *.o
 *.so
 tryLTRCforests
@@ -12,7 +13,6 @@ old
 
 !**/LTRCforests_*.pdf
 # Un-ignore the affected subdirectory
-!/analysis/figures/
 
 **/CRAN-RELEASE
 **/LTRCforests.Rproj
