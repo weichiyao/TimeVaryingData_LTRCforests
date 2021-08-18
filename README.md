@@ -32,7 +32,7 @@ The [analysis](./analysis/) folder provides analysis codes in the paper:
 Main analysis for applying the methodology on time-varying covariate data have been provided in the paper "Ensemble Methods for Survival Data with Time-Varying Covariates". Here we provide some more detailed information as supplemental material.
 
 ### "Out-of-bag" observation-based `mtry` tuning algorithm
-The values of `mtry` can be fine-tuned using the "out-of-bag" observation. The simulation results have shown that it can greatly improve the forest performance over the default setting. See the following figures for the performance comparisons using `CIF-TV` for different values of `mtry` vs. the optimal one (`Opt`) vs. the one tuned by the tuning algorithm (`Tuned`); the figure on the left gives the results under the PH setting, the one on the right gives the results under the non-PH setting.
+The values of `mtry` can be fine-tuned using the "out-of-bag" observation. The simulation results have shown that it can greatly improve the forest performance over the default setting. See the following figure for the performance comparisons using `CIF-TV` for different values of `mtry` vs. the optimal one (`Opt`) vs. the one tuned by the tuning algorithm (`Tuned`).
 
 <img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/6a08a7f03d55caca8f9446d55ddee244c1e138f7/analysis/figures/LTRC_time-varying/mtryCIF_WI_c1.png?raw=true" width="900" />  
 
