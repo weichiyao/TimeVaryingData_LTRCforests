@@ -31,6 +31,13 @@ The [analysis](./analysis/) folder provides analysis codes in the paper:
 ## LTRCforests for Time-Varying Covariate Data
 Main analysis for applying the methodology on time-varying covariate data have been provided in the paper "Ensemble Methods for Survival Data with Time-Varying Covariates". Here we provide some more detailed information as supplemental material.
 
+### "Out-of-bag" observation-based `mtry` tuning algorithm
+The values of `mtry` can be fine-tuned using the "out-of-bag" observation. The simulation results have shown that it can greatly improve the forest performance over the default setting. See the following figures for the performance comparisons using `CIF-TV` for different values of `mtry` vs. the optimal one (`Opt`) vs. the one tuned by the tuning algorithm (`Tuned`); the figure on the left gives the results under PH setting, the one on the right gives the results under non-PH setting.
+
+<img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryCIF_PH_20var_WI_c1.png?raw=true" width="450" /> <img src="https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryCIF_nonPH_20var_WI_c1.png?raw=true" width="450" />
+
+Find the similar results using `RRF-TV` ([Figure](https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryRRF_PH_20var_WI_c1.png) for PH, [Figure](https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryRRF_nonPH_20var_WI_c1.png) for non-PH) and `TSF-TV` ([Figure](https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryTSF_PH_20var_WI_c1.png) for PH, [Figure](https://github.com/ElainaYao/TimeVaryingData_LTRCforests/blob/74333803e59598382ceb5232e71824ffa00caf84/analysis/figures/LTRC_time-varying/mtryTSF_nonPH_20var_WI_c1.png) for non-PH).
+
 ### `ntree` in the ensembles
 Throughout the experiments, we use `ntree=100L` for all forest ensembles. It has been recommended that a random forest should have a number of trees between 64 and 128 trees (see [Lecture Notes in Computer Science](https://www.researchgate.net/publication/230766603_How_Many_Trees_in_a_Random_Forest)). It is true that generally more trees will result in better accuracy. However, more trees also means higher computational cost, and after a certain number of trees, the improvement is negligible. See the following figure for performance comparisons for different numbers of trees built in the forest methods. 
  
