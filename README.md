@@ -4,7 +4,7 @@ In the paper "**Ensemble Methods for Survival Function Estimation with Time-Vary
 
 The [pkg](./pkg/) folder contains the R package [LTRCforests](https://cran.r-project.org/web/packages/LTRCforests/LTRCforests.pdf), available on CRAN. 
 
-We here provide analysis codes for the paper, as well as the analysis codes for time-invariant covariate data in [analysis](./analysis/) folder. Please also find [Supplemental Material](./analysis/doc/supplemental_material.pdf) in the subfolder [doc](./analysis/doc/).
+We here provide analysis codes for the paper, as well as the analysis codes for time-invariant covariate data in [analysis](./analysis/) folder. [Supplemental Material](./analysis/doc/supplemental_material.pdf) can be found in the subfolder [doc](./analysis/doc/).
 
 ## Analysis Codes 
 We provide analysis codes for "Ensemble Methods for Survival Data with Time-Varying Covariates", as well as the analysis codes for time-invariant covariate data.
