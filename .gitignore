@@ -4,7 +4,7 @@ makepackage/
 *.Rbuildignore
 .Rd2pdf*
 .Rhistory
-*.pdf
+
 *.o
 *.so
 tryLTRCforests
