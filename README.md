@@ -1,6 +1,6 @@
 # LTRCforests for Time-Varying Covariate Data 
 
-In the paper "**Ensemble Methods for Survival Data with Time-Varying Covariates**", we generalize the conditional inference and relative risk forests to allow time-varying covariates and propose two forest algorithms `CIF-TV` and `RSF-TV`. The proposed methods by design can handle survival data with *all* combinations of left-truncation and right-censoring in the survival outcome, and with both time-invariant and time-varying covariates. For this matter, we call the methodology as `LTRC CIF` and `LTRC RRF` for general speaking. 
+In the paper "**Ensemble Methods for Survival Function Estimation with Time-Varying Covariates**", we generalize the conditional inference and relative risk forests to allow time-varying covariates and propose two forest algorithms `CIF-TV` and `RSF-TV`. The proposed methods by design can handle survival data with *all* combinations of left-truncation and right-censoring in the survival outcome, and with both time-invariant and time-varying covariates. For this matter, we call the methodology as `LTRC CIF` and `LTRC RRF` for general speaking. 
 
 The [pkg](./pkg/) folder contains the R package [LTRCforests](https://cran.r-project.org/web/packages/LTRCforests/LTRCforests.pdf), available on CRAN. 
 
