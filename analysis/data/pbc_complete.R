@@ -69,6 +69,37 @@ make_realset <- function(x, naremove = TRUE){
   return(pbcseq)
 }  
 
+make_timeinvariant <- function(fullDATA){
+  DATA_ti <- fullDATA
+  DATA_ti <- DATA_ti[1:length(unique(fullDATA$ID)),]
+  DATA_ti$ID <- unique(fullDATA$ID)
+  for (id in unique(fullDATA$ID)){
+    DATA_ti[DATA_ti$ID==id,] <- fullDATA[fullDATA$ID==id,][1,]
+    DATA_ti[DATA_ti$ID==id,]$Stop <- max(fullDATA[fullDATA$ID==id,]$Stop)
+    DATA_ti[DATA_ti$ID==id,]$Event <- sum(fullDATA[fullDATA$ID==id,]$Event)
+  }
+  return(DATA_ti)
+}
+
+compute_propAtRisk <- function(DATA, Tpnt){
+  N = length(unique(DATA$ID))
+  id_uniq = sort(unique(DATA$ID))
+  data_sbrier <- data.frame(matrix(0, nrow = N, ncol = 3))
+  names(data_sbrier) <- c("ID", "times", "cens")
+  data_sbrier$ID <- id_uniq
+  data = DATA
+  for (ii in 1:N){
+    data_sbrier[ii, ]$times <- max(data[data$ID==id_uniq[ii], ]$Stop)
+    data_sbrier[ii, ]$cens <- sum(data[data$ID==id_uniq[ii], ]$Event)
+  }
+  tlen = length(Tpnt)
+  propAtRisk = rep(0, tlen)
+  
+  for(i in 1:tlen){
+    propAtRisk[i] = sum(data_sbrier$times > Tpnt[i]) / length(data_sbrier$times)
+  }
+  return(propAtRisk)
+}
 # k=0
 # for (i in 1:312){
 #   if (sum(pbc$Event[pbc$ID == i])== 1){

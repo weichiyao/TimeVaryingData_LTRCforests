@@ -1,9 +1,9 @@
 Package: LTRCforests
-Version: 0.5.5
-Date: 2021-02-24
+Version: 0.6.5
+Date: 2023-10-14
 Title: Ensemble Methods for Survival Data with Time-Varying Covariates
 Authors@R: c(person(given = "Weichi", family = "Yao", role = c("aut", "cre"), 
-                    email = "wy635@stern.nyu.edu"),
+                    email = "weichi.yao@gmail.com"),
              person(given = "Halina", family = "Frydman", role = "aut", email = "hf2@stern.nyu.edu"),
              person(given = "Denis", family = "Larocque", role = "aut", email = "denis.larocque@hec.ca"),
              person(given = "Jeffrey S.", family = "Simonoff", role = "aut", email = "jss2@stern.nyu.edu"))
@@ -11,7 +11,7 @@ Author: Weichi Yao [aut, cre],
   Halina Frydman [aut],
   Denis Larocque [aut],
   Jeffrey S. Simonoff [aut]
-Maintainer: Weichi Yao <wy635@stern.nyu.edu>
+Maintainer: Weichi Yao <weichi.yao@gmail.com>
 Depends: R (>= 3.5.0)
 Imports: stats, utils, survival, ipred, parallel, prodlim, partykit
 Suggests: randomForestSRC, LTRCtrees
@@ -24,4 +24,4 @@ NeedsCompilation: yes
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3

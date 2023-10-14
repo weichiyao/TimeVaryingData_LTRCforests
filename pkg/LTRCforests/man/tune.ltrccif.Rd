@@ -23,8 +23,8 @@ tune.ltrccif(
   plot = FALSE,
   applyfun = NULL,
   cores = NULL,
-  control = partykit::ctree_control(teststat = "quad", testtype = "Univ", mincriterion
-    = 0, saveinfo = FALSE, minsplit = max(ceiling(sqrt(nrow(data))), 20), minbucket =
+  control = partykit::ctree_control(teststat = "quad", testtype = "Univ", mincriterion =
+    0, saveinfo = FALSE, minsplit = max(ceiling(sqrt(nrow(data))), 20), minbucket =
     max(ceiling(sqrt(nrow(data))), 7), minprob = 0.01)
 )
 }

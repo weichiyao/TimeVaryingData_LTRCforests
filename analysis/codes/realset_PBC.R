@@ -9,8 +9,10 @@ Nfold = 10
 
 # time points of interest
 Tpnt = c(0, sort(unique(DATA$Stop)))
-
+ 
 BSt = NULL
+
+
 #####################################################################################################################
 Survobj = Surv(DATA$Start, DATA$Stop, DATA$Event)
 ## LTRCRRF
@@ -43,11 +45,18 @@ predTnew = list(survival.probs = Shat,
 rm(Shat)
 BSt$tsf = sbrier_ltrc(obj = Survobj, id = DATA$ID, pred = predTnew, type = "BS")
 
+filename = "./PBC_BS.rds"
+
+RES = NULL
+RES$BS = BSt 
+saveRDS(RES, filename)
 ################ ======== Plot -- Using ggplot2 ========== ###############
 library(ggplot2)
 library(dplyr)
 library(reshape2)
 library(patchwork) # To display 2 charts together
+
+BSt <- readRDS(filename)$BS
 ##########################################################################
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
@@ -79,25 +88,25 @@ for(i in 1:tlen){
 
 
 dataGP = data.frame(matrix(0, nrow = tlen, ncol = 6))
-names(dataGP) = c("Time", "LTRC CIF", "LTRC RRF", "LTRC TSF", "Cox", "propAtRisk")
+names(dataGP) = c("Time", "CIF-TV", "RRF-TV", "TSF-TV", "Extended Cox", "propAtRisk")
 dataGP$Time = Tpnt
-dataGP$`LTRC CF` = BSt$cf
-dataGP$`LTRC RRF` = BSt$rrf
-dataGP$`TSF` = BSt$tsf
-dataGP$`Cox` = BSt$cx
+dataGP$`CIF-TV` = BSt$cf$BScore
+dataGP$`RRF-TV` = BSt$rrf$BScore
+dataGP$`TSF-TV` = BSt$tsf$BScore
+dataGP$`Extended Cox` = BSt$cx$BScore
 dataGP$`propAtRisk` = propAtRisk
 
 
 # Reshape for the ggplot2
 melted = melt(dataGP, id.vars=c("Time","propAtRisk"),
-              measure.vars = c("LTRC CIF", "LTRC RRF", "LTRC TSF", "Cox"))
+              measure.vars = c("CIF-TV", "RRF-TV", "TSF-TV", "Extended Cox"))
 names(melted)[3] = "Model"
 
 # Value used to transform the data
 coeff <- 0.22
 # A few constants
 ggplot(melted, aes(x=Time)) + 
-  geom_step(aes(y = propAtRisk), color = "midnightblue", linetype = "solid", size = 0.7)
+  geom_step(aes(y = propAtRisk), color = "midnightblue", linetype = "solid", size = 0.7) +
   geom_line(aes(y = value / coeff, color = Model, linetype = Model, group=Model), 
             size = 0.65) + 
   scale_linetype_manual(values=c("solid", "twodash", "F1", "dotdash"))+

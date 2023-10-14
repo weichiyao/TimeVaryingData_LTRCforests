@@ -40,7 +40,7 @@ tsf_wy <- function(formula, data, ntree = 100L, mtry = NULL, log_first = TRUE,
     TSFfsub1 <- traforest(rex, formula = formula, data = data, ntree = ntree, 
                           mtry = mtry, 
                           control = control)
-     
+    
   } else {
     stop("wrong bootstrap is set")
   }
@@ -48,12 +48,14 @@ tsf_wy <- function(formula, data, ntree = 100L, mtry = NULL, log_first = TRUE,
   TSFfsub1 
 }
 ###################################################################################
-predict_tsf_wy <- function(object, newdata=NULL, ensemble = TRUE, OOB = FALSE){
+predict_tsf_wy <- function(object, newdata=NULL, ensemble = TRUE, OOB = FALSE, varying = TRUE){
   if (OOB) {
     DATA = data.frame(as.matrix(object$data))
     ntree = length(object$weights)
     weights = matrix(unlist(object$weights),nrow = ntree,byrow = TRUE) ## row: number of trees
-    names(DATA)[1:3] = c("start","stop","status")
+    if (ncol(DATA) > 2){
+      names(DATA)[1:3] = c("start","stop","status")
+    }  
     node_all <- predict(object, type = "node")
     
     rm(object)
@@ -75,9 +77,14 @@ predict_tsf_wy <- function(object, newdata=NULL, ensemble = TRUE, OOB = FALSE){
         id_buildtree = id_samenode_witi[id_samenode_witi %in% id_inbag]
         weights_wi[id_buildtree] = weights_wi[id_buildtree] + 1/length(id_buildtree) # with correct weighting
       }
+      if (ncol(DATA) == 2){
+        pred[[wi]] = survfit(formula = Surv(time,status)~1, data = DATA, 
+                             weights = weights_wi, subset = weights_wi > 0)
+      } else {
+        pred[[wi]] = survfit(formula = Surv(start,stop,status)~1, data = DATA, 
+                             weights = weights_wi, subset = weights_wi > 0)
+      }
       
-      pred[[wi]] = survfit(formula = Surv(start,stop,status)~1, data = DATA, 
-                           weights = weights_wi, subset = weights_wi > 0)
     }
   } else {
     if (is.null(newdata)){

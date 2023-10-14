@@ -745,7 +745,10 @@ is.forest.missing <- function(object) {
     }
     else {
         ## Check the class of the object.
-        if (class(user.option$base.learner) == "base.learner") {
+        # if (class(user.option$base.learner) == "base.learner") {
+        #     base.learner <- user.option$base.learner
+        # }
+        if (inherits(user.option$base.learner, "base.learner")){
             base.learner <- user.option$base.learner
         }
         else {
@@ -761,8 +764,11 @@ is.forest.missing <- function(object) {
     }
     else {
         ## Check the class of the object.
-        if (class(user.option$lot) == "lot") {
-            lot <- user.option$lot
+        # if (class(user.option$lot) == "lot") {
+        #     lot <- user.option$lot
+        # }
+        if (inherits(user.option$lot, "lot")) {
+          lot <- user.option$lot
         }
         else {
             stop("Invalid choice for 'lot' option:  ", user.option$lot)
