@@ -69,7 +69,6 @@
 #'
 #'
 #' @export
-#' 
 predictProb <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
                         time.eval, time.tau = NULL){
   UseMethod("predictProb", object)
@@ -558,6 +557,6 @@ predictProb.ltrcrrf <- function(object, newdata = NULL, newdata.id, OOB = FALSE,
   return(RES)
 }
 
-predictProb.prodlim <- function(object, time.eval, ...) {
-  predict(object, times = time.eval, type  = "surv")
-}
+# predictProb.prodlim <- function(object, time.eval, ...) {
+#   predict(object, times = time.eval, type  = "surv")
+# }

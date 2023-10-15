@@ -127,15 +127,15 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predictProb(hatcdist, time.eval = Tleft)
+  csurv_adj = predict(hatcdist, times = Tleft, type = "surv") 
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predictProb(hatcdist, time.eval = Ttildei) / csurv_adj
+  csurv_obs <- predict(hatcdist, times = Ttildei, type = "surv") / csurv_adj
   csurv_obs[csurv_adj == 0] <- Inf
   csurv_obs[csurv_obs == 0] <- Inf
 
   # conditional survival for Observed value > t, G(t)
-  csurv_t <- predictProb(hatcdist, time.eval = tpnt[tpnt < Ttildei]) / csurv_adj
+  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 
@@ -171,16 +171,16 @@ sbrier_ltrc <- function(obj, id = NULL, pred, type = c("IBS","BS")){
 
   Tleft = data_sbrier[data_sbrier$id == id_uniq[Ni], ]$start
 
-  csurv_adj = predictProb(hatcdist, time.eval = Tleft)
+  csurv_adj = predict(hatcdist, times = Tleft, type  = "surv")
   if (is.na(csurv_adj)) stop("reverse Kaplan-Meier estimate at the left-truncateion point is NA! ")
 
   ### conditional survival for Observed value < t, G(Obs)
-  csurv_obs <- predictProb(hatcdist, time.eval = Ttildei) / csurv_adj
+  csurv_obs <- predict(hatcdist, times = Ttildei, type  = "surv") / csurv_adj
   csurv_obs[csurv_adj == 0] <- Inf
   csurv_obs[csurv_obs == 0] <- Inf
 
-  # conditional survival for Observed value > t, G(t)
-  csurv_t <- predictProb(hatcdist, time.eval = tpnt[tpnt < Ttildei]) / csurv_adj
+  # conditional survival for Observed value > t, G(t) 
+  csurv_t <- predict(hatcdist, times = tpnt[tpnt < Ttildei], type = "surv") / csurv_adj
   csurv_t[is.na(csurv_t)] <- min(csurv_t, na.rm = TRUE)
   csurv_t[csurv_t == 0] <- Inf
 

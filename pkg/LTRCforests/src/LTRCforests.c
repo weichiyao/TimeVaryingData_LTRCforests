@@ -1482,7 +1482,7 @@ void getTreeInfo(uint treeID, Node *parent) {
     getTreeInfo(treeID, parent -> right);
   }
 }
-void processDefaultGrow() {
+void processDefaultGrow(void) {
   RF_optHigh = RF_optHigh & (~OPT_MEMB_PRUN);
   RF_ptnCount             = 0;
   RF_sobservationSize = 0;
@@ -1579,7 +1579,7 @@ void processDefaultGrow() {
     RF_nImpute = 1;
   }
 }
-void processDefaultPredict() {
+void processDefaultPredict(void) {
   char mode;
   RF_opt = RF_opt & (~OPT_IMPU_ONLY);
   RF_opt = RF_opt & (~OPT_USPV_STAT);
@@ -5803,7 +5803,7 @@ void nrCopyVector(char *new, char *old, unsigned int ncol) {
     new[j] = old[j];
   }
 }
-void testEndianness() {
+void testEndianness(void) {
   unsigned int     test = 0x12345678;
   unsigned int *testPtr = & test;
   RF_nativePrint("\nTest of Endianness:  ");
@@ -6057,7 +6057,7 @@ void makeLookUpTree(LookUpInfo *infoObj, QuantileObj *qObj, uint size, uint dept
   else {
   }
 }
-LookUpInfo *makeLookUpInfo() {
+LookUpInfo *makeLookUpInfo(void) {
   LookUpInfo *obj = (LookUpInfo*) gblock((size_t) sizeof(LookUpInfo));
   obj -> qPtr    = NULL;
   obj -> rootPtr = NULL;
@@ -11912,7 +11912,7 @@ char randomSGS (uint       treeID,
                                 deltaMax);
   return result;
 }
-LatOptTreeObj *makeLatOptTreeObj() {
+LatOptTreeObj *makeLatOptTreeObj(void) {
   LatOptTreeObj *lotObj = (LatOptTreeObj*) gblock((size_t) sizeof(LatOptTreeObj));
   lotObj -> risk  = dvector(1, RF_lotLag+1);
   lotObj -> risk1 = dvector(1, RF_lotLag+1);
@@ -22011,7 +22011,7 @@ void stackTNQuantitativeOutputObjects(char     mode,
     free_ivector(dim, 1, 4);
   }
 }
-void verifyAndRegisterCustomSplitRules() {
+void verifyAndRegisterCustomSplitRules(void) {
   uint familyConstant;
   uint i, j;
   familyConstant = 0;  
@@ -22317,7 +22317,7 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
    }
   free_new_vvector(list, 0, count, NRUTIL_XPTR);
 }
-void memoryCheck() {
+void memoryCheck(void) {
   if (RF_nativeIndex != RF_stackCount) {
     RF_nativeError("\nRF-SRC:  *** ERROR *** ");
     RF_nativeError("\nRF-SRC:  Stack imbalance in PROTECT/UNPROTECT:  %10d + 1 versus %10d  ", RF_nativeIndex, RF_stackCount);
@@ -22726,7 +22726,7 @@ void unstackPreDefinedCommonArrays(Node      ***nodeMembership,
     free_new_vvector(RF_augmentationObj, 1, RF_ntree, NRUTIL_GPTR);
   }
 }
-void stackPreDefinedGrowthArrays() {
+void stackPreDefinedGrowthArrays(void) {
   uint i;
   if (RF_opt & OPT_VIMP) {
     RF_intrPredictorSize = RF_xSize;
@@ -22761,7 +22761,7 @@ void stackPreDefinedGrowthArrays() {
     }
   }
 }
-void unstackPreDefinedGrowthArrays() {
+void unstackPreDefinedGrowthArrays(void) {
   if (RF_opt & OPT_VIMP) {
     free_uivector(RF_intrPredictor, 1, RF_intrPredictorSize);
     free_cvector(RF_importanceFlag, 1, RF_xSize);
@@ -22775,7 +22775,7 @@ void unstackPreDefinedGrowthArrays() {
                    RF_yWeightSorted); 
   }
 }
-void stackPreDefinedRestoreArrays() {
+void stackPreDefinedRestoreArrays(void) {
   uint i;
   if (RF_opt & OPT_VIMP) {
     checkInteraction();
@@ -22812,7 +22812,7 @@ void stackPreDefinedRestoreArrays() {
     RF_soobSize = uivector(1, RF_ntree);
   }
 }
-void unstackPreDefinedRestoreArrays() {
+void unstackPreDefinedRestoreArrays(void) {
   if (RF_opt & OPT_VIMP) {
     free_cvector(RF_importanceFlag, 1, RF_xSize);
   }
@@ -22820,7 +22820,7 @@ void unstackPreDefinedRestoreArrays() {
     free_uivector(RF_soobSize, 1, RF_ntree);
   }
 }
-void stackPreDefinedPredictArrays() {
+void stackPreDefinedPredictArrays(void) {
   uint i;
   RF_fnodeMembership = (Node ***)     new_vvector(1, RF_ntree, NRUTIL_NPTR2);
   RF_ftTermMembership = (Terminal ***) new_vvector(1, RF_ntree, NRUTIL_NPTR2);
@@ -22843,7 +22843,7 @@ void stackPreDefinedPredictArrays() {
     }
   }
 }
-void unstackPreDefinedPredictArrays() {
+void unstackPreDefinedPredictArrays(void) {
   free_new_vvector(RF_fnodeMembership, 1, RF_ntree, NRUTIL_NPTR2);
   free_new_vvector(RF_ftTermMembership, 1, RF_ntree, NRUTIL_NPTR2);
   free_uivector(RF_fidentityMembershipIndex, 1, RF_fobservationSize);
@@ -22852,7 +22852,7 @@ void unstackPreDefinedPredictArrays() {
     free_cvector(RF_importanceFlag, 1, RF_xSize);
   }
 }
-void checkInteraction() {
+void checkInteraction(void) {
   uint leadingIndex, i;
   if((RF_intrPredictorSize <= 0) || (RF_intrPredictorSize > RF_xSize)) {
     RF_nativeError("\nRF-SRC:  *** ERROR *** ");
@@ -23733,7 +23733,7 @@ void getCRPerformance (char     mode,
   free_dvector(subsettedMortality, 1, obsSize);
   free_uivector(subsettedEnsembleDen, 1, obsSize);
 }
-Terminal *makeTerminal() {
+Terminal *makeTerminal(void) {
   Terminal *parent = (Terminal*) gblock((size_t) sizeof(Terminal));
   parent -> lmiIndex      = NULL;
   parent -> lmiValue      = NULL;
@@ -27172,7 +27172,7 @@ SEXP rfsrcPredict(SEXP traceFlag,
   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
   return RF_sexpVector[RF_OUTP_ID];
 }
-void exit2R() {
+void exit2R(void) {
   error("\nRF-SRC:  The application will now exit.\n");
 }
 // void printR(char *format, ...) {
@@ -27195,7 +27195,7 @@ void printR(char *format, ...) {
   Rprintf(buffer);
   free((char *) buffer);
 }
-void setNativeGlobalEnv() {
+void setNativeGlobalEnv(void) {
   RF_nativeIndex = RF_stackCount = 0;
 }
 void *copy1DObject(SEXP arr, char type, uint size, char actual) {
@@ -27379,6 +27379,6 @@ void *stackAndProtect(uint  *sexpIndex,
 void setUserTraceFlag (uint traceFlag) {
   RF_userTraceFlag = traceFlag;
 }
-uint getUserTraceFlag () {
+uint getUserTraceFlag (void) {
   return RF_userTraceFlag;
 }

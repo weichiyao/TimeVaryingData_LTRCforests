@@ -232,7 +232,7 @@ get.impute.only <-  function (impute.only, nMiss) {
       return (0)
     }
 }
-  get.membership <- function (membership) {
+get.membership <- function (membership) {
     ## Convert option into native code parameter.
     bits <- 0
     if (!is.null(membership)) {
@@ -424,7 +424,7 @@ get.seed <- function (seed) {
     seed <- -round(abs(seed))
     return (seed)
   }
-  get.split.depth <- function (split.depth) {
+get.split.depth <- function (split.depth) {
     ## Convert split.depth option into native code parameter.
     if (!is.null(split.depth)) {
       if (split.depth == "all.trees") {
@@ -445,7 +445,7 @@ get.seed <- function (seed) {
       }
     return (split.depth)
   }
-  get.split.null <- function (split.null) {
+get.split.null <- function (split.null) {
     ## Convert split.null option into native code parameter.
     if (!is.null(split.null)) {
       if (split.null == TRUE) {
@@ -463,7 +463,7 @@ get.seed <- function (seed) {
     }
     return (split.null)
   }
-  get.split.cust <- function (split.cust) {
+get.split.cust <- function (split.cust) {
     ## Convert split.cust option into native code parameter.
     if (!is.null(split.cust)) {
       if ((split.cust >= 1) && (split.cust <= 16)) {
@@ -479,7 +479,7 @@ get.seed <- function (seed) {
       }
     return (split.cust)
   }
-  get.statistics <- function (statistics) {
+get.statistics <- function (statistics) {
     ## Convert statistics option into native code parameter.
     if (!is.null(statistics)) {
       if (statistics == TRUE) {
@@ -497,7 +497,7 @@ get.seed <- function (seed) {
       }
     return (statistics)
   }
-  get.terminal.qualts <- function (terminal.qualts, incoming.flag) {
+get.terminal.qualts <- function (terminal.qualts, incoming.flag) {
     ## Convert option into native code parameter.  This
     ## is sensitive to incoming and outgoing data
     ## (from the native code perspective).
@@ -522,7 +522,7 @@ get.seed <- function (seed) {
       }
     return (bits)
   }
-  get.terminal.quants <- function (terminal.quants, incoming.flag) {
+get.terminal.quants <- function (terminal.quants, incoming.flag) {
     ## Convert option into native code parameter.  This
     ## is sensitive to incoming and outgoing data
     ## (from the native code perspective).
@@ -547,7 +547,7 @@ get.seed <- function (seed) {
       }
     return (bits)
   }
-  get.trace <- function (do.trace) {
+get.trace <- function (do.trace) {
     ## Convert trace into native code parameter.
     if (!is.logical(do.trace)) {
       if (do.trace >= 1) {
@@ -562,7 +562,7 @@ get.seed <- function (seed) {
       }
     return (do.trace)
   }
-  get.block.size <- function (block.size, ntree) {
+get.block.size <- function (block.size, ntree) {
     ## Check for user silliness.
     if (!is.null(block.size)) {
       ## for backwards compatibility allow TRUE/FALSE
@@ -662,7 +662,7 @@ get.var.used <- function (var.used) {
       }
     return (var.used)
   }
-  get.vimp.only <-  function (vimp.only) {
+get.vimp.only <-  function (vimp.only) {
     ## Convert vimp.only option into native code parameter.
     if (!is.null(vimp.only)) {
       if (vimp.only) {
