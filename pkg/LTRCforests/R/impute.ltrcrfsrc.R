@@ -74,7 +74,7 @@ impute.ltrcrfsrc <- function(formula, data,
   ## set the number of blocks used to subdivide the data
   ## hence subdivide the problem into more manageable pieces
   if (!missing(blocks)) {
-    blocks <- cv.folds(nrow(data), max(1, blocks))
+    blocks <- cvfolds(nrow(data), max(1, blocks))
   }
   else {
     blocks <- list(1:nrow(data))
@@ -201,7 +201,7 @@ impute.ltrcrfsrc <- function(formula, data,
       ##--------------------------------------------------------
       nullBlocks <- lapply(blocks, function(blk) {
         ## determine the grouping of the multivariate response
-        var.grp <- cv.folds(p0, K)
+        var.grp <- cvfolds(p0, K)
         ##--------------------------------------------------------
         ## loop over the multivariate response groupings
         ##--------------------------------------------------------

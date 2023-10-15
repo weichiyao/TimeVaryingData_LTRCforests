@@ -100,7 +100,7 @@ print.ltrcrrf <- function(x) {
   # grow.mode <- TRUE
   
   ## x will be processed if it's multivariate - therefore save some values from it
-  familyPretty <- family.pretty(x)
+  familyPretty <- familypretty(x)
   familyOrg <- x$family
   yvar.dim <- ncol(x$yvar)
   
