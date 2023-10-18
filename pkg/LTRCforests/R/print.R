@@ -4,8 +4,39 @@
 #' This is the default print method for objects in the class of \code{\link{ltrccif}} or 
 #' \code{\link{ltrcrrf}}.
 #'
-#' @param x an object of class \code{ltrccif} or \code{ltrcrrf}.
-#'
+#' @param x an object of class \code{\link{ltrccif}} or \code{\link{ltrcrrf}}.
+#' @return A printout object containing the following components:
+#'         \item{Number of (pseudo-subject) observations}{number of left-truncated 
+#'         right-censored pseudo-subject observations based on the Andersen-Gill reformulation.}
+#'         \item{Number of subjects}{number of independent subject observations.}
+#'         \item{Number of deaths}{number of times that an event occurs in the whole dataset.}
+#'         \item{Number of trees}{the value set for argument \code{ntree}, 
+#'         see \code{\link{ltrccif}} and \code{\link{ltrcrrf}}.}
+#'         \item{minsplit}{the value set for argument \code{minsplit} that controls 
+#'         the growth of individual trees; see \code{\link[partykit]{ctree_control}}.}
+#'         \item{minbucket}{the value set for argument \code{minbucket} 
+#'         that controls the growth of individual trees; see \code{\link[partykit]{ctree_control}}.}
+#'         \item{minprob}{the value set for argument \code{minprob} 
+#'         that controls the growth of individual trees; see \code{\link[partykit]{ctree_control}}.}
+#'         \item{maxdepth}{the value set for argument \code{maxdepth} 
+#'         that controls the maximum depth of individual trees; see \code{\link[partykit]{ctree_control}}.}
+#'         \item{No. of variables tried at each split}{number of input variables 
+#'         randomly sampled as candidates at each node for random forest algorithms, 
+#'         which is either set as an argument \code{mtry} in \code{\link{ltrccif}} and \code{\link{ltrcrrf}}, 
+#'         or tuned by \code{\link{tune.ltrccif}} or \code{\link{tune.ltrcrrf}}, respectively.}
+#'         \item{Total no. of variables}{the number of features provided in \code{data}.}
+#'         \item{Bootstrap type to grow trees}{the values set for augument \code{bootstrap}, 
+#'         see \code{\link{ltrccif}} and \code{\link{ltrcrrf}}.}
+#'         \item{Resampling used to grow trees}{the value set for argument \code{samptype}, 
+#'         see \code{\link{ltrccif}} and \code{\link{ltrcrrf}}.}
+#'         \item{Resampling rate used to grow trees}{the values set for argument \code{sampfrac}, 
+#'         see \code{\link{ltrccif}} and \code{\link{ltrcrrf}}.}
+#'         \item{Analysis}{LTRCCIF for a \code{\link{ltrccif}} object or LTRCRRF for \code{\link{ltrcrrf}}.}
+#'         \item{Family}{the family used in the analysis, \code{surv}.}
+#'         \item{Splitting rule}{the splitting rule that is implemented, 
+#'         conditional inference framework for a \code{\link{ltrccif}} object or 
+#'         Poisson splitting for \code{\link{ltrcrrf}}.}
+#'         \item{Number of random split points}{the values set for argument \code{nsplit} in \code{\link{ltrcrrf}}.}
 #' @importFrom survival Surv
 #' @examples
 #'

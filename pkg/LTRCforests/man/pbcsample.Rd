@@ -11,20 +11,20 @@ Primary biliary cirrhosis: Prediction of shortterm survival based on
 repeated patient visits. \emph{Hepatology}, \strong{20}, 126-134.
 }
 \value{
-a data frame with 57 rows and 9 variables:
-  \item{ID}{Patient id}
+A data frame with 57 rows and 9 variables:
+  \item{ID}{patient id.}
   \item{Start}{the left truncation time point for the corresponding
-  pseudo-subject observation}
+  pseudo-subject observation.}
   \item{Stop}{the right censoring time point for the corresponding
-  pseudo-subject observation}
+  pseudo-subject observation.}
   \item{Event}{a binary value, with \code{1} indicating the event occurring at
-  the corresponding \code{Stop}, \code{0} indicating right-censored}
-  \item{age}{patient's age at entry, in years}
-  \item{alk.phos}{alkaline phosphotase (U/liter)}
-  \item{ast}{aspartate aminotransferase (U/ml)}
-  \item{chol}{serum cholesterol (mg/dl)}
+  the corresponding \code{Stop}, \code{0} indicating right-censored.}
+  \item{age}{patient's age at entry, in years.}
+  \item{alk.phos}{alkaline phosphotase (U/liter).}
+  \item{ast}{aspartate aminotransferase (U/ml).}
+  \item{chol}{serum cholesterol (mg/dl).}
   \item{edema}{\code{0}--no edema, \code{0.5}--untreated or successfully treated,
-  \code{1}--edema despite diuretic therapy}
+  \code{1}--edema despite diuretic therapy.}
 }
 \description{
 A sample real dataset with time varying covariates. It contains multiple records

@@ -113,7 +113,8 @@ If no value is specified, the default action is to use all observed event times.
 Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.}
 }
 \value{
-An object belongs to the class \code{ltrcrrf}.
+An object belongs to the class \code{ltrcrrf}, as a subclass of
+\code{\link[randomForestSRC]{rfsrc}}.
 }
 \description{
 An implementation of the random forest algorithms utilizing LTRC \code{rpart}

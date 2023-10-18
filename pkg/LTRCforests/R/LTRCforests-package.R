@@ -3,7 +3,7 @@
 #' Constructs a LTRC conditional inference forest (LTRCCIF) or
 #' a LTRC relative risk forest (LTRCRRF) for left-truncated and right-censored data,
 #' it also allows for (left-truncated) right-censored survival data with
-#' time-varying covariates.
+#' time-varying covariates (Yao et al. 2022).
 #' The main functions of this package are \code{\link{ltrccif}} and \code{\link{ltrcrrf}}.
 #'
 #' \subsection{Problem setup and existing methods}{
@@ -61,17 +61,20 @@
 #' directly to construct conditional inference forests and random survival forests,
 #' respectively.
 #'
+#' @references Yao, W., Frydman, H., Larocque, D. and Simonoff, J. S. (2022). 
+#' Ensemble methods for survival function estimation with time-varying covariates.
+#' \emph{Statistical Methods in Medical Research}, \strong{31}(11):2217-2236.
 #' @references Andersen, P. and Gill, R. (1982). Cox’s regression model for counting
 #' processes, a large sample study. \emph{Annals of Statistics}, \strong{10}:1100-1120.
-#' @references H. Ishwaran, E. H. Blackstone, C. Pothier, and M. S. Lauer. (2004).
+#' @references Ishwaran, H., Blackstone, E. H., Pothier, C., and Lauer, M. S. (2004).
 #' Relative risk forests for exercise heart rate recovery as a predictor of mortality.
 #' \emph{Journal of the American StatisticalAssociation}, \strong{99}(1):591–600.
-#' @references Fu, W. and Simonoff, J.S. (2016). Survival trees for left-truncated and 
+#' @references Fu, W. and Simonoff, J. S. (2016). Survival trees for left-truncated and 
 #' right-censored data, with application to time-varying covariate data. 
 #' \emph{Biostatistics}, \strong{18}(2):352–369.
 #' @seealso \code{\link{ltrccif}}, \code{\link{ltrcrrf}},
 #' \code{\link{predictProb}}, \code{\link{print}},
-#' \code{\link{tune.ltrccif}}, \code{\link{tune.ltrcrrf}}, \code{\link{sbrier_ltrc}}
+#' \code{\link{tune.ltrccif}}, \code{\link{tune.ltrcrrf}}, \code{\link{sbrier_ltrc}}.
 #' @docType package
 #' @name LTRCforests-package
 NULL

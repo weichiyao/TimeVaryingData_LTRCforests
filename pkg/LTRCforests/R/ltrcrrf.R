@@ -84,7 +84,8 @@
 #' used will be the observed event times closest to the user supplied time points).
 #' If no value is specified, the default action is to use all observed event times.
 #' Further demails can be found in \code{\link[randomForestSRC]{rfsrc}}.
-#' @return An object belongs to the class \code{ltrcrrf}.
+#' @return An object belongs to the class \code{ltrcrrf}, as a subclass of
+#' \code{\link[randomForestSRC]{rfsrc}}.
 #' @import survival
 #' @import stats
 #' @import utils

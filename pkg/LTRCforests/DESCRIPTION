@@ -19,7 +19,7 @@ Description: Implements the conditional inference forest and relative risk fores
              algorithm to modeling left-truncated right-censored data with time-invariant        
              covariates, and (left-truncated) right-censored survival data with time-varying 
              covariates. It also provides functions to tune the parameters and evaluate the 
-             model fit. 
+             model fit. See Yao et al. (2022) <doi:10.1177/09622802221111549>.
 NeedsCompilation: yes 
 License: GPL (>= 2)
 Encoding: UTF-8
