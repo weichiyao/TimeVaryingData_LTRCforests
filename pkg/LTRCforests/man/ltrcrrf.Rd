@@ -134,8 +134,7 @@ library(survival)
 Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 # Built a LTRCRRF forest (based on bootstrapping subjects without replacement)
 # on the time-varying data by specifying id:
-LTRCRRFobj = ltrcrrf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-                     ntree = 10L)
+LTRCRRFobj = ltrcrrf(formula = Formula, data = pbcsample, id = ID, ntree = 20L)
 
 
 }

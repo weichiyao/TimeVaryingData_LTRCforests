@@ -90,6 +90,8 @@
 #' @import stats
 #' @import utils
 #' @import prodlim
+#' @import partykit
+#' @import randomForestSRC
 #' @importFrom survival Surv
 #' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrrf}}
 #' for \code{mtry} tuning.
@@ -107,8 +109,7 @@
 #' Formula = Surv(Start, Stop, Event) ~ age + alk.phos + ast + chol + edema
 #' # Built a LTRCRRF forest (based on bootstrapping subjects without replacement)
 #' # on the time-varying data by specifying id:
-#' LTRCRRFobj = ltrcrrf(formula = Formula, data = pbcsample, id = ID, stepFactor = 3,
-#'                      ntree = 10L)
+#' LTRCRRFobj = ltrcrrf(formula = Formula, data = pbcsample, id = ID, ntree = 20L)
 #'
 #'
 #' @export

@@ -542,7 +542,7 @@ generic.predict.ltrcrfsrc <-
                                     as.integer(samp),
                                     as.double(case.wt),
                                     list(if(is.null(event.info$time.interest)) as.integer(0) else as.integer(length(event.info$time.interest)),
-                                         if(is.null(event.info$time.interest)) NULL else as.double(event.info$time.interest)),
+                                         if(is.null(event.info$time.interest)) double(0) else as.double(event.info$time.interest)),
                                     as.integer(object$totalNodeCount),
                                     as.integer(object$seed),
                                     as.integer(hdim),
@@ -621,11 +621,11 @@ generic.predict.ltrcrfsrc <-
                                     as.integer((object$nativeArrayTNDS$tnCLAS)),
                                     ## <<<< end of maxi forest object <<<<
                                     list(if (is.null(m.target.idx)) as.integer(0) else as.integer(length(m.target.idx)),
-                                         if (is.null(m.target.idx)) NULL else as.integer(m.target.idx)),
+                                         if (is.null(m.target.idx)) double(0) else as.integer(m.target.idx)),
                                     as.integer(ptn.count),
                                     
                                     list(if (is.null(importance.xvar.idx)) as.integer(0) else as.integer(length(importance.xvar.idx)),
-                                         if (is.null(importance.xvar.idx)) NULL else as.integer(importance.xvar.idx)),
+                                         if (is.null(importance.xvar.idx)) double(0) else as.integer(importance.xvar.idx)),
                                     ## Partial variables disabled.
                                     list(as.integer(0), as.integer(0), as.integer(0), NULL, as.integer(0), NULL, NULL),
                                     as.integer(length(subset)),
@@ -636,7 +636,7 @@ generic.predict.ltrcrfsrc <-
                                     as.double(if (outcome != "test") xvar.newdata else 0),
                                     as.integer(block.size),
                                     list(if (is.null(prob.assign$prob)) as.integer(0) else as.integer(length(prob.assign$prob)),
-                                         if (is.null(prob.assign$prob)) NULL else as.double(prob.assign$prob),
+                                         if (is.null(prob.assign$prob)) double(0) else as.double(prob.assign$prob),
                                          if (is.null(prob.assign$prob.epsilon)) as.double(0) else as.double(prob.assign$prob.epsilon)),
                                     as.integer(get.tree),
                                     as.integer(get.rf.cores()))}, error = function(e) {
