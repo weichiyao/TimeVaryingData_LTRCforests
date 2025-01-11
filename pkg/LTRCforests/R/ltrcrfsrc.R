@@ -424,7 +424,7 @@ ltrcrfsrc <- function(formula, data, ntree = 1000,
                                     as.integer(length(prob)),
                                     as.double(prob),
                                     as.double(prob.epsilon),
-                                    as.double(NULL),
+                                    as.double(0),
                                     as.integer(get.rf.cores()))}, error = function(e) {
                                         print(e)
                                         NULL})

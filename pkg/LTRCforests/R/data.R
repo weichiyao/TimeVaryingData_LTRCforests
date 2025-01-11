@@ -3,7 +3,7 @@
 #' A sample real dataset with time varying covariates. It contains multiple records
 #' of measurements of risk factors at multiple time points from 10 patients
 #' with primary biliary cirrhosis (PBC), constructed from
-#' \code{\link{pbcseq}} in the R package \pkg{\link{survival}}. The data
+#' \code{\link[survival:pbcseq]{pbcseq}} in the \pkg{survival} package. The data
 #' structure has been reformatted with left-truncated right-censored
 #' pseudo-subject observations based on the Andersen-Gill reformulation method.
 #'

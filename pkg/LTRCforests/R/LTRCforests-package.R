@@ -75,6 +75,5 @@
 #' @seealso \code{\link{ltrccif}}, \code{\link{ltrcrrf}},
 #' \code{\link{predictProb}}, \code{\link{print}},
 #' \code{\link{tune.ltrccif}}, \code{\link{tune.ltrcrrf}}, \code{\link{sbrier_ltrc}}.
-#' @docType package
 #' @name LTRCforests-package
 NULL

@@ -26686,26 +26686,26 @@ SEXP rfsrcCIndex(SEXP sexp_traceFlag,
   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
   return RF_sexpVector[RF_OUTP_ID];
 }
-SEXP rfsrcTestSEXP(SEXP sexp_size) {
-  setNativeGlobalEnv();
-  ulong size = (ulong) REAL(sexp_size)[0];
-  char *v;
-  char  *sexpString[3] = {
-    "",              
-    "",              
-    "dummy"          
-  };
-  RF_stackCount = 1;
-  initProtect(RF_stackCount);
-  stackAuxiliaryInfoList(&RF_snpAuxiliaryInfoList, RF_stackCount);
-  v = (char*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_CHARACTER, 2, size, 0, sexpString[2], NULL, 1, size);
-  v --;
-  unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
-  memoryCheck();
-  R_ReleaseObject(RF_sexpVector[RF_OUTP_ID]);
-  R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
-  return RF_sexpVector[RF_OUTP_ID];
-}
+// SEXP rfsrcTestSEXP(SEXP sexp_size) {
+//   setNativeGlobalEnv();
+//   ulong size = (ulong) REAL(sexp_size)[0];
+//   // char *v;
+//   char  *sexpString[3] = {
+//     "",              
+//     "",              
+//     "dummy"          
+//   };
+//   RF_stackCount = 1;
+//   initProtect(RF_stackCount);
+//   stackAuxiliaryInfoList(&RF_snpAuxiliaryInfoList, RF_stackCount);
+//   // v = (char*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_CHARACTER, 2, size, 0, sexpString[2], NULL, 1, size);
+//   // v --;
+//   unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
+//   memoryCheck();
+//   R_ReleaseObject(RF_sexpVector[RF_OUTP_ID]);
+//   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
+//   return RF_sexpVector[RF_OUTP_ID];
+// }
 SEXP rfsrcDistance(SEXP sexp_metricType,
                    SEXP sexp_n,
                    SEXP sexp_p,
@@ -27192,7 +27192,7 @@ void printR(char *format, ...) {
   va_start(aptr, format);
   vsnprintf(buffer, sizeof(char) * 1023, format, aptr);
   va_end(aptr);
-  Rprintf(buffer);
+  Rprintf("%s", buffer);  // Use '%s' as the format string
   free((char *) buffer);
 }
 void setNativeGlobalEnv(void) {
