@@ -21605,8 +21605,13 @@ void stackForestOutputObjects(char mode) {
       RF_parmID_[1]  --;
       RF_contPT_[1]  --;
       RF_mwcpSZ_[1]  --;
-      RF_mwcpPT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, RF_sexpString[RF_MWCP_PT], NULL, 1, totalMWCPCount);
-      RF_mwcpPT_[1] --;
+      if (totalMWCPCount > 0) {
+        RF_mwcpPT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, RF_sexpString[RF_MWCP_PT], NULL, 1, totalMWCPCount);
+        RF_mwcpPT_[1] --;
+      }
+      else {
+        RF_mwcpPT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, 1, 0, RF_sexpString[RF_MWCP_PT], NULL, 1, 1);
+      }
       RF_mwcpCT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_CT, (ulong) RF_ntree, 0, RF_sexpString[RF_MWCP_CT], NULL, 1, RF_ntree);
       RF_mwcpCT_[1] --;
       if (RF_baseLearnTST > 1) {
@@ -26957,7 +26962,13 @@ SEXP rfsrcGrow(SEXP traceFlag,
   RF_nImpute              = INTEGER(nImpute)[0];
   RF_perfBlock            = INTEGER(perfBlock)[0];
   RF_quantileSize         = INTEGER(quantileSize)[0];
-  RF_quantile             = REAL(quantile);  RF_quantile--;
+  if (quantile != R_NilValue) {
+    RF_quantile = (double *) REAL(quantile);
+    RF_quantile --;
+  }
+  else {
+    RF_quantile = NULL;
+  }
   RF_qEpsilon             = REAL(qEpsilon)[0];
   RF_vtry      = 0;
   RF_vtryArray = NULL;
