@@ -1844,7 +1844,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
 void verifyAndRegisterCustomSplitRules(void);
 extern void registerCustomFunctions(void);
 void stackAuxiliaryInfoList(SNPAuxiliaryInfo ***list, uint count);
-void allocateAuxiliaryInfo(char   type,
+void allocateAuxiliaryInfo(char   targetFlag,
+                           char   type,
                            char  *stringIdentifier,
                            SNPAuxiliaryInfo **list,
                            uint   slot,
@@ -1852,8 +1853,8 @@ void allocateAuxiliaryInfo(char   type,
                            void  *auxiliaryArrayPtr,
                            uint   dimSize,
                            int   *dim);
-uint getAuxDim(int *dim, uint preIndex, uint postIndex);
-void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count);
+uint getAuxDim(char flag, int *dim, uint iterIndex, uint slot);
+void unstackAuxiliaryInfoAndList(char targetFlag, SNPAuxiliaryInfo **list, uint count);
 void memoryCheck(void);
 void stackIncomingResponseArrays(char mode);
 void unstackIncomingResponseArrays(char mode);
@@ -2168,7 +2169,8 @@ void *copy2DObject(SEXP arr, char type, char flag, uint row, uint col);
 void free_1DObject(void *arr, char type, uint size);
 void free_2DObject(void *arr, char type, char flag, uint row, uint col);
 void initProtect(uint  stackCount);
-void *stackAndProtect(uint  *sexpIndex,
+void *stackAndProtect(char   mode,
+                      uint  *sexpIndex,
                       char   sexpType,
                       uint   sexpIdentity,
                       ulong  size,

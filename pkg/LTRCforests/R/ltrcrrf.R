@@ -90,8 +90,6 @@
 #' @import stats
 #' @import utils
 #' @import prodlim
-#' @import partykit
-#' @import randomForestSRC
 #' @importFrom survival Surv
 #' @seealso \code{\link{predictProb}} for prediction and \code{\link{tune.ltrcrrf}}
 #' for \code{mtry} tuning.

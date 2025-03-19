@@ -7318,9 +7318,9 @@ void rfsrc(char mode, int seedValue) {
     break;
   }
   unstackAuxStatisticalStructures(mode);
-  unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
+  unstackAuxiliaryInfoAndList((mode == RF_GROW) ? FALSE : TRUE, RF_snpAuxiliaryInfoList, RF_stackCount);
   if ((RF_optHigh & OPT_MEMB_INCG) || (RF_optHigh & OPT_TERM_INCG)) {
-    unstackAuxiliaryInfoAndList(RF_incAuxiliaryInfoList, 8);
+    unstackAuxiliaryInfoAndList(FALSE, RF_incAuxiliaryInfoList, 8);
   }
   unstackDefinedOutputObjects(mode);
   switch (mode) {
@@ -20449,7 +20449,7 @@ void stackDefinedOutputObjects(char      mode,
         {
           (oobFlag == TRUE) ? (sexpIdentity = RF_OSRG_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_ASRG_ID : TRUE);
           localSize = (ulong) RF_eventTypeSize * RF_sortedTimeInterestSize * obsSize;
-          *ensembleSRG = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleSRGptr, 3, RF_eventTypeSize, RF_sortedTimeInterestSize, obsSize);
+          *ensembleSRG = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleSRGptr, 3, RF_eventTypeSize, RF_sortedTimeInterestSize, obsSize);
           *ensembleSRGnum = (double ***) new_vvector(1, RF_eventTypeSize, NRUTIL_DPTR2);
           for (j = 1; j <= RF_eventTypeSize; j++) {
             (*ensembleSRGnum)[j] = (double **) new_vvector(1, RF_sortedTimeInterestSize, NRUTIL_DPTR);
@@ -20462,7 +20462,7 @@ void stackDefinedOutputObjects(char      mode,
           }
           (oobFlag == TRUE) ? (sexpIdentity = RF_OMRT_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_AMRT_ID: TRUE);
           localSize = (ulong) RF_eventTypeSize * obsSize;
-          *ensembleMRT = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleMRTptr, 2, RF_eventTypeSize, obsSize);
+          *ensembleMRT = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleMRTptr, 2, RF_eventTypeSize, obsSize);
           *ensembleMRTnum = (double **) new_vvector(1, RF_eventTypeSize, NRUTIL_DPTR);
           for (j = 1; j <= RF_eventTypeSize; j++) {
             (*ensembleMRTnum)[j] = dvector(1, obsSize);
@@ -20473,7 +20473,7 @@ void stackDefinedOutputObjects(char      mode,
           if (!(RF_opt & OPT_COMP_RISK)) {
             (oobFlag == TRUE) ? (sexpIdentity = RF_OSRV_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_ASRV_ID: TRUE);
             localSize = (ulong) RF_sortedTimeInterestSize * obsSize;
-            *ensembleSRV = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleSRVptr, 2, RF_sortedTimeInterestSize, obsSize);
+            *ensembleSRV = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleSRVptr, 2, RF_sortedTimeInterestSize, obsSize);
             *ensembleSRVnum = (double **) new_vvector(1, RF_sortedTimeInterestSize, NRUTIL_DPTR);
             for (j = 1; j <= RF_sortedTimeInterestSize; j++) {
               (*ensembleSRVnum)[j]  = dvector(1, obsSize);
@@ -20485,7 +20485,7 @@ void stackDefinedOutputObjects(char      mode,
           else {
             (oobFlag == TRUE) ? (sexpIdentity = RF_OCIF_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_ACIF_ID: TRUE);
             localSize = (ulong) RF_eventTypeSize * RF_sortedTimeInterestSize * obsSize;
-            *ensembleCIF = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleCIFptr, 3, RF_eventTypeSize, RF_sortedTimeInterestSize, obsSize);
+            *ensembleCIF = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleCIFptr, 3, RF_eventTypeSize, RF_sortedTimeInterestSize, obsSize);
             *ensembleCIFnum = (double ***) new_vvector(1, RF_eventTypeSize, NRUTIL_DPTR2);
             for (j = 1; j <= RF_eventTypeSize; j++) {
               (*ensembleCIFnum)[j] = (double **) new_vvector(1, RF_sortedTimeInterestSize, NRUTIL_DPTR);
@@ -20508,7 +20508,7 @@ void stackDefinedOutputObjects(char      mode,
               localSize += (ulong) obsSize;
             }
           }
-          *ensembleCLS = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleCLSptr, 3, RF_rTargetFactorCount, 0, obsSize);
+          *ensembleCLS = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleCLSptr, 3, RF_rTargetFactorCount, 0, obsSize);
           *ensembleCLSnum = (double ***) new_vvector(1, RF_rTargetFactorCount, NRUTIL_DPTR2);
           localSize = 0;
           for (j = 1; j <= RF_rTargetFactorCount; j++) {
@@ -20525,7 +20525,7 @@ void stackDefinedOutputObjects(char      mode,
         if (RF_rTargetNonFactorCount > 0) {
           (oobFlag == TRUE) ? (sexpIdentity = RF_ORGR_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_ARGR_ID: TRUE);
           localSize = (ulong) RF_rTargetNonFactorCount * obsSize;
-          *ensembleRGR = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleRGRptr, 2, RF_rTargetNonFactorCount, obsSize);
+          *ensembleRGR = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleRGRptr, 2, RF_rTargetNonFactorCount, obsSize);
           (*ensembleRGRnum) = (double **) new_vvector(1, RF_rTargetNonFactorCount, NRUTIL_DPTR);
           for (j = 1; j <= RF_rTargetNonFactorCount; j++) {
             (*ensembleRGRnum)[j] = dvector(1, obsSize);
@@ -20545,7 +20545,7 @@ void stackDefinedOutputObjects(char      mode,
             }
             (oobFlag == TRUE) ? (sexpIdentity = RF_OQNT_ID) : ((fullFlag == TRUE) ? sexpIdentity = RF_AQNT_ID: TRUE);
             localSize = (ulong) RF_rTargetNonFactorCount * RF_quantileSize * obsSize;
-            *ensembleQNT = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleQNTptr, 3, RF_rTargetNonFactorCount, RF_quantileSize, obsSize);
+            *ensembleQNT = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, sexpIdentity, localSize, 0, RF_sexpString[sexpIdentity], ensembleQNTptr, 3, RF_rTargetNonFactorCount, RF_quantileSize, obsSize);
             *quantileStreamSize = (uint **) new_vvector(1, RF_rTargetNonFactorCount, NRUTIL_UPTR);
             for (j = 1; j <= RF_rTargetNonFactorCount; j++) {
               (*quantileStreamSize)[j] = uivector(1, obsSize);
@@ -20588,7 +20588,7 @@ void stackDefinedOutputObjects(char      mode,
     if ((RF_timeIndex > 0) && (RF_statusIndex > 0)) {
       {
         localSize = (ulong) RF_ntree * RF_eventTypeSize; 
-        RF_perfMRT_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_SURV, localSize, RF_nativeNaN, RF_sexpString[RF_ER_SURV], &RF_perfMRTptr, 2, RF_ntree, RF_eventTypeSize);
+        RF_perfMRT_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_SURV, localSize, RF_nativeNaN, RF_sexpString[RF_ER_SURV], &RF_perfMRTptr, 2, RF_ntree, RF_eventTypeSize);
       }
     }  
     else {
@@ -20599,19 +20599,19 @@ void stackDefinedOutputObjects(char      mode,
             localSize += (ulong) RF_ntree;
           }
         }
-        RF_perfCLS_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_CLAS, localSize, RF_nativeNaN, RF_sexpString[RF_ER_CLAS], &RF_perfCLSptr, 3, RF_ntree, RF_rTargetFactorCount, -1);
+        RF_perfCLS_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_CLAS, localSize, RF_nativeNaN, RF_sexpString[RF_ER_CLAS], &RF_perfCLSptr, 3, RF_ntree, RF_rTargetFactorCount, -1);
       }
       if (RF_rTargetNonFactorCount > 0) {
         localSize = (ulong) RF_ntree * RF_rTargetNonFactorCount;
-        RF_perfRGR_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_REGR, localSize, RF_nativeNaN, RF_sexpString[RF_ER_REGR], &RF_perfRGRptr, 2, RF_ntree, RF_rTargetNonFactorCount);
+        RF_perfRGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_ER_REGR, localSize, RF_nativeNaN, RF_sexpString[RF_ER_REGR], &RF_perfRGRptr, 2, RF_ntree, RF_rTargetNonFactorCount);
       } 
     }
   }  
   if (RF_opt & OPT_EMPR_RISK) {
     localSize = (ulong) RF_ntree * RF_lotSize; 
-    RF_splitStatLOT_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_STAT_LOT, localSize, RF_nativeNaN, RF_sexpString[RF_STAT_LOT], &RF_splitStatLOTptr, 2, RF_ntree, RF_lotSize);
-    RF_emprRSK_      = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_EMP_RSK, localSize, RF_nativeNaN, RF_sexpString[RF_EMP_RSK], &RF_emprRSKptr, 2, RF_ntree, RF_lotSize);
-    RF_oobEmprRSK_   = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_OEMP_RSK, localSize, RF_nativeNaN, RF_sexpString[RF_OEMP_RSK], &RF_oobEmprRSKptr, 2, RF_ntree, RF_lotSize);
+    RF_splitStatLOT_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_STAT_LOT, localSize, RF_nativeNaN, RF_sexpString[RF_STAT_LOT], &RF_splitStatLOTptr, 2, RF_ntree, RF_lotSize);
+    RF_emprRSK_      = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_EMP_RSK, localSize, RF_nativeNaN, RF_sexpString[RF_EMP_RSK], &RF_emprRSKptr, 2, RF_ntree, RF_lotSize);
+    RF_oobEmprRSK_   = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_OEMP_RSK, localSize, RF_nativeNaN, RF_sexpString[RF_OEMP_RSK], &RF_oobEmprRSKptr, 2, RF_ntree, RF_lotSize);
   }
   if (RF_opt & OPT_VIMP) {
     RF_vimpMRTstd = NULL;
@@ -20673,7 +20673,7 @@ void stackDefinedOutputObjects(char      mode,
     if ((RF_timeIndex > 0) && (RF_statusIndex > 0)) {
       {
         localSize = (ulong) xVimpSize * RF_eventTypeSize;
-        RF_vimpMRT_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_SRG, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_SRG], &RF_vimpMRTptr, 2, xVimpSize, RF_eventTypeSize);
+        RF_vimpMRT_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_SRG, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_SRG], &RF_vimpMRTptr, 2, xVimpSize, RF_eventTypeSize);
         RF_vimpMRTstd = (double ***) new_vvector(1, xVimpSize, NRUTIL_DPTR2);
         for (j = 1; j <= xVimpSize; j++) {
           RF_vimpMRTstd[j]  = (double **) new_vvector(1, RF_eventTypeSize, NRUTIL_DPTR);
@@ -20702,7 +20702,7 @@ void stackDefinedOutputObjects(char      mode,
           }
         }
         localSize = localSize / xVimpSize * RF_perfBlockCount;
-        RF_perfBlockMRT_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_SRG, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_SRG], &RF_perfMRTblk, 2, RF_perfBlockCount, RF_eventTypeSize);
+        RF_perfBlockMRT_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_SRG, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_SRG], &RF_perfMRTblk, 2, RF_perfBlockCount, RF_eventTypeSize);
       }
     }  
     else {
@@ -20712,7 +20712,7 @@ void stackDefinedOutputObjects(char      mode,
           localSize += (ulong) 1 + RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[j]]];
         }
         localSize = (ulong) xVimpSize * localSize;
-        RF_vimpCLS_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_CLS, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_CLS], &RF_vimpCLSptr, 3, xVimpSize, RF_rTargetFactorCount, -1);
+        RF_vimpCLS_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_CLS, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_CLS], &RF_vimpCLSptr, 3, xVimpSize, RF_rTargetFactorCount, -1);
         RF_vimpCLSstd = (double ****) new_vvector(1, xVimpSize, NRUTIL_DPTR3);        
         for (i = 1; i <= xVimpSize; i++) {
           RF_vimpCLSstd[i] = (double ***) new_vvector(1, RF_rTargetFactorCount, NRUTIL_DPTR2);
@@ -20750,11 +20750,11 @@ void stackDefinedOutputObjects(char      mode,
           }
         }
         localSize = localSize / xVimpSize * RF_perfBlockCount;
-        RF_perfBlockCLS_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_CLS, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_CLS], &RF_perfCLSblk, 3, RF_perfBlockCount, RF_rTargetFactorCount, -1);
+        RF_perfBlockCLS_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_CLS, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_CLS], &RF_perfCLSblk, 3, RF_perfBlockCount, RF_rTargetFactorCount, -1);
       }
       if (RF_rTargetNonFactorCount > 0) {
         localSize = (ulong) xVimpSize * RF_rTargetNonFactorCount;
-        RF_vimpRGR_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_RGR, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_RGR], &RF_vimpRGRptr, 2, xVimpSize, RF_rTargetNonFactorCount);
+        RF_vimpRGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_VMP_RGR, localSize, RF_nativeNaN, RF_sexpString[RF_VMP_RGR], &RF_vimpRGRptr, 2, xVimpSize, RF_rTargetNonFactorCount);
         RF_vimpRGRstd = (double ***) new_vvector(1, xVimpSize, NRUTIL_DPTR2);
         for (j = 1; j <= xVimpSize; j++) {
           RF_vimpRGRstd[j]  = (double **) new_vvector(1, RF_rTargetNonFactorCount, NRUTIL_DPTR);
@@ -20783,13 +20783,13 @@ void stackDefinedOutputObjects(char      mode,
           }
         }
         localSize = localSize / xVimpSize * RF_perfBlockCount;
-        RF_perfBlockRGR_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_RGR, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_RGR], &RF_perfRGRblk, 2, RF_perfBlockCount, RF_rTargetNonFactorCount);
+        RF_perfBlockRGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_BLK_RGR, localSize, RF_nativeNaN, RF_sexpString[RF_BLK_RGR], &RF_perfRGRblk, 2, RF_perfBlockCount, RF_rTargetNonFactorCount);
       }
     }
   }  
   if ((RF_vtry > 0) && (RF_vtryMode != RF_VTRY_DEAD)) {
     localSize = (ulong) RF_xSize;
-    RF_holdBLK_ = (uint*) stackAndProtect(&RF_nativeIndex,
+    RF_holdBLK_ = (uint*) stackAndProtect(mode, &RF_nativeIndex,
                                           NATIVE_TYPE_INTEGER,
                                           RF_HLDOUT_BLK,
                                           localSize,
@@ -20888,7 +20888,7 @@ void stackDefinedOutputObjects(char      mode,
             localSize += (ulong) RF_holdBLKptr[j] * RF_eventTypeSize;
           }
         }
-        RF_holdMRT_ = (double*) stackAndProtect(&RF_nativeIndex,
+        RF_holdMRT_ = (double*) stackAndProtect(mode, &RF_nativeIndex,
                                                 NATIVE_TYPE_NUMERIC,
                                                 RF_HLDOUT_SRG,
                                                 localSize,
@@ -20925,7 +20925,7 @@ void stackDefinedOutputObjects(char      mode,
             localSize += (ulong) RF_holdBLKptr[j] * localSize2;
           }
         }
-        RF_holdCLS_ = (double*) stackAndProtect(&RF_nativeIndex,
+        RF_holdCLS_ = (double*) stackAndProtect(mode, &RF_nativeIndex,
                                                 NATIVE_TYPE_NUMERIC,
                                                 RF_HLDOUT_CLS,
                                                 localSize,
@@ -20957,7 +20957,7 @@ void stackDefinedOutputObjects(char      mode,
             localSize += (ulong) RF_holdBLKptr[j] * RF_rTargetNonFactorCount;
           }
         }
-        RF_holdRGR_ = (double*) stackAndProtect(&RF_nativeIndex,
+        RF_holdRGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex,
                                                 NATIVE_TYPE_NUMERIC,
                                                 RF_HLDOUT_RGR,
                                                 localSize,
@@ -20985,7 +20985,7 @@ void stackDefinedOutputObjects(char      mode,
   }
   if (RF_opt & OPT_PROX) {
     localSize = ((ulong) (obsSize + 1) * obsSize) >> 1;
-    *pRF_proximity = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PROX_ID, localSize, 0, RF_sexpString[RF_PROX_ID], NULL, 1, localSize);
+    *pRF_proximity = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PROX_ID, localSize, 0, RF_sexpString[RF_PROX_ID], NULL, 1, localSize);
     RF_proximityDen = dvector(1, localSize);
     (*pRF_proximity) --;
     RF_proximityPtr = (double **) new_vvector(1, obsSize, NRUTIL_DPTR);
@@ -21004,7 +21004,7 @@ void stackDefinedOutputObjects(char      mode,
   }
   if (RF_optHigh & OPT_DIST) {
     localSize = ((ulong) (obsSize + 1) * obsSize) >> 1;
-    *pRF_distance = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_DIST_ID, localSize, 0, RF_sexpString[RF_DIST_ID], NULL, 1, localSize);
+    *pRF_distance = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_DIST_ID, localSize, 0, RF_sexpString[RF_DIST_ID], NULL, 1, localSize);
     RF_distanceDen = dvector(1, localSize);
     (*pRF_distance) --;
     RF_distancePtr = (double **) new_vvector(1, obsSize, NRUTIL_DPTR);
@@ -21023,7 +21023,7 @@ void stackDefinedOutputObjects(char      mode,
   }
   if (RF_optHigh & OPT_WGHT) {
     localSize = (ulong) obsSize * RF_observationSize;
-    *pRF_weight = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_WGHT_ID, localSize, 0, RF_sexpString[RF_WGHT_ID], &RF_weightPtr, 2, obsSize, RF_observationSize);
+    *pRF_weight = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_WGHT_ID, localSize, 0, RF_sexpString[RF_WGHT_ID], &RF_weightPtr, 2, obsSize, RF_observationSize);
     RF_weightDenom = uivector(1, obsSize);
     for (k = 1; k <= obsSize; k++) {
       RF_weightDenom[k] = 0.0;
@@ -21031,13 +21031,13 @@ void stackDefinedOutputObjects(char      mode,
   }
   if (RF_opt & OPT_LEAF) {
     localSize = (ulong) RF_ntree;
-    *pRF_tLeafCount = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_LEAF_CT, localSize, 0, RF_sexpString[RF_LEAF_CT], NULL, 1, localSize);
+    *pRF_tLeafCount = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_LEAF_CT, localSize, 0, RF_sexpString[RF_LEAF_CT], NULL, 1, localSize);
     (*pRF_tLeafCount) --;
     RF_tLeafCount = *pRF_tLeafCount;
   }
   if (RF_opt & OPT_SEED) {
     localSize = (ulong) RF_ntree;
-    *pRF_seed = (int*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_SEED_ID, localSize, 0, RF_sexpString[RF_SEED_ID], NULL, 1, localSize);
+    *pRF_seed = (int*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_SEED_ID, localSize, 0, RF_sexpString[RF_SEED_ID], NULL, 1, localSize);
     (*pRF_seed) --;
     for (i = 1; i <= RF_ntree; i++) {
       (*pRF_seed)[i] = -1;
@@ -21045,7 +21045,7 @@ void stackDefinedOutputObjects(char      mode,
   }
   if (RF_opt & OPT_MISS) {
     localSize = (ulong) (1 + rspSize + RF_xSize) * mRecordSize;
-    *p_imputation = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_MISS_ID, localSize, RF_nativeNaN, RF_sexpString[RF_MISS_ID], &RF_sImputeDataPtr, 2, 1 + rspSize + RF_xSize, mRecordSize);
+    *p_imputation = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_MISS_ID, localSize, RF_nativeNaN, RF_sexpString[RF_MISS_ID], &RF_sImputeDataPtr, 2, 1 + rspSize + RF_xSize, mRecordSize);
     if (rspSize > 0) {
       *pRF_sImputeResponsePtr = (double **) new_vvector(1, rspSize, NRUTIL_DPTR);
       for (i = 1; i <= rspSize; i++) {
@@ -21071,11 +21071,11 @@ void stackDefinedOutputObjects(char      mode,
   if (RF_opt & (OPT_VARUSED_F | OPT_VARUSED_T)) {
     if (RF_opt & OPT_VARUSED_T) {
       localSize = (ulong) RF_ntree * RF_xSize;
-      *pRF_varUsed = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_VUSE_ID, localSize, 0, RF_sexpString[RF_VUSE_ID], pRF_varUsedPtr, 2, RF_ntree, RF_xSize);
+      *pRF_varUsed = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_VUSE_ID, localSize, 0, RF_sexpString[RF_VUSE_ID], pRF_varUsedPtr, 2, RF_ntree, RF_xSize);
     }
     else {
       localSize = (ulong) 1 * RF_xSize;
-      *pRF_varUsed = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_VUSE_ID, localSize, 0, RF_sexpString[RF_VUSE_ID], NULL, 1, localSize);
+      *pRF_varUsed = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_VUSE_ID, localSize, 0, RF_sexpString[RF_VUSE_ID], NULL, 1, localSize);
       *pRF_varUsedPtr = uimatrix(1, RF_ntree, 1, RF_xSize);
       for (i = 1; i <= RF_ntree; i++) {
         for (j = 1; j <= RF_xSize; j++) {
@@ -21093,17 +21093,17 @@ void stackDefinedOutputObjects(char      mode,
       dpthDimOne = RF_ntree;
     }
     localSize = (ulong) dpthDimOne * RF_xSize * RF_observationSize;
-    *p_splitDepth = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_DPTH_ID, localSize, 0, RF_sexpString[RF_DPTH_ID], &RF_splitDepthPtr, 3, dpthDimOne, RF_xSize, RF_observationSize);
+    *p_splitDepth = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_DPTH_ID, localSize, 0, RF_sexpString[RF_DPTH_ID], &RF_splitDepthPtr, 3, dpthDimOne, RF_xSize, RF_observationSize);
   }
   if (RF_optHigh & OPT_MEMB_PRUN) {
     localSize = (ulong) RF_ntree * obsSize;
-    RF_PRUN_ID_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PRUN_ID, localSize, 0, RF_sexpString[RF_PRUN_ID], &RF_PRUN_ID_ptr, 2, RF_ntree, obsSize);
+    RF_PRUN_ID_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PRUN_ID, localSize, 0, RF_sexpString[RF_PRUN_ID], &RF_PRUN_ID_ptr, 2, RF_ntree, obsSize);
   }
   if (RF_optHigh & OPT_MEMB_USER) {
     localSize = (ulong) RF_ntree * obsSize;
-    RF_MEMB_ID_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MEMB_ID, localSize, 0, RF_sexpString[RF_MEMB_ID], &RF_MEMB_ID_ptr, 2, RF_ntree, obsSize);
+    RF_MEMB_ID_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MEMB_ID, localSize, 0, RF_sexpString[RF_MEMB_ID], &RF_MEMB_ID_ptr, 2, RF_ntree, obsSize);
     localSize = (ulong) RF_ntree * RF_observationSize;
-    RF_BOOT_CT_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_BOOT_CT, localSize, 0, RF_sexpString[RF_BOOT_CT], &RF_BOOT_CT_ptr, 2, RF_ntree, RF_observationSize);
+    RF_BOOT_CT_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_BOOT_CT, localSize, 0, RF_sexpString[RF_BOOT_CT], &RF_BOOT_CT_ptr, 2, RF_ntree, RF_observationSize);
   }
   if (RF_optHigh & OPT_PART_PLOT) {
     RF_partSURVptr = NULL;
@@ -21178,7 +21178,7 @@ void stackDefinedOutputObjects(char      mode,
           }
         }
         localSize = (ulong) RF_partialLength * RF_eventTypeSize * dimThree * RF_observationSize;
-        RF_partial_SURV_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_SR, localSize, 0, RF_sexpString[RF_PART_SR], &RF_partSURVptr, 4, RF_partialLength, RF_eventTypeSize, dimThree, RF_observationSize);
+        RF_partial_SURV_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_SR, localSize, 0, RF_sexpString[RF_PART_SR], &RF_partSURVptr, 4, RF_partialLength, RF_eventTypeSize, dimThree, RF_observationSize);
       }
     }  
     else {
@@ -21188,11 +21188,11 @@ void stackDefinedOutputObjects(char      mode,
           localSize += (ulong) 1 + RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[k]]];
         }
         localSize = (ulong) RF_partialLength * localSize * RF_observationSize;
-        RF_partial_CLAS_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_CL, localSize, 0, RF_sexpString[RF_PART_CL], &RF_partCLASptr, 4, RF_partialLength, RF_rTargetFactorCount, -1, RF_observationSize);
+        RF_partial_CLAS_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_CL, localSize, 0, RF_sexpString[RF_PART_CL], &RF_partCLASptr, 4, RF_partialLength, RF_rTargetFactorCount, -1, RF_observationSize);
       }
       if (RF_rTargetNonFactorCount > 0) {
         localSize = (ulong) RF_partialLength * RF_rTargetNonFactorCount * RF_observationSize;
-        RF_partial_REGR_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_RG, localSize, 0, RF_sexpString[RF_PART_RG], &RF_partREGRptr, 3, RF_partialLength, RF_rTargetNonFactorCount, RF_observationSize);
+        RF_partial_REGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_PART_RG, localSize, 0, RF_sexpString[RF_PART_RG], &RF_partREGRptr, 3, RF_partialLength, RF_rTargetNonFactorCount, RF_observationSize);
       }
     }
   }  
@@ -21595,71 +21595,71 @@ void stackForestOutputObjects(char mode) {
         mwcpSize = 0;
       }
       totalMWCPCount = (ulong) mwcpSize * totalNodeCount;
-      RF_treeID_ = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TREE_ID, totalNodeCount, 0, RF_sexpString[RF_TREE_ID], NULL, 1, totalNodeCount);
-      RF_nodeID_ = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_NODE_ID, totalNodeCount, 0, RF_sexpString[RF_NODE_ID], NULL, 1, totalNodeCount);
+      RF_treeID_ = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TREE_ID, totalNodeCount, 0, RF_sexpString[RF_TREE_ID], NULL, 1, totalNodeCount);
+      RF_nodeID_ = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_NODE_ID, totalNodeCount, 0, RF_sexpString[RF_NODE_ID], NULL, 1, totalNodeCount);
       RF_treeID_ --;
       RF_nodeID_ --;
-      RF_parmID_[1]  = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PARM_ID, totalNodeCount, 0, RF_sexpString[RF_PARM_ID], NULL, 1, totalNodeCount);
-      RF_contPT_[1]  = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PT, totalNodeCount, 0, RF_sexpString[RF_CONT_PT], NULL, 1, totalNodeCount);
-      RF_mwcpSZ_[1]  = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_SZ, totalNodeCount, 0, RF_sexpString[RF_MWCP_SZ], NULL, 1, totalNodeCount);
+      RF_parmID_[1]  = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PARM_ID, totalNodeCount, 0, RF_sexpString[RF_PARM_ID], NULL, 1, totalNodeCount);
+      RF_contPT_[1]  = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PT, totalNodeCount, 0, RF_sexpString[RF_CONT_PT], NULL, 1, totalNodeCount);
+      RF_mwcpSZ_[1]  = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_SZ, totalNodeCount, 0, RF_sexpString[RF_MWCP_SZ], NULL, 1, totalNodeCount);
       RF_parmID_[1]  --;
       RF_contPT_[1]  --;
       RF_mwcpSZ_[1]  --;
-      RF_mwcpPT_[1] = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, RF_sexpString[RF_MWCP_PT], NULL, 1, totalMWCPCount);
+      RF_mwcpPT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, RF_sexpString[RF_MWCP_PT], NULL, 1, totalMWCPCount);
       RF_mwcpPT_[1] --;
-      RF_mwcpCT_[1] = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_CT, (ulong) RF_ntree, 0, RF_sexpString[RF_MWCP_CT], NULL, 1, RF_ntree);
+      RF_mwcpCT_[1] = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_CT, (ulong) RF_ntree, 0, RF_sexpString[RF_MWCP_CT], NULL, 1, RF_ntree);
       RF_mwcpCT_[1] --;
       if (RF_baseLearnTST > 1) {
-        RF_augmX1_[1]  = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X1, totalNodeCount, 0, RF_sexpString[RF_AUGM_X1], NULL, 1, totalNodeCount);
-        RF_augmX2_[1]  = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X2, totalNodeCount, 0, RF_sexpString[RF_AUGM_X2], NULL, 1, totalNodeCount);
+        RF_augmX1_[1]  = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X1, totalNodeCount, 0, RF_sexpString[RF_AUGM_X1], NULL, 1, totalNodeCount);
+        RF_augmX2_[1]  = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X2, totalNodeCount, 0, RF_sexpString[RF_AUGM_X2], NULL, 1, totalNodeCount);
         RF_augmX1_[1] --;
         RF_augmX2_[1] --;
       }
       if (RF_hdim > 0) {
-        RF_hcDim_ = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_HC_DIM, totalNodeCount, 0, RF_sexpString[RF_HC_DIM], NULL, 1, totalNodeCount);
+        RF_hcDim_ = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_HC_DIM, totalNodeCount, 0, RF_sexpString[RF_HC_DIM], NULL, 1, totalNodeCount);
         RF_hcDim_ --;
-        RF_contPTR_[1] = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PTR, totalNodeCount, 0, RF_sexpString[RF_CONT_PTR], NULL, 1, totalNodeCount);
+        RF_contPTR_[1] = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PTR, totalNodeCount, 0, RF_sexpString[RF_CONT_PTR], NULL, 1, totalNodeCount);
         RF_contPTR_[1] --;
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_PARM_ID]);
           strcat(resultStr, adjStr);
-          RF_parmID_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PARM_ID, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+          RF_parmID_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_PARM_ID, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
           RF_parmID_[i]  --;
         }
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_CONT_PT]);
           strcat(resultStr, adjStr);
-          RF_contPT_[i]   = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PT, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+          RF_contPT_[i]   = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PT, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
           RF_contPT_[i]  --;
         }
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_CONT_PTR]);
           strcat(resultStr, adjStr);
-          RF_contPTR_[i]  = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PTR, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+          RF_contPTR_[i]  = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_CONT_PTR, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
           RF_contPTR_[i] --;
         }
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_MWCP_SZ]);
           strcat(resultStr, adjStr);
-          RF_mwcpSZ_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_SZ, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+          RF_mwcpSZ_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_SZ, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
           RF_mwcpSZ_[i] --;
         }
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_MWCP_PT]);
           strcat(resultStr, adjStr);
-          RF_mwcpPT_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, resultStr, NULL, 1, totalMWCPCount);
+          RF_mwcpPT_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_PT, totalMWCPCount, 0, resultStr, NULL, 1, totalMWCPCount);
           RF_mwcpPT_[i] --;
         }
         for (i = 2; i <= RF_hdim; i++) {
           integerToHexString(i, adjStr);
           strcpy(resultStr, RF_sexpString[RF_MWCP_CT]);
           strcat(resultStr, adjStr);
-          RF_mwcpCT_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_CT, (ulong) RF_ntree, 0, resultStr, NULL, 1, RF_ntree);
+          RF_mwcpCT_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MWCP_CT, (ulong) RF_ntree, 0, resultStr, NULL, 1, RF_ntree);
           RF_mwcpCT_[i] --;
         }
         if (RF_baseLearnTST > 1) {        
@@ -21667,14 +21667,14 @@ void stackForestOutputObjects(char mode) {
             integerToHexString(i, adjStr);
             strcpy(resultStr, RF_sexpString[RF_AUGM_X1]);
             strcat(resultStr, adjStr);
-            RF_augmX1_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X1, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+            RF_augmX1_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X1, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
             RF_augmX1_[i] --;
           }
           for (i = 2; i <= RF_hdim; i++) {
             integerToHexString(i, adjStr);
             strcpy(resultStr, RF_sexpString[RF_AUGM_X2]);
             strcat(resultStr, adjStr);
-            RF_augmX2_[i]   = (uint*)   stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X2, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
+            RF_augmX2_[i]   = (uint*)   stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AUGM_X2, totalNodeCount, 0, resultStr, NULL, 1, totalNodeCount);
             RF_augmX2_[i] --;
           }
         }
@@ -21783,7 +21783,7 @@ void stackStatisticalOutputObjects(char     mode,
     totalNodeCount = ((RF_theoreticalMaxtLeafCount[1] << 1) - 1) * RF_ntree;
     if (RF_opt & OPT_USPV_STAT) {
       localSize = (ulong) totalNodeCount * RF_ytry;
-      *pRF_uspvST = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_USPV_ST, localSize, 0, RF_sexpString[RF_USPV_ST], &RF_uspvST_ptr, 2, totalNodeCount, RF_ytry);
+      *pRF_uspvST = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_USPV_ST, localSize, 0, RF_sexpString[RF_USPV_ST], &RF_uspvST_ptr, 2, totalNodeCount, RF_ytry);
     }
     break;
   default:
@@ -21792,13 +21792,13 @@ void stackStatisticalOutputObjects(char     mode,
   }
   if (RF_opt & OPT_NODE_STAT) {
     localSize = totalNodeCount;
-    *pRF_spltST = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_SPLT_ST, localSize, 0, RF_sexpString[RF_SPLT_ST], NULL, 1, localSize);
+    *pRF_spltST = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_SPLT_ST, localSize, 0, RF_sexpString[RF_SPLT_ST], NULL, 1, localSize);
     (*pRF_spltST) --;
     *pRF_spltVR = NULL;
     if (mode == RF_GROW) {
       localSize = (ulong) totalNodeCount * RF_mtry;
-      *pRF_mtryID = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MTRY_ID, localSize, 0, RF_sexpString[RF_MTRY_ID], &RF_mtryID_ptr, 2, totalNodeCount, RF_mtry);
-      *pRF_mtryST = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_MTRY_ST, localSize, 0, RF_sexpString[RF_MTRY_ST], &RF_mtryST_ptr, 2, totalNodeCount, RF_mtry);
+      *pRF_mtryID = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_MTRY_ID, localSize, 0, RF_sexpString[RF_MTRY_ID], &RF_mtryID_ptr, 2, totalNodeCount, RF_mtry);
+      *pRF_mtryST = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_MTRY_ST, localSize, 0, RF_sexpString[RF_MTRY_ST], &RF_mtryST_ptr, 2, totalNodeCount, RF_mtry);
     }
   }
 }
@@ -21818,18 +21818,19 @@ void stackTNQualitativeOutputObjects(char     mode,
   ulong localSize;
   if (RF_optHigh & OPT_MEMB_OUTG) {
     localSize = (ulong) RF_ntree * RF_bootstrapSize;
-    *pRF_RMBR_ID_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_RMBR_ID, localSize, 0, RF_sexpString[RF_RMBR_ID], &RF_RMBR_ID_ptr, 2, RF_ntree, RF_bootstrapSize);
+    *pRF_RMBR_ID_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_RMBR_ID, localSize, 0, RF_sexpString[RF_RMBR_ID], &RF_RMBR_ID_ptr, 2, RF_ntree, RF_bootstrapSize);
     localSize = (ulong) RF_ntree * RF_observationSize;
-    *pRF_AMBR_ID_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AMBR_ID, localSize, 0, RF_sexpString[RF_AMBR_ID], &RF_AMBR_ID_ptr, 2, RF_ntree, RF_observationSize);
+    *pRF_AMBR_ID_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_AMBR_ID, localSize, 0, RF_sexpString[RF_AMBR_ID], &RF_AMBR_ID_ptr, 2, RF_ntree, RF_observationSize);
     localSize = RF_totalTerminalCount;
-    *pRF_TN_RCNT_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_RCNT, localSize, 0, RF_sexpString[RF_TN_RCNT], &RF_TN_RCNT_ptr, 2, RF_ntree, RF_theoreticalMaxtLeafCount[1]);
-    *pRF_TN_ACNT_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_ACNT, localSize, 0, RF_sexpString[RF_TN_ACNT], &RF_TN_ACNT_ptr, 2, RF_ntree, RF_theoreticalMaxtLeafCount[1]);
+    *pRF_TN_RCNT_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_RCNT, localSize, 0, RF_sexpString[RF_TN_RCNT], &RF_TN_RCNT_ptr, 2, RF_ntree, RF_theoreticalMaxtLeafCount[1]);
+    *pRF_TN_ACNT_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_ACNT, localSize, 0, RF_sexpString[RF_TN_ACNT], &RF_TN_ACNT_ptr, 2, RF_ntree, RF_theoreticalMaxtLeafCount[1]);
   }
   else if (RF_optHigh & OPT_MEMB_INCG) {
     int *dim = ivector(1, 2);
     dim[1] = RF_ntree;
     dim[2] = RF_bootstrapSize;
-    allocateAuxiliaryInfo(NATIVE_TYPE_INTEGER,
+    allocateAuxiliaryInfo(FALSE,
+                          NATIVE_TYPE_INTEGER,
                           RF_sexpString[RF_RMBR_ID],
                           RF_incAuxiliaryInfoList,
                           RF_incStackCount,
@@ -21840,7 +21841,8 @@ void stackTNQualitativeOutputObjects(char     mode,
     RF_incStackCount ++;
     dim[1] = RF_ntree;
     dim[2] = RF_observationSize;
-    allocateAuxiliaryInfo(NATIVE_TYPE_INTEGER,
+    allocateAuxiliaryInfo(FALSE,
+                          NATIVE_TYPE_INTEGER,
                           RF_sexpString[RF_AMBR_ID],
                           RF_incAuxiliaryInfoList,
                           RF_incStackCount,                          
@@ -21851,7 +21853,8 @@ void stackTNQualitativeOutputObjects(char     mode,
     RF_incStackCount ++;
     dim[1] = RF_ntree;
     dim[2] = -2;
-    allocateAuxiliaryInfo(NATIVE_TYPE_INTEGER,
+    allocateAuxiliaryInfo(FALSE,
+                          NATIVE_TYPE_INTEGER,
                           RF_sexpString[RF_TN_RCNT],
                           RF_incAuxiliaryInfoList,
                           RF_incStackCount,
@@ -21860,7 +21863,8 @@ void stackTNQualitativeOutputObjects(char     mode,
                           2,
                           dim);
     RF_incStackCount ++;
-    allocateAuxiliaryInfo(NATIVE_TYPE_INTEGER,
+    allocateAuxiliaryInfo(FALSE,
+                          NATIVE_TYPE_INTEGER,
                           RF_sexpString[RF_TN_ACNT],
                           RF_incAuxiliaryInfoList,
                           RF_incStackCount,
@@ -21887,22 +21891,22 @@ void stackTNQuantitativeOutputObjects(char     mode,
     tnDimOne = RF_totalTerminalCount;
     if ((RF_timeIndex > 0) && (RF_statusIndex > 0)) {
       localSize = (ulong) tnDimOne * RF_eventTypeSize;
-      *pRF_TN_MORT_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_MORT, localSize, RF_nativeNaN, RF_sexpString[RF_TN_MORT], &RF_TN_MORT_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize);
+      *pRF_TN_MORT_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_MORT, localSize, RF_nativeNaN, RF_sexpString[RF_TN_MORT], &RF_TN_MORT_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize);
       if (!(RF_opt & OPT_COMP_RISK)) {
         localSize = (ulong) tnDimOne * RF_sortedTimeInterestSize;
-        *pRF_TN_SURV_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_SURV, localSize, RF_nativeNaN, RF_sexpString[RF_TN_SURV], &RF_TN_SURV_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_sortedTimeInterestSize);
-        *pRF_TN_NLSN_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_NLSN, localSize, RF_nativeNaN, RF_sexpString[RF_TN_NLSN], &RF_TN_NLSN_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_sortedTimeInterestSize);
+        *pRF_TN_SURV_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_SURV, localSize, RF_nativeNaN, RF_sexpString[RF_TN_SURV], &RF_TN_SURV_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_sortedTimeInterestSize);
+        *pRF_TN_NLSN_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_NLSN, localSize, RF_nativeNaN, RF_sexpString[RF_TN_NLSN], &RF_TN_NLSN_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_sortedTimeInterestSize);
       }
       else {
         localSize = (ulong) tnDimOne * RF_eventTypeSize * RF_sortedTimeInterestSize;
-        *pRF_TN_CSHZ_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_CSHZ, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CSHZ], &RF_TN_CSHZ_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize, RF_sortedTimeInterestSize);
-        *pRF_TN_CIFN_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_CIFN, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CIFN], &RF_TN_CIFN_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize, RF_sortedTimeInterestSize);
+        *pRF_TN_CSHZ_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_CSHZ, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CSHZ], &RF_TN_CSHZ_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize, RF_sortedTimeInterestSize);
+        *pRF_TN_CIFN_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_CIFN, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CIFN], &RF_TN_CIFN_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_eventTypeSize, RF_sortedTimeInterestSize);
       }
     }
     else {
       if (RF_rNonFactorCount > 0) {
         localSize = (ulong) tnDimOne * RF_rNonFactorCount;
-        *pRF_TN_REGR_ = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_REGR, localSize, RF_nativeNaN, RF_sexpString[RF_TN_REGR], &RF_TN_REGR_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_rNonFactorCount);
+        *pRF_TN_REGR_ = (double*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, RF_TN_REGR, localSize, RF_nativeNaN, RF_sexpString[RF_TN_REGR], &RF_TN_REGR_ptr, 3, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_rNonFactorCount);
       }
       if (RF_rFactorCount > 0) {
         tnDimTwo = 0;
@@ -21910,7 +21914,7 @@ void stackTNQuantitativeOutputObjects(char     mode,
           tnDimTwo += RF_rFactorSize[j];
         }
         localSize = (ulong) tnDimOne * tnDimTwo;
-        *pRF_TN_CLAS_ = (uint*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_CLAS, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CLAS], &RF_TN_CLAS_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_rFactorCount, 0);
+        *pRF_TN_CLAS_ = (uint*) stackAndProtect(mode, &RF_nativeIndex, NATIVE_TYPE_INTEGER, RF_TN_CLAS, localSize, RF_nativeNaN, RF_sexpString[RF_TN_CLAS], &RF_TN_CLAS_ptr, 4, RF_ntree, RF_theoreticalMaxtLeafCount[1], RF_rFactorCount, 0);
       }
     }
   }
@@ -21920,7 +21924,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
       dim[1] = RF_ntree;
       dim[2] = -2;
       dim[3] = RF_eventTypeSize;
-      allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+      allocateAuxiliaryInfo(FALSE,
+                            NATIVE_TYPE_NUMERIC,
                             RF_sexpString[RF_TN_MORT],
                             RF_incAuxiliaryInfoList,
                             RF_incStackCount,
@@ -21933,7 +21938,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
         dim[1] = RF_ntree;
         dim[2] = -2;
         dim[3] = RF_sortedTimeInterestSize;
-        allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_NUMERIC,
                               RF_sexpString[RF_TN_SURV],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -21942,7 +21948,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
                               3,
                               dim);
         RF_incStackCount ++;
-        allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_NUMERIC,
                               RF_sexpString[RF_TN_NLSN],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -21957,7 +21964,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
         dim[2] = -2;
         dim[3] = RF_eventTypeSize;
         dim[4] = RF_sortedTimeInterestSize;
-        allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_NUMERIC,
                               RF_sexpString[RF_TN_CSHZ],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -21966,7 +21974,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
                               4,
                               dim);
         RF_incStackCount ++;
-        allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_NUMERIC,
                               RF_sexpString[RF_TN_CIFN],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -21982,7 +21991,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
         dim[1] = RF_ntree;
         dim[2] = -2;
         dim[3] = RF_rNonFactorCount;
-        allocateAuxiliaryInfo(NATIVE_TYPE_NUMERIC,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_NUMERIC,
                               RF_sexpString[RF_TN_REGR],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -21997,7 +22007,8 @@ void stackTNQuantitativeOutputObjects(char     mode,
         dim[2] = -2;
         dim[3] = RF_rFactorCount;
         dim[4] = 0;
-        allocateAuxiliaryInfo(NATIVE_TYPE_INTEGER,
+        allocateAuxiliaryInfo(FALSE,
+                              NATIVE_TYPE_INTEGER,
                               RF_sexpString[RF_TN_CLAS],
                               RF_incAuxiliaryInfoList,
                               RF_incStackCount,
@@ -22065,7 +22076,8 @@ void stackAuxiliaryInfoList(SNPAuxiliaryInfo ***list, uint count) {
      (*list)[i] = NULL;
   }
  }
-void allocateAuxiliaryInfo(char   type,
+void allocateAuxiliaryInfo(char   targetFlag,
+                           char   type,
                            char  *stringIdentifier,
                            SNPAuxiliaryInfo **list,
                            uint   slot,
@@ -22096,17 +22108,17 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 4) {
       offset = 0;
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((double *****) auxiliaryArrayPtr) = (double ****) new_vvector(1, dim1, NRUTIL_DPTR3);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         if (dim2 > 0) {
           (*((double *****) auxiliaryArrayPtr))[i] = (double ***) new_vvector(1, dim2, NRUTIL_DPTR2);
           for (uint j = 1; j <= dim2; j++) {
-            dim3 = getAuxDim(dim, j , 3);
+            dim3 = getAuxDim(targetFlag, dim, j , 3);
             (*((double *****) auxiliaryArrayPtr))[i][j] = (double **) new_vvector(1, dim3, NRUTIL_DPTR);
             for (uint k = 1; k <= dim3; k++) {
-              dim4 = getAuxDim(dim, k , 4);
+              dim4 = getAuxDim(targetFlag, dim, k , 4);
               (*((double *****) auxiliaryArrayPtr))[i][j][k] = (double *) snpPtr + offset - 1;
               offset += dim4;
             }
@@ -22116,14 +22128,14 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 3) {
       offset = 0;      
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((double ****) auxiliaryArrayPtr) = (double ***) new_vvector(1, dim1, NRUTIL_DPTR2);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         if (dim2 > 0) {
           (*((double ****) auxiliaryArrayPtr))[i] = (double **) new_vvector(1, dim2, NRUTIL_DPTR);
           for (uint j = 1; j <= dim2; j++) {
-            dim3 = getAuxDim(dim, j , 3);
+            dim3 = getAuxDim(targetFlag, dim, j , 3);
             (*((double ****) auxiliaryArrayPtr))[i][j] = (double *) snpPtr + offset - 1;
             offset += dim3;
           }
@@ -22132,10 +22144,10 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 2) {
       offset = 0;
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((double ***) auxiliaryArrayPtr) = (double **) new_vvector(1, dim1, NRUTIL_DPTR);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         (*((double ***) auxiliaryArrayPtr))[i] = (double *) snpPtr + offset - 1;
           offset += dim2;
       }
@@ -22154,16 +22166,16 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 4) {
       offset = 0;
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((uint *****) auxiliaryArrayPtr) = (uint ****) new_vvector(1, dim1, NRUTIL_UPTR3);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         (*((uint *****) auxiliaryArrayPtr))[i] = (uint ***) new_vvector(1, dim2, NRUTIL_UPTR2);
         for (uint j = 1; j <= dim2; j++) {
-          dim3 = getAuxDim(dim, j , 3);
+          dim3 = getAuxDim(targetFlag, dim, j , 3);
           (*((uint *****) auxiliaryArrayPtr))[i][j] = (uint **) new_vvector(1, dim3, NRUTIL_UPTR);
           for (uint k = 1; k <= dim3; k++) {
-            dim4 = getAuxDim(dim, k , 4);
+            dim4 = getAuxDim(targetFlag, dim, k , 4);
             (*((uint *****) auxiliaryArrayPtr))[i][j][k] = (uint *) snpPtr + offset - 1;
             offset += dim4;
           }
@@ -22172,13 +22184,13 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 3) {
       offset = 0;
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((uint ****) auxiliaryArrayPtr) = (uint ***) new_vvector(1, dim1, NRUTIL_UPTR2);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         (*((uint ****) auxiliaryArrayPtr))[i] = (uint **) new_vvector(1, dim2, NRUTIL_UPTR);
         for (uint j = 1; j <= dim2; j++) {
-          dim3 = getAuxDim(dim, j , 3);
+          dim3 = getAuxDim(targetFlag, dim, j , 3);
           (*((uint ****) auxiliaryArrayPtr))[i][j] = (uint *) snpPtr + offset - 1;
             offset += dim3;
         }
@@ -22186,10 +22198,10 @@ void allocateAuxiliaryInfo(char   type,
     }
     else if (dimSize == 2) {
       offset = 0;
-      dim1 = getAuxDim(dim, 0 , 1);
+      dim1 = getAuxDim(targetFlag, dim, 0 , 1);
       *((uint ***) auxiliaryArrayPtr) = (uint **) new_vvector(1, dim1, NRUTIL_UPTR);
       for (uint i = 1; i <= dim1; i++) {
-        dim2 = getAuxDim(dim, i , 2);
+        dim2 = getAuxDim(targetFlag, dim, i , 2);
         (*((uint ***) auxiliaryArrayPtr))[i] = (uint *) snpPtr + offset - 1;
           offset += dim2;
       }
@@ -22205,34 +22217,71 @@ void allocateAuxiliaryInfo(char   type,
     break;
   }
 }
-uint getAuxDim(int *dim, uint preIndex, uint postIndex) {
+// uint getAuxDim(char flag, int *dim, uint preIndex, uint postIndex) {
+//   uint result = 0;
+//   if (postIndex == 1) {
+//     result = dim[postIndex];
+//   }
+//   else if (dim[postIndex] >= 1) {
+//     result = dim[postIndex];
+//   }
+//   else if (dim[postIndex] == 0) {
+//     result = RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[preIndex]]];
+//   }
+//   else if (dim[postIndex] == -1) {
+//     result = 1 + RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[preIndex]]];
+//   }
+//   else if (dim[postIndex] == -2) {
+//     result = RF_tLeafCount[preIndex];
+//   }
+//   else if (dim[postIndex] == -3) {
+//     result = RF_holdBLKptr[preIndex];
+//   }
+//   else {
+//     RF_nativeError("\nRF-SRC:  *** ERROR *** ");
+//     RF_nativeError("\nRF-SRC:  Inconsistent internal dimension of auxiliary array in getAuxDim():  %10d", dim[postIndex]);
+//     RF_nativeError("\nRF-SRC:  Please Contact Technical Support.");
+//   }
+//   return result;
+// }
+uint getAuxDim(char flag, int *dim, uint iterIndex, uint slot) {
   uint result = 0;
-  if (postIndex == 1) {
-    result = dim[postIndex];
+  if (slot == 1) {
+    result = dim[slot];
   }
-  else if (dim[postIndex] >= 1) {
-    result = dim[postIndex];
+  else if (dim[slot] >= 1) {
+    result = dim[slot];
   }
-  else if (dim[postIndex] == 0) {
-    result = RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[preIndex]]];
+  else if (dim[slot] == 0) {
+    if (flag) {
+      result = RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[iterIndex]]];
+    }
+    else {
+      result = RF_rFactorSize[iterIndex];
+    }
   }
-  else if (dim[postIndex] == -1) {
-    result = 1 + RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[preIndex]]];
+  else if (dim[slot] == -1) {
+    if (flag) {
+      result = 1 + RF_rFactorSize[RF_rFactorMap[RF_rTargetFactor[iterIndex]]];
+    }
+    else {
+      result = 1 + RF_rFactorSize[iterIndex];
+    }
   }
-  else if (dim[postIndex] == -2) {
-    result = RF_tLeafCount[preIndex];
+  else if (dim[slot] == -2) {
+    result = RF_tLeafCount[iterIndex];
   }
-  else if (dim[postIndex] == -3) {
-    result = RF_holdBLKptr[preIndex];
+  else if (dim[slot] == -3) {
+    result = RF_holdBLKptr[iterIndex];
   }
   else {
     RF_nativeError("\nRF-SRC:  *** ERROR *** ");
-    RF_nativeError("\nRF-SRC:  Inconsistent internal dimension of auxiliary array in getAuxDim():  %10d", dim[postIndex]);
+    RF_nativeError("\nRF-SRC:  Inconsistent internal dimension of auxiliary array in getAuxDim():  %10d", dim[slot]);
     RF_nativeError("\nRF-SRC:  Please Contact Technical Support.");
   }
   return result;
 }
-void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
+void unstackAuxiliaryInfoAndList(char targetFlag, SNPAuxiliaryInfo **list, uint count) {
   SNPAuxiliaryInfo *auxInfoPtr;
   int  *dim;
   uint  dimSize;
@@ -22250,12 +22299,12 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
          if ((auxInfoPtr -> auxiliaryArrayPtr) == NULL) {
          }
          else if (dimSize == 4) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            for (uint i = 1; i <= dim1; i++) {
-             dim2 = getAuxDim(dim, i , 2);
+             dim2 = getAuxDim(targetFlag, dim, i , 2);
              if (dim2 > 0) {
                for (uint j = 1; j <= dim2; j++) {
-                 dim3 = getAuxDim(dim, j , 3);
+                 dim3 = getAuxDim(targetFlag, dim, j , 3);
                  free_new_vvector((*((double *****) (auxInfoPtr -> auxiliaryArrayPtr)))[i][j], 1, dim3, NRUTIL_DPTR);
                }
                free_new_vvector((*((double *****) (auxInfoPtr -> auxiliaryArrayPtr)))[i], 1, dim2, NRUTIL_DPTR2);
@@ -22264,9 +22313,9 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
            free_new_vvector((*((double *****) (auxInfoPtr -> auxiliaryArrayPtr))), 1, dim1, NRUTIL_DPTR3);
          }
          else if (dimSize == 3) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            for (uint i = 1; i <= dim1; i++) {
-             dim2 = getAuxDim(dim, i , 2);
+             dim2 = getAuxDim(targetFlag, dim, i , 2);
              if (dim2 > 0) {
                free_new_vvector((*((double ****) (auxInfoPtr -> auxiliaryArrayPtr)))[i], 1, dim2, NRUTIL_DPTR);
              }
@@ -22274,7 +22323,7 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
            free_new_vvector((*((double ****) (auxInfoPtr -> auxiliaryArrayPtr))), 1, dim1, NRUTIL_DPTR2);
          }
          else if (dimSize == 2) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            free_new_vvector((*((double ***) (auxInfoPtr -> auxiliaryArrayPtr))), 1, dim1, NRUTIL_DPTR);
          }
          else if (dimSize == 1) {
@@ -22284,11 +22333,11 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
          if ((auxInfoPtr -> auxiliaryArrayPtr) == NULL) {
          }
          else if (dimSize == 4) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            for (uint i = 1; i <= dim1; i++) {
-             dim2 = getAuxDim(dim, i , 2);
+             dim2 = getAuxDim(targetFlag, dim, i , 2);
              for (uint j = 1; j <= dim2; j++) {
-               dim3 = getAuxDim(dim, j , 3);
+               dim3 = getAuxDim(targetFlag, dim, j , 3);
                free_new_vvector((*((uint *****) (auxInfoPtr -> auxiliaryArrayPtr)))[i][j], 1, dim3, NRUTIL_UPTR);
              }
              free_new_vvector((*((uint *****) (auxInfoPtr -> auxiliaryArrayPtr)))[i], 1, dim2, NRUTIL_UPTR2);
@@ -22296,15 +22345,15 @@ void unstackAuxiliaryInfoAndList(SNPAuxiliaryInfo **list, uint count) {
            free_new_vvector((*((uint *****) (auxInfoPtr -> auxiliaryArrayPtr))), 1,  dim1, NRUTIL_UPTR3);
          }
          else if (dimSize == 3) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            for (uint i = 1; i <= dim1; i++) {
-             dim2 = getAuxDim(dim, i , 2);             
+             dim2 = getAuxDim(targetFlag, dim, i , 2);             
              free_new_vvector((*((uint ****) (auxInfoPtr -> auxiliaryArrayPtr)))[i], 1, dim2, NRUTIL_UPTR);
            }
            free_new_vvector((*((uint ****) (auxInfoPtr -> auxiliaryArrayPtr))), 1, dim1, NRUTIL_UPTR2);
          }
          else if (dimSize == 2) {
-           dim1 = getAuxDim(dim, 0 , 1);
+           dim1 = getAuxDim(targetFlag, dim, 0 , 1);
            free_new_vvector((*((uint ***) (auxInfoPtr -> auxiliaryArrayPtr))), 1, dim1, NRUTIL_UPTR);
          }
          else if (dimSize == 1) {
@@ -26673,14 +26722,14 @@ SEXP rfsrcCIndex(SEXP sexp_traceFlag,
   RF_stackCount = 1;
   initProtect(RF_stackCount);
   stackAuxiliaryInfoList(&RF_snpAuxiliaryInfoList, RF_stackCount);
-  v = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, 2, 1, 0, sexpString[2], NULL, 1, 1);
+  v = (double*) stackAndProtect(RF_GROW, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, 2, 1, 0, sexpString[2], NULL, 1, 1);
   *v = getConcordanceIndex( 1,
                             size,
                             time,
                             censoring,
                             predicted,
                             denom);
-  unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
+  unstackAuxiliaryInfoAndList(FALSE, RF_snpAuxiliaryInfoList, RF_stackCount);
   memoryCheck();
   R_ReleaseObject(RF_sexpVector[RF_OUTP_ID]);
   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
@@ -26698,9 +26747,9 @@ SEXP rfsrcCIndex(SEXP sexp_traceFlag,
 //   RF_stackCount = 1;
 //   initProtect(RF_stackCount);
 //   stackAuxiliaryInfoList(&RF_snpAuxiliaryInfoList, RF_stackCount);
-//   // v = (char*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_CHARACTER, 2, size, 0, sexpString[2], NULL, 1, size);
+//   // v = (char*) stackAndProtect(RF_GROW, &RF_nativeIndex, NATIVE_TYPE_CHARACTER, 2, size, 0, sexpString[2], NULL, 1, size);
 //   // v --;
-//   unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
+//   unstackAuxiliaryInfoAndList(FALSE, RF_snpAuxiliaryInfoList, RF_stackCount);
 //   memoryCheck();
 //   R_ReleaseObject(RF_sexpVector[RF_OUTP_ID]);
 //   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
@@ -26774,7 +26823,7 @@ SEXP rfsrcDistance(SEXP sexp_metricType,
   RF_stackCount = 1;
   initProtect(RF_stackCount);
   stackAuxiliaryInfoList(&RF_snpAuxiliaryInfoList, RF_stackCount);
-  dist = (double*) stackAndProtect(&RF_nativeIndex, NATIVE_TYPE_NUMERIC, 2, sizeIJ, 0, sexpString[2], NULL, 1, sizeIJ);
+  dist = (double*) stackAndProtect(RF_GROW, &RF_nativeIndex, NATIVE_TYPE_NUMERIC, 2, sizeIJ, 0, sexpString[2], NULL, 1, sizeIJ);
   dist --;
   xMatrix = (double **) new_vvector(1, p, NRUTIL_DPTR);
   for (i = 1; i <= p; i++) {
@@ -26786,7 +26835,7 @@ SEXP rfsrcDistance(SEXP sexp_metricType,
   for (k = 1; k <= sizeIJ; k++) {
     dist[k] = euclidean(n, p, rowI[k], rowJ[k], xMatrix);
   }
-  unstackAuxiliaryInfoAndList(RF_snpAuxiliaryInfoList, RF_stackCount);
+  unstackAuxiliaryInfoAndList(FALSE, RF_snpAuxiliaryInfoList, RF_stackCount);
   memoryCheck();
   R_ReleaseObject(RF_sexpVector[RF_OUTP_ID]);
   R_ReleaseObject(RF_sexpVector[RF_STRG_ID]);
@@ -27292,7 +27341,8 @@ void initProtect(uint  stackCount) {
     UNPROTECT(2);
   }
 }
-void *stackAndProtect(uint  *sexpIndex,
+void *stackAndProtect(char   mode,
+                      uint  *sexpIndex,
                       char   sexpType,
                       uint   sexpIdentity,
                       ulong  size,
@@ -27304,6 +27354,7 @@ void *stackAndProtect(uint  *sexpIndex,
   void *v;
   SEXP thisVector;
   thisVector = NULL;  
+  v          = NULL;  
   if (sizeof(ulong) > sizeof(uint)) {
     if (size > UINT_MAX) {
       if (TRUE) {
@@ -27321,15 +27372,21 @@ void *stackAndProtect(uint  *sexpIndex,
     auxiliaryDim[i] = va_arg(list, int);
   }
   va_end(list);
+  // if (!(size > 0)) {
+  //   RF_nativeError("\nRF-SRC:  *** ERROR *** ");
+  //   RF_nativeError("\nRF-SRC:  SEXP vector element is of size zero (0) and of aux dimensionality:  %20d", auxiliaryDimSize);
+  //   RF_nativeError("\nRF-SRC:  Please Contact Technical Support.");
+  //   RF_nativeExit();
+  // }
   switch(sexpType) {
   case NATIVE_TYPE_NUMERIC:
-    PROTECT(thisVector = NEW_NUMERIC(size));
+    thisVector = PROTECT(allocVector(REALSXP, size));
     break;
   case NATIVE_TYPE_INTEGER:
-    PROTECT(thisVector = NEW_INTEGER(size));
+    thisVector = PROTECT(allocVector(INTSXP, size));
     break;
   case NATIVE_TYPE_CHARACTER:
-    PROTECT(thisVector = NEW_CHARACTER(size));
+    thisVector = PROTECT(allocVector(STRSXP, size));
     break;
   default:
     RF_nativeError("\nRF-SRC:  *** ERROR *** ");
@@ -27343,28 +27400,26 @@ void *stackAndProtect(uint  *sexpIndex,
   UNPROTECT(1);
   switch(sexpType) {
   case NATIVE_TYPE_NUMERIC:
-    v = (double*) NUMERIC_POINTER(thisVector);
+    v = (double*) REAL(thisVector);
     for (ulong i = 0; i < size; i++) {
       ((double*) v)[i] = value;
     }
     break;
-  case NATIVE_TYPE_INTEGER:
-    v = (uint*) INTEGER_POINTER(thisVector);
+  case NATIVE_TYPE_INTEGER: 
+    v = (uint*) INTEGER(thisVector);
     for (ulong i = 0; i < size; i++) {
       ((uint*) v)[i] = 0;
     }
     break;
   case NATIVE_TYPE_CHARACTER:
-    v = (char*) CHARACTER_POINTER(thisVector);
+    v = (char*) CHAR(thisVector);
     for (ulong i = 0; i < size; i++) {
       ((char*) v)[i] = 0;
     }
     break;
-  default:
-    v = NULL;
-    break;
   }
-  allocateAuxiliaryInfo(sexpType,
+  allocateAuxiliaryInfo((mode == RF_GROW) ? FALSE : TRUE,
+                        sexpType,
                         sexpString,
                         RF_snpAuxiliaryInfoList,
                         *sexpIndex,
