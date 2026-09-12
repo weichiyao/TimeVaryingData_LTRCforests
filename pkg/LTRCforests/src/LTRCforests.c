@@ -26962,7 +26962,7 @@ SEXP rfsrcGrow(SEXP traceFlag,
   RF_nImpute              = INTEGER(nImpute)[0];
   RF_perfBlock            = INTEGER(perfBlock)[0];
   RF_quantileSize         = INTEGER(quantileSize)[0];
-  if (quantile != R_NilValue) {
+  if (RF_quantileSize > 0) {
     RF_quantile = (double *) REAL(quantile);
     RF_quantile --;
   }

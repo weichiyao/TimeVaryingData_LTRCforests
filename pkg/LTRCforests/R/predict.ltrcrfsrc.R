@@ -1,5 +1,6 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats as.dist as.formula cutree dlnorm formula hclust lowess median model.matrix na.omit optim pgamma plnorm pnorm predict qnorm runif sd supsmu var wilcox.test
+#' @export
 #'
 predict.ltrcrfsrc <-
   function(object,
