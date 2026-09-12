@@ -51,7 +51,17 @@ jobs:
       image: ${{ matrix.config.container }}
 
     steps:
-      - uses: r-hub/actions/checkout@v1
+      # R-hub expects the R package at the workflow root. This repository also
+      # contains analysis code, so check out the repository separately and
+      # stage only the package here.
+      - uses: actions/checkout@v6
+        with:
+          path: source
+      - name: Stage R package at workflow root
+        shell: bash
+        run: |
+          cp -R source/pkg/LTRCforests/. .
+          rm -rf source
       - uses: r-hub/actions/platform-info@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -76,7 +86,17 @@ jobs:
         config: ${{ fromJson(needs.setup.outputs.platforms) }}
 
     steps:
-      - uses: r-hub/actions/checkout@v1
+      # R-hub expects the R package at the workflow root. This repository also
+      # contains analysis code, so check out the repository separately and
+      # stage only the package here.
+      - uses: actions/checkout@v6
+        with:
+          path: source
+      - name: Stage R package at workflow root
+        shell: bash
+        run: |
+          cp -R source/pkg/LTRCforests/. .
+          rm -rf source
       - uses: r-hub/actions/setup-r@v1
         with:
           job-config: ${{ matrix.config.job-config }}
